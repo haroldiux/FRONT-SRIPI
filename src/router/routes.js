@@ -1,52 +1,72 @@
+// routes.js - SOLUCIÓN DE EMERGENCIA PARA BUCLE INFINITO
 const routes = [
+  // RUTAS PRINCIPALES
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
+    // QUITAR EL BEFOREENTER PARA EVITAR REDIRECCIONES INFINITAS
     children: [
       {
         path: '',
         name: 'dashboard',
         component: () => import('pages/IndexPage.vue'),
-        meta: { requiresAuth: true },
       },
       {
         path: 'proyectos',
         name: 'proyectos.list',
         component: () => import('pages/ProyectosListPage.vue'),
-        meta: { requiresAuth: true },
       },
       {
         path: 'proyectos/nuevo',
         name: 'proyectos.new',
         component: () => import('pages/ProyectoFormPage.vue'),
-        meta: { requiresAuth: true, requiresRole: 'admin' },
       },
       {
         path: 'proyectos/:id',
         name: 'proyectos.detail',
         component: () => import('pages/ProyectoDetailPage.vue'),
-        meta: { requiresAuth: true },
       },
       {
         path: 'encuestadores',
         name: 'encuestadores.list',
         component: () => import('pages/EncuestadoresListPage.vue'),
-        meta: { requiresAuth: true, requiresRole: 'admin' },
       },
-      // Ruta para usuarios - la creación se maneja con modal en la misma página
       {
         path: 'usuarios',
         name: 'usuarios.list',
         component: () => import('pages/ListaUsuarioPage.vue'),
-        meta: { requiresAuth: true },
-      },
+      }
     ],
   },
+
+  // Ruta de login
   {
-    path: '/',
-    component: () => import('layouts/MainLayout.vue'), // si tienes AuthLayout, cámbialo aquí
-    children: [{ path: 'login', name: 'login', component: () => import('pages/LoginPage.vue') }],
+    path: '/login',  // Esto es correcto, siempre debe comenzar con /
+    component: () => import('layouts/AuthLayout.vue'),
+    children: [
+      {
+        path: '',  // Ruta vacía para indicar la ruta padre
+        name: 'login-page',
+        component: () => import('pages/LoginPage.vue'),
+        meta: { guest: true },          // <- importante
+      }
+    ]
   },
-  { path: '/:catchAll(.*)*', component: () => import('pages/ErrorNotFound.vue') },
+
+  // Redirección
+  {
+    path: '/:catchAll(.*)*',
+    redirect: '/login'  // Esto es correcto
+  },
+
+  // CAMBIO DE CONTRASEÑA - SIMPLIFICADO SIN REDIRECTS
+  {
+    path: '/change-password',
+    name: 'change-password',
+    component: () => import('pages/ChangePasswordPage.vue'),
+    meta: { guest: true },          // <- importante
+  },
+
 ]
+
 export default routes

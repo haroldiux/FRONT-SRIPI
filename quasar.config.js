@@ -12,7 +12,7 @@ export default defineConfig((/* ctx */) => {
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
 
-    boot: ['pinia', 'axios', 'auth-guard'], // axios puede ir antes; el guard ya verá Pinia activa
+    boot: ['pinia', 'axios', 'auth-guard', 'activity-monitor'], // axios puede ir antes; el guard ya verá Pinia activa
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
@@ -92,7 +92,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Notify','Dialog'],
+      plugins: ['Notify','Dialog', 'Loading', 'LocalStorage', 'SessionStorage', 'AppFullscreen', 'Meta', 'Cookies', 'Dark', 'BottomSheet', 'LoadingBar', 'Screen' , 'Platform', 'AddressbarColor'],
     },
 
     // animations: 'all', // --- includes all animations

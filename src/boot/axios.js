@@ -6,6 +6,12 @@ export const api = axios.create({
 })
 
 export default boot(({ app }) => {
+  // NUEVO: restaurar Authorization desde localStorage si existe
+  const t = localStorage.getItem('token')
+  if (t) {
+    api.defaults.headers.common['Authorization'] = `Bearer ${t}`
+  }
+
   api.interceptors.request.use((config) => {
     config.headers['X-Requested-With'] = 'XMLHttpRequest'
     return config

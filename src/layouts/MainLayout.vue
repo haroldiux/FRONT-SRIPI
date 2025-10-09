@@ -1,6 +1,8 @@
+<!-- MainLayout.vue -->
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header elevated class="bg-primary text-white">
+  <q-layout view="hHh lpR fFf">
+    <!-- Header simple pero efectivo -->
+    <q-header elevated class="bg-primary">
       <q-toolbar>
         <q-btn
           flat
@@ -8,20 +10,21 @@
           round
           icon="menu"
           aria-label="Menu"
-          @click="toggleLeftDrawer"
+          @click="left = !left"
         />
 
-        <q-toolbar-title>
-          <span class="text-weight-bold">Sistema de Encuestas</span>
+        <q-toolbar-title class="row items-center">
+          <span>Sistema de Encuestas</span>
         </q-toolbar-title>
 
-        <!-- Usuario actual y logout -->
+        <!-- Dropdown de usuario -->
         <q-btn-dropdown
+          v-if="auth.isAuth && auth.user"
           flat
           no-caps
           dense
+          :label="auth.user ? `${auth.user.nombres} ${auth.user.apellidos}` : 'Usuario'"
           icon="account_circle"
-          :label="currentUser.name"
         >
           <q-list>
             <q-item clickable v-close-popup @click="goToProfile">
@@ -48,42 +51,35 @@
       </q-toolbar>
     </q-header>
 
+    <!-- Drawer -->
     <q-drawer
-      v-model="leftDrawerOpen"
+      v-model="left"
       show-if-above
       bordered
-      :mini="miniState"
-      @mouseover="miniState = false"
-      @mouseout="miniState = true"
-      mini-to-overlay
+      content-class="bg-white"
       :width="250"
-      :mini-width="65"
+      v-if="auth.isAuth"
     >
-      <!-- Header del drawer con logo/info -->
-      <q-list class="q-pa-md">
-        <q-item class="q-mb-md">
-          <q-item-section avatar>
-            <q-avatar color="primary" text-color="white" size="40px">
-              <span class="text-h6">SE</span>
-            </q-avatar>
-          </q-item-section>
-          <q-item-section v-if="!miniState">
-            <q-item-label class="text-weight-bold">Sistema</q-item-label>
-            <q-item-label caption>v1.0.0</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
+      <!-- Logo simplificado -->
+      <div class="q-pa-md flex items-center">
+        <div class="text-primary text-h6 text-weight-bold">
+          <q-avatar color="primary" text-color="white" class="q-mr-md">
+            <span>SE</span>
+          </q-avatar>
+          Sistema
+        </div>
+      </div>
 
       <q-separator />
 
-      <!-- Menú de navegación -->
-      <q-list padding>
+      <!-- Menú -->
+      <q-list>
         <q-item
           clickable
           v-ripple
           :to="{ name: 'dashboard' }"
+          :active="route.name === 'dashboard'"
           active-class="bg-primary text-white"
-          :class="$route.name === 'dashboard' ? 'bg-primary text-white' : ''"
         >
           <q-item-section avatar>
             <q-icon name="dashboard" />
@@ -97,8 +93,8 @@
           clickable
           v-ripple
           :to="{ name: 'proyectos.list' }"
+          :active="route.name?.includes('proyectos')"
           active-class="bg-primary text-white"
-          :class="$route.name?.includes('proyectos') ? 'bg-primary text-white' : ''"
         >
           <q-item-section avatar>
             <q-icon name="folder" />
@@ -111,9 +107,23 @@
         <q-item
           clickable
           v-ripple
-          :to="{ name: 'usuarios.list' }"
+          :to="{ name: 'proyectos.new' }"
           active-class="bg-primary text-white"
-          :class="$route.name?.includes('usuarios') ? 'bg-primary text-white' : ''"
+        >
+          <q-item-section avatar>
+            <q-icon name="add_circle" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Nuevo Proyecto</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <q-item
+          clickable
+          v-ripple
+          :to="{ name: 'usuarios.list' }"
+          :active="route.name?.includes('usuarios')"
+          active-class="bg-primary text-white"
           v-if="hasPermission(['admin', 'supervisor'])"
         >
           <q-item-section avatar>
@@ -128,9 +138,8 @@
           clickable
           v-ripple
           :to="{ name: 'encuestadores.list' }"
+          :active="route.name?.includes('encuestadores')"
           active-class="bg-primary text-white"
-          :class="$route.name?.includes('encuestadores') ? 'bg-primary text-white' : ''"
-          v-if="hasPermission(['admin'])"
         >
           <q-item-section avatar>
             <q-icon name="badge" />
@@ -140,8 +149,7 @@
           </q-item-section>
         </q-item>
 
-        <!-- Separador para sección de configuración -->
-        <q-separator class="q-my-md" v-if="hasPermission(['admin'])" />
+        <q-separator v-if="hasPermission(['admin'])" />
 
         <q-item
           clickable
@@ -157,29 +165,19 @@
         </q-item>
       </q-list>
 
-      <!-- Footer del drawer con info del usuario -->
-      <div class="absolute-bottom q-pa-md" v-if="!miniState">
-        <q-card flat bordered>
-          <q-card-section class="q-pa-sm">
-            <div class="row items-center no-wrap">
-              <div class="col">
-                <div class="text-caption text-grey-7">Sesión actual</div>
-                <div class="text-weight-bold">{{ currentUser.name }}</div>
-                <div class="text-caption">{{ currentUser.role }}</div>
-              </div>
-              <div class="col-auto">
-                <q-chip
-                  :color="getRoleColor(currentUser.role)"
-                  text-color="white"
-                  size="sm"
-                  dense
-                >
-                  {{ currentUser.role }}
-                </q-chip>
-              </div>
-            </div>
-          </q-card-section>
-        </q-card>
+      <!-- Información del usuario -->
+      <div class="absolute-bottom q-pa-md" v-if="auth.user">
+        <q-item>
+          <q-item-section avatar>
+            <q-avatar color="primary" text-color="white">
+              <span>{{ getUserInitials }}</span>
+            </q-avatar>
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ auth.user ? `${auth.user.nombres} ${auth.user.apellidos}` : 'Usuario' }}</q-item-label>
+            <q-item-label caption>{{ auth.user ? auth.user.usuario : '' }}</q-item-label>
+          </q-item-section>
+        </q-item>
       </div>
     </q-drawer>
 
@@ -190,95 +188,96 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, inject } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
+import { useAuthStore } from 'src/stores/auth.store'
 
-const $q = useQuasar()
 const router = useRouter()
+const route = useRoute()
+const $q = useQuasar()
+const auth = useAuthStore()
+const setupActivityMonitor = inject('setupActivityMonitor', null)
 
-// Estados
-const leftDrawerOpen = ref(false)
-const miniState = ref(false)
+// Estado del drawer
+const left = ref(false)
 
-// Usuario actual (esto debería venir del store de autenticación)
-const currentUser = ref({
-  id: 1,
-  name: 'Admin Usuario',
-  email: 'admin@example.com',
-  role: 'admin' // admin, supervisor, encuestador, user
+// Obtener iniciales del usuario para el avatar
+const getUserInitials = computed(() => {
+  if (!auth.user || !auth.user.nombres || !auth.user.apellidos) return '?'
+
+  const firstNameInitial = auth.user.nombres.charAt(0)
+  const lastNameInitial = auth.user.apellidos.charAt(0)
+
+  return `${firstNameInitial}${lastNameInitial}`
 })
 
-// Función para alternar el drawer
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
-
-// Función para verificar permisos
+// Verificar si el usuario tiene un rol específico
 function hasPermission(roles) {
   if (!Array.isArray(roles)) {
     roles = [roles]
   }
-  return roles.includes(currentUser.value.role)
-}
 
-// Función para obtener color del rol
-function getRoleColor(role) {
-  const colors = {
-    admin: 'red',
-    supervisor: 'orange',
-    encuestador: 'blue',
-    user: 'grey'
+  // Mapeo de roles por ID
+  const roleMap = {
+    1: 'admin',
+    2: 'supervisor',
+    3: 'encuestador'
   }
-  return colors[role] || 'grey'
+
+  // Obtener el rol del usuario
+  const userRole = auth.user && auth.user.rol_id ? roleMap[auth.user.rol_id] : null
+
+  // Verificar si el usuario tiene alguno de los roles permitidos
+  return roles.includes(userRole)
 }
 
-// Función para ir al perfil
+// Ir al perfil del usuario
 function goToProfile() {
-  // router.push({ name: 'profile' })
   $q.notify({
     type: 'info',
-    message: 'Función de perfil en desarrollo'
+    message: 'Función de perfil en desarrollo',
+    position: 'top'
   })
 }
 
-// Función para cerrar sesión
+// Cerrar sesión
 function logout() {
   $q.dialog({
     title: 'Cerrar Sesión',
     message: '¿Está seguro que desea cerrar sesión?',
     cancel: true,
     persistent: true
-  }).onOk(() => {
-    // Aquí deberías limpiar el token y datos del usuario
-    // localStorage.removeItem('token')
-    // store.dispatch('auth/logout')
-
-    $q.notify({
-      type: 'positive',
-      message: 'Sesión cerrada exitosamente'
-    })
-
-    router.push({ name: 'login' })
+  }).onOk(async () => {
+    try {
+      await auth.logout()
+      router.push('/login')
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
+      // En caso de error, forzar redirección manual
+      window.location.href = '/login?logout=error'
+    }
   })
 }
+
+// Configurar el monitor de actividad al montar el componente
+onMounted(() => {
+  if (setupActivityMonitor) {
+    setupActivityMonitor()
+  }
+})
 </script>
 
 <style lang="scss" scoped>
-.q-item.bg-primary {
-  .q-icon {
-    color: white !important;
-  }
+// Estilos básicos
+.q-item.active-item {
+  background-color: #1976d2;
+  color: white;
 }
 
 .q-drawer {
-  .q-item {
-    border-radius: 8px;
-    margin: 4px 8px;
-
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.05);
-    }
+  .q-item:hover {
+    background-color: rgba(0,0,0,0.03);
   }
 }
 </style>
