@@ -33,6 +33,13 @@ const routes = [
         component: () => import('pages/EncuestadoresListPage.vue'),
         meta: { requiresAuth: true, requiresRole: 'admin' },
       },
+      // Ruta para usuarios - la creación se maneja con modal en la misma página
+      {
+        path: 'usuarios',
+        name: 'usuarios.list',
+        component: () => import('pages/ListaUsuarioPage.vue'),
+        meta: { requiresAuth: true },
+      },
     ],
   },
   {
