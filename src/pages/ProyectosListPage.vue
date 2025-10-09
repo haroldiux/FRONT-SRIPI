@@ -12,35 +12,15 @@
           <p class="department-text">{{ userDepartment }}</p>
         </div>
         <div class="header-actions">
-          <q-btn
-            label="Nueva Encuesta"
-            icon="add"
-            color="primary"
-            unelevated
-            class="btn-nueva-encuesta"
-            @click="onNuevaEncuesta"
-          />
-          <q-btn
-            label="Cerrar Sesión"
-            flat
-            color="grey-8"
-            class="btn-cerrar-sesion"
-            @click="onCerrarSesion"
-          />
+
+          <q-btn label="Cerrar Sesión" flat color="grey-8" class="btn-cerrar-sesion" @click="onCerrarSesion" />
         </div>
       </div>
     </div>
 
     <!-- Tabs de navegación -->
     <div class="tabs-container">
-      <q-tabs
-        v-model="tab"
-        dense
-        class="custom-tabs"
-        active-color="primary"
-        indicator-color="primary"
-        align="left"
-      >
+      <q-tabs v-model="tab" dense class="custom-tabs" active-color="primary" indicator-color="primary" align="left">
         <q-tab name="campañas" icon="folder" label="Campañas" />
         <q-tab name="encuestas" icon="description" label="Encuestas" />
         <q-tab name="analisis" icon="bar_chart" label="Análisis" />
@@ -54,42 +34,22 @@
           <h2 class="section-title">Gestión de Campañas</h2>
           <p class="section-subtitle">Organiza y administra tus estudios de investigación</p>
         </div>
-        <q-btn
-          label="Nueva Campaña"
-          icon="add"
-          color="primary"
-          unelevated
-          class="btn-nueva-campana"
-          @click="onNuevaCampana"
-        />
+        <q-btn label="Nueva Campaña" icon="add" color="primary" unelevated class="btn-nueva-campana"
+          @click="onNuevaCampana" />
       </div>
 
       <!-- Lista de Campañas -->
       <div class="campaigns-list">
-        <q-card
-          v-for="campaign in campaigns"
-          :key="campaign.id"
-          class="campaign-card"
-          flat
-          bordered
-        >
+        <q-card v-for="campaign in campaigns" :key="campaign.id" class="campaign-card" flat bordered>
           <q-card-section>
             <div class="campaign-header">
               <div class="campaign-title-section">
                 <h3 class="campaign-title">{{ campaign.nombre }}</h3>
-                <q-badge
-                  :color="campaign.estado === 'Finalizada' ? 'purple' : 'positive'"
-                  :label="campaign.estado"
-                  class="status-badge"
-                />
+                <q-badge :color="campaign.estado === 'Finalizada' ? 'purple' : 'positive'" :label="campaign.estado"
+                  class="status-badge" />
               </div>
-              <q-btn
-                label="VER DETALLES"
-                flat
-                color="primary"
-                icon-right="visibility"
-                @click="verDetalles(campaign.id)"
-              />
+              <q-btn label="VER DETALLES" flat color="primary" icon-right="visibility"
+                @click="verDetalles(campaign.id)" />
             </div>
 
             <p class="campaign-description">{{ campaign.descripcion }}</p>
@@ -171,10 +131,6 @@ export default {
       },
     ])
 
-    const onNuevaEncuesta = () => {
-      router.push('/encuestas/nueva')
-    }
-
     const onNuevaCampana = () => {
       router.push('/proyectos/nuevo')
     }
@@ -193,7 +149,6 @@ export default {
       userName,
       userDepartment,
       campaigns,
-      onNuevaEncuesta,
       onNuevaCampana,
       onCerrarSesion,
       verDetalles,
@@ -245,16 +200,6 @@ export default {
 .header-actions {
   display: flex;
   gap: 12px;
-}
-
-.btn-nueva-encuesta {
-  background: #7c3aed;
-  color: white;
-  font-weight: 500;
-  padding: 8px 20px;
-  border-radius: 8px;
-  text-transform: none;
-  font-size: 14px;
 }
 
 .btn-cerrar-sesion {
