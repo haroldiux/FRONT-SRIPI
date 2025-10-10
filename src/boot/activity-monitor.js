@@ -32,13 +32,17 @@ export default boot(({ app }) => {
       const lastActivity = auth.lastActivity
       const inactivityTime = currentTime - lastActivity
 
-      // Tiempo de inactividad máximo (30 minutos)
-      const maxInactivityTime = 30 * 60 * 1000
+      // Tiempo máximo y de advertencia
+      const maxInactivityTime = 30 * 60 * 1000  // 30 min
+      const warningTime = 28 * 60 * 1000        // 28 min
 
-      // Tiempo de advertencia (28 minutos)
-      const warningTime = 28 * 60 * 1000
+      // Si ya no hay sesión activa, limpiar todo y salir
+      if (!auth.isAuth) {
+        clearInterval(inactivityInterval)
+        return
+      }
 
-      // Si el tiempo de inactividad supera el máximo, cerrar sesión
+      // Cerrar sesión automáticamente si superó el tiempo máximo
       if (inactivityTime > maxInactivityTime) {
         clearInterval(inactivityInterval)
         auth.logout()
@@ -50,23 +54,41 @@ export default boot(({ app }) => {
         })
 
         router.push('/login')
+        return
       }
+
       // Mostrar advertencia si está cerca del tiempo máximo
-      else if (inactivityTime > warningTime) {
-        Dialog.create({
+      if (inactivityTime > warningTime) {
+        // Evitar mostrar varios diálogos simultáneamente
+        if (window.activeInactivityDialog) return
+
+        // Guardamos referencia global del diálogo
+        window.activeInactivityDialog = Dialog.create({
           title: 'Advertencia de inactividad',
           message: 'Su sesión está a punto de expirar por inactividad. ¿Desea continuar activo?',
           cancel: true,
           persistent: true
-        }).onOk(() => {
-          // Actualizar actividad si el usuario confirma
-          updateActivity()
-        }).onCancel(() => {
-          // Cerrar sesión si el usuario cancela
-          clearInterval(inactivityInterval)
-          auth.logout()
-          router.push('/login')
         })
+          .onOk(() => {
+            // Si aún sigue logueado, refresca la actividad
+            if (auth.isAuth) updateActivity()
+            window.activeInactivityDialog = null
+          })
+          .onCancel(() => {
+            clearInterval(inactivityInterval)
+            auth.logout()
+            router.push('/login')
+            window.activeInactivityDialog = null
+          })
+
+        // Cerrar automáticamente si se detecta que la sesión caducó mientras estaba visible
+        const dialogCheckInterval = setInterval(() => {
+          if (!auth.isAuth && window.activeInactivityDialog) {
+            window.activeInactivityDialog.hide()
+            window.activeInactivityDialog = null
+            clearInterval(dialogCheckInterval)
+          }
+        }, 3000) // verifica cada 3 segundos
       }
     }
 
