@@ -1,11 +1,7 @@
 <template>
   <q-page class="panel-investigacion">
     <!-- Diálogo de nuevo proyecto -->
-    <ProyectoForm
-      v-model="showProjectDialog"
-      @save="handleProjectSubmit"
-      @cancel="showProjectDialog = false"
-    />
+    <ProyectoForm v-model="showProjectDialog" @save="handleProjectSubmit" @cancel="showProjectDialog = false" />
 
     <!-- Header mejorado - estilo más simple como en la imagen -->
     <div class="page-header">
@@ -24,14 +20,8 @@
           <h2 class="section-title">Gestión de Proyectos</h2>
           <p class="section-subtitle">Organiza y administra tus estudios de investigación</p>
         </div>
-        <q-btn
-          label="Nuevo Proyecto"
-          icon="add"
-          color="primary"
-          unelevated
-          class="btn-nuevo-proyecto"
-          @click="showProjectDialog = true"
-        />
+        <q-btn label="Nuevo Proyecto" icon="add" color="primary" unelevated class="btn-nuevo-proyecto"
+          @click="showProjectDialog = true" />
       </div>
 
       <!-- Estado de carga -->
@@ -45,14 +35,8 @@
         <q-icon name="folder_open" size="80px" color="grey-5" />
         <h5 class="q-mt-md text-grey-8">No hay proyectos</h5>
         <p class="text-grey-7">Crea tu primer proyecto para comenzar</p>
-        <q-btn
-          label="Nuevo Proyecto"
-          icon="add"
-          color="primary"
-          unelevated
-          class="q-mt-sm"
-          @click="showProjectDialog = true"
-        />
+        <q-btn label="Nuevo Proyecto" icon="add" color="primary" unelevated class="q-mt-sm"
+          @click="showProjectDialog = true" />
       </div>
 
       <!-- Lista de Proyectos - estilo similar a la imagen -->
@@ -62,19 +46,11 @@
             <div class="project-header">
               <div class="project-title-section">
                 <h3 class="project-title">{{ proyecto.titulo }}</h3>
-                <q-badge
-                  :color="getEstadoColor(proyecto.estado, proyecto)"
-                  :label="getEstadoLabel(proyecto.estado, proyecto)"
-                  class="status-badge"
-                />
+                <q-badge :color="getEstadoColor(proyecto.estado, proyecto)"
+                  :label="getEstadoLabel(proyecto.estado, proyecto)" class="status-badge" />
               </div>
-              <q-btn
-                label="VER DETALLES"
-                flat
-                color="primary"
-                icon-right="visibility"
-                @click="verDetalles(proyecto.id)"
-              />
+              <q-btn label="VER DETALLES" flat color="primary" icon-right="visibility"
+                @click="verDetalles(proyecto.id)" />
             </div>
 
             <p class="project-description">{{ proyecto.descripcion || 'Sin descripción' }}</p>
@@ -428,10 +404,12 @@ function handleProjectSubmit() {
 }
 
 // Ver detalles del proyecto
-function verDetalles(id) {
-  router.push(`/proyectos/${id}`)
+function verDetalles(proyectoId) {
+  router.push({
+    name: 'proyectos.detail',
+    params: { id: proyectoId }
+  })
 }
-
 // Cargar proyectos y usuarios al montar el componente
 onMounted(async () => {
   // Cargar datos en paralelo
