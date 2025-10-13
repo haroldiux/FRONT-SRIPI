@@ -6,8 +6,19 @@ import { ref, computed } from 'vue'
 export const useAuthStore = defineStore('auth', () => {
   // Estado
   const token = ref(localStorage.getItem('token') || null)
-  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
+  const user = ref(null)
   const lastActivity = ref(localStorage.getItem('lastActivity') || Date.now())
+
+  // Inicializar user de manera segura
+  try {
+    const userStr = localStorage.getItem('user')
+    if (userStr) {
+      user.value = JSON.parse(userStr)
+    }
+  } catch (e) {
+    console.error('Error parsing user from localStorage:', e)
+    localStorage.removeItem('user') // Limpiar datos corruptos
+  }
 
   // Getters
   const isAuth = computed(() => !!token.value)
@@ -37,20 +48,32 @@ export const useAuthStore = defineStore('auth', () => {
       userData.password_changed = userData.user.password_changed;
     }
     user.value = userData;
-    localStorage.setItem('user', JSON.stringify(userData));
+    try {
+      localStorage.setItem('user', JSON.stringify(userData));
+    } catch (e) {
+      console.error('Error saving user to localStorage:', e)
+    }
   }
 
   function setToken(tokenValue) {
-    token.value = tokenValue
-    localStorage.setItem('token', tokenValue)
+  token.value = tokenValue
+  localStorage.setItem('token', tokenValue)
 
-    // Configurar el header de Authorization para futuras peticiones
+  // Configurar el header de Authorization para futuras peticiones
+  if (tokenValue) {
     api.defaults.headers.common['Authorization'] = `Bearer ${tokenValue}`
+  } else {
+    delete api.defaults.headers.common['Authorization']
   }
+}
 
   function updateLastActivity() {
     lastActivity.value = Date.now()
-    localStorage.setItem('lastActivity', lastActivity.value)
+    try {
+      localStorage.setItem('lastActivity', lastActivity.value)
+    } catch (e) {
+      console.error('Error saving lastActivity to localStorage:', e)
+    }
   }
 
   // Función login
@@ -89,9 +112,9 @@ export const useAuthStore = defineStore('auth', () => {
         // Intentar logout en el servidor
         await api.post('/api/auth/logout');
         console.log('Logout exitoso en el servidor');
-      } catch { // Usar _ para indicar que no se usa la variable
+      } catch (error) {
         // No es crítico si falla el logout en el servidor
-        console.log('Error al cerrar sesión en el servidor, continuando con logout local');
+        console.log('Error al cerrar sesión en el servidor, continuando con logout local:', error);
       }
     }
 
@@ -99,31 +122,31 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null;
     user.value = null;
 
-    // Limpiar localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('lastActivity');
+    // Limpiar localStorage de manera segura
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('lastActivity');
 
-    // También limpiar cualquier dato relacionado con cambio de contraseña
-    // Esto ayudará a evitar problemas en el próximo inicio de sesión
-    const userKeys = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('pwd_changed_')) {
-        userKeys.push(key);
+      // También limpiar cualquier dato relacionado con cambio de contraseña
+      const userKeys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('pwd_changed_')) {
+          userKeys.push(key);
+        }
       }
+      userKeys.forEach(key => localStorage.removeItem(key));
+    } catch (e) {
+      console.error('Error clearing localStorage:', e)
     }
-    userKeys.forEach(key => localStorage.removeItem(key));
 
     // Limpiar headers de API
     if (api.defaults.headers.common) {
       delete api.defaults.headers.common['Authorization'];
     }
 
-    console.log('Sesión cerrada correctamente, redirigiendo al login');
-
-    // Redirección para modo hash
-    window.location.href = '/#/login?logout=success';
+    console.log('Sesión cerrada correctamente');
   }
 
   function checkSession() {
@@ -168,8 +191,13 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     // 3) Fallback (temporal) a localStorage si no vino nada
-    const changed = localStorage.getItem(`pwd_changed_${user.value.id}`);
-    return !changed;
+    try {
+      const changed = localStorage.getItem(`pwd_changed_${user.value.id}`);
+      return !changed;
+    } catch (e) {
+      console.error('Error reading from localStorage:', e)
+      return false;
+    }
   }
 
   return {

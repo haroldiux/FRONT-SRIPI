@@ -74,13 +74,13 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import {  useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { useAuthStore } from 'src/stores/auth.store'
 
 const $q = useQuasar()
-const route = useRoute()
+//const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
@@ -109,56 +109,79 @@ const passwordRules = computed(() => [
 ])
 
 // Verificación de autenticación + carga de usuario
+// Modificación de la función checkAuthentication
 async function checkAuthentication() {
   isLoading.value = true
 
-  // 1) si no hay token -> login
-  if (!auth.isAuth) {
-    isLoading.value = false
-    return router.push({ name: 'login' })
-  }
-
-  // 2) intenta poblar el usuario si no está en memoria
-  if (!auth.user) {
-    try {
-      const { data } = await api.get('/api/auth/user')
-      const payload = data?.user ?? data // acepta { user: {...} } o {...}
-
-      if (payload && payload.id) {
-        auth.updateUser(payload)
-        username.value = payload.usuario ?? ''
-      } else {
-        $q.notify({ type: 'negative', message: 'Error al obtener información del usuario', position: 'top' })
-        isLoading.value = false
-        return router.push({ name: 'login' })
-      }
-    } catch {
-      $q.notify({ type: 'negative', message: 'Sesión inválida. Inicie sesión nuevamente.', position: 'top' })
+  try {
+    // 1) Verificar que tengamos token
+    if (!auth.token) {
+      console.log("No hay token, redirigiendo a login")
       isLoading.value = false
-      return router.push({ name: 'login' })
+      window.location.href = '/#/login'
+      return
     }
-  } else {
-    username.value = auth.user?.usuario ?? ''
-  }
 
-  // 3) si no es primer inicio, no corresponde estar aquí
-  if (!auth.isFirstLogin()) {
+    // 2) Asegurar que el header de Authorization esté configurado
+    api.defaults.headers.common['Authorization'] = `Bearer ${auth.token}`
+
+    // 3) Intentar obtener el usuario si no está en memoria
+    if (!auth.user) {
+      try {
+        console.log("Obteniendo info del usuario con token:", auth.token.substring(0, 10) + '...')
+        const { data } = await api.get('/api/auth/user')
+        const payload = data?.user ?? data
+        console.log("Datos del usuario recibidos:", payload)
+
+        if (payload && payload.id) {
+          auth.updateUser(payload)
+          username.value = payload.usuario ?? ''
+        } else {
+          console.error("Datos de usuario incompletos:", payload)
+          $q.notify({ type: 'negative', message: 'Error al obtener información del usuario', position: 'top' })
+          isLoading.value = false
+          window.location.href = '/#/login'
+          return
+        }
+      } catch (error) {
+        console.error("Error al obtener usuario:", error)
+        $q.notify({ type: 'negative', message: 'Sesión inválida. Inicie sesión nuevamente.', position: 'top' })
+        isLoading.value = false
+        window.location.href = '/#/login'
+        return
+      }
+    } else {
+      username.value = auth.user?.usuario ?? ''
+    }
+
+    // 4) Si no es primer inicio, no corresponde estar aquí
+    if (!auth.isFirstLogin()) {
+      console.log("No es primer login, redirigiendo a dashboard")
+      isLoading.value = false
+      window.location.href = '/#/'
+      return
+    }
+
+    // 5) Si la cuenta está desactivada, cerrar sesión
+    const estado = auth.user?.estado
+    const desactivado = estado === 0 || estado === false
+    if (desactivado) {
+      console.log("Usuario desactivado, cerrando sesión")
+      await auth.logout()
+      isLoading.value = false
+      window.location.href = '/#/login'
+      return
+    }
+
+    // Todo en orden para mostrar el formulario
+    isReady.value = true
     isLoading.value = false
-    return router.push('/')
-  }
-
-  // 4) si la cuenta está desactivada (tolera booleano/numérico), cerrar sesión
-  const estado = auth.user?.estado
-  const desactivado = estado === 0 || estado === false
-  if (desactivado) {
-    await auth.logout()
+  } catch (error) {
+    console.error("Error en checkAuthentication:", error)
     isLoading.value = false
-    return
+    $q.notify({ type: 'negative', message: error.message || 'Error al verificar sesión', position: 'top' })
+    window.location.href = '/#/login'
   }
-
-  // ok para mostrar el formulario
-  isReady.value = true
-  isLoading.value = false
 }
 
 // Volver al login limpiando estado local
@@ -173,47 +196,59 @@ function redirectToLogin() {
 }
 
 // Submit cambio de contraseña
+// Modificación de la función onSubmit
 const onSubmit = async () => {
   try {
     loading.value = true
 
-    // Validaciones simples locales (ajusta a tu backend si quieres verificar server-side)
-    if (form.value.currentPassword !== username.value) {
-      throw new Error('La contraseña actual es incorrecta')
-    }
-    if (form.value.newPassword === form.value.currentPassword) {
-      throw new Error('La nueva contraseña debe ser diferente a la actual')
-    }
-    if (form.value.newPassword === username.value) {
-      throw new Error('La nueva contraseña no puede ser igual a su nombre de usuario')
+    // Asegurar que el token esté configurado
+    if (auth.token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${auth.token}`
+    } else {
+      throw new Error('No hay token de autenticación')
     }
 
-    // Petición al backend
-    await api.post('/api/auth/change-password', {
-      current_password: form.value.currentPassword, // si decides validar
+    // Validaciones básicas
+    if (form.value.newPassword.length < 6) {
+      throw new Error('La contraseña debe tener al menos 6 caracteres')
+    }
+    if (form.value.newPassword !== form.value.confirmPassword) {
+      throw new Error('Las contraseñas no coinciden')
+    }
+
+    console.log('Enviando solicitud de cambio de contraseña...')
+    const response = await api.post('/api/auth/change-password', {
+      current_password: form.value.currentPassword,
       password: form.value.newPassword,
       password_confirmation: form.value.confirmPassword,
     })
-    // Actualiza el usuario en el store
+
+    console.log('Respuesta del servidor:', response.data)
+
+    // Actualizar el usuario en el store
     if (auth.user) {
-      auth.updateUser({ ...auth.user, password_changed: true, password_changed_at: new Date().toISOString() })
-    }
-    localStorage.removeItem(`pwd_changed_${auth.user?.id}`)
-    // Marcar que ya cambió la contraseña
-    const user = auth.user
-    if (user?.id) {
-      localStorage.setItem(`pwd_changed_${user.id}`, 'true')
+      auth.updateUser({
+        ...auth.user,
+        password_changed: true,
+        password_changed_at: new Date().toISOString()
+      })
     }
 
-    $q.notify({ type: 'positive', message: 'Contraseña actualizada correctamente', position: 'top' })
+    // Guardar en localStorage como respaldo
+    if (auth.user?.id) {
+      localStorage.setItem(`pwd_changed_${auth.user.id}`, 'true')
+    }
 
-    // Redirección
-    const redirectPath =
-      typeof route.query.redirect === 'string'
-        ? route.query.redirect
-        : '/'
-    router.push(redirectPath)
+    $q.notify({
+      type: 'positive',
+      message: 'Contraseña actualizada correctamente',
+      position: 'top'
+    })
+
+    // Redirección al dashboard
+    window.location.href = '/#/'
   } catch (error) {
+    console.error('Error en cambio de contraseña:', error)
     $q.notify({
       type: 'negative',
       message: error.response?.data?.message || error.message || 'Error al cambiar la contraseña',

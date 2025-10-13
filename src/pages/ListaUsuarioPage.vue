@@ -93,11 +93,7 @@
           <!-- Estado con badge mejorado -->
           <template v-slot:body-cell-estado="props">
             <q-td :props="props">
-              <q-badge
-                :color="getEstadoColor(props.row)"
-                :label="getEstadoLabel(props.row)"
-                class="q-px-md q-py-xs"
-              />
+              <q-badge :color="getEstadoColor(props.row)" :label="getEstadoLabel(props.row)" class="q-px-md q-py-xs" />
             </q-td>
           </template>
 
@@ -121,16 +117,8 @@
                   v-if="canEditUser()">
                   <q-tooltip>Editar</q-tooltip>
                 </q-btn>
-                <q-btn
-                  flat
-                  round
-                  dense
-                  :color="getToggleButtonColor(props.row)"
-                  :icon="getToggleButtonIcon(props.row)"
-                  @click="toggleUserStatus(props.row)"
-                  size="sm"
-                  v-if="canToggleUserStatus"
-                >
+                <q-btn flat round dense :color="getToggleButtonColor(props.row)" :icon="getToggleButtonIcon(props.row)"
+                  @click="toggleUserStatus(props.row)" size="sm" v-if="canToggleUserStatus">
                   <q-tooltip>{{ getToggleButtonTooltip(props.row) }}</q-tooltip>
                 </q-btn>
               </div>
@@ -196,10 +184,7 @@
             <div class="row">
               <div class="col-5 text-grey-7 text-weight-medium">Estado:</div>
               <div class="col-7">
-                <q-badge
-                  :color="getEstadoColor(selectedUser)"
-                  :label="getEstadoLabel(selectedUser)"
-                />
+                <q-badge :color="getEstadoColor(selectedUser)" :label="getEstadoLabel(selectedUser)" />
               </div>
             </div>
 
@@ -513,55 +498,57 @@ export default {
 
     const viewSusFile = (fileUrl) => {
       if (fileUrl) {
-    // Usar la nueva ruta API para acceder a archivos privados
-    window.open(`${api.defaults.baseURL}/api/documentos-sus/${fileUrl}`, '_blank');
-  } else {
-    $q.notify({
-      type: 'warning',
-      message: 'No hay documento disponible',
-      position: 'top'
-    });
-  }
-}
+        // Usar la ruta web directa en lugar de la API
+        const url = `${api.defaults.baseURL.replace('/api', '')}/ver-documento/${encodeURIComponent(fileUrl)}`;
+        console.log(`Intentando abrir: ${url}`);
+        window.open(url, '_blank');
+      } else {
+        $q.notify({
+          type: 'warning',
+          message: 'No hay documento disponible',
+          position: 'top'
+        });
+      }
+    }
 
     // CORRECCIÓN: Función toggleUserStatus completamente implementada
     const toggleUserStatus = async (user) => {
-  try {
-    console.log(`Cambiando estado del usuario ${user.id} (${user.usuario}) - Estado actual: ${user.estado}`)
+      try {
+        console.log(`Cambiando estado del usuario ${user.id} (${user.usuario}) - Estado actual: ${user.estado}`)
 
-    // Llamar a la API para cambiar el estado
-    const response = await api.post(`/api/usuarios/${user.id}/toggle-status`)
+        // Llamar a la API para cambiar el estado
+        const response = await api.post(`/api/usuarios/${user.id}/toggle-status`)
 
-    if (response.data && response.data.data) {
-      console.log('Respuesta del servidor:', response.data)
+        if (response.data && response.data.data) {
+          console.log('Respuesta del servidor:', response.data)
 
-      // Encontrar el usuario en la lista y actualizar su estado
-      const index = users.value.findIndex(u => u.id === user.id)
-      if (index !== -1) {
-        // Actualizar el estado según la respuesta del servidor
-        users.value[index].estado = response.data.data.estado === true ||
-                                    response.data.data.estado === 1 ||
-                                    response.data.data.estado === '1' ? 1 : 0
+          // Encontrar el usuario en la lista y actualizar su estado
+          const index = users.value.findIndex(u => u.id === user.id)
+          if (index !== -1) {
+            // Actualizar el estado según la respuesta del servidor
+            users.value[index].estado = response.data.data.estado === true ||
+              response.data.data.estado === 1 ||
+              response.data.data.estado === '1' ? 1 : 0
 
-        console.log(`Estado actualizado: ${users.value[index].estado}`)
+            console.log(`Estado actualizado: ${users.value[index].estado}`)
+          }
+
+          // Mostrar notificación de éxito
+          $q.notify({
+            type: 'positive',
+            message: `Usuario ${getEstadoValue(user) === 1 ? 'desactivado' : 'activado'} correctamente`,
+            position: 'top'
+          })
+        }
+      } catch (error) {
+        console.error('Error al cambiar estado:', error)
+        $q.notify({
+          type: 'negative',
+          message: error.response?.data?.message || 'Error al cambiar el estado del usuario',
+          position: 'top'
+        })
       }
-
-      // Mostrar notificación de éxito
-      $q.notify({
-        type: 'positive',
-        message: `Usuario ${getEstadoValue(user) === 1 ? 'desactivado' : 'activado'} correctamente`,
-        position: 'top'
-      })
     }
-  } catch (error) {
-    console.error('Error al cambiar estado:', error)
-    $q.notify({
-      type: 'negative',
-      message: error.response?.data?.message || 'Error al cambiar el estado del usuario',
-      position: 'top'
-    })
-  }
-}
 
     const onUserSaved = () => {
       // Refrescar la lista después de guardar
