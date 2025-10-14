@@ -1,5 +1,7 @@
 <template>
   <q-page class="proyecto-detail-page">
+    <EncuestaPreview v-model="showEncuestaPreview" :encuesta-id="selectedEncuestaId" @edit="editarEncuesta"
+      @close="showEncuestaPreview = false" />
     <!-- Header con fondo azul y degradado sutil -->
     <div class="header-container">
       <div class="header-content">
@@ -17,8 +19,10 @@
             </q-badge>
           </div>
           <div class="header-actions">
-            <q-btn unelevated color="white" text-color="primary" class="action-btn" icon-right="add" label="Nueva Encuesta" @click="nuevaEncuesta" />
-            <q-btn unelevated color="white" text-color="primary" class="action-btn" icon-right="file_download" label="Exportar" @click="exportarDatos" />
+            <q-btn unelevated color="white" text-color="primary" class="action-btn" icon-right="add"
+              label="Nueva Encuesta" @click="nuevaEncuesta" />
+            <q-btn unelevated color="white" text-color="primary" class="action-btn" icon-right="file_download"
+              label="Exportar" @click="exportarDatos" />
           </div>
         </div>
       </div>
@@ -125,15 +129,8 @@
         <!-- Panel de contenido principal con tabs -->
         <div class="content-panel">
           <q-card flat bordered class="tabs-card">
-            <q-tabs
-              v-model="tab"
-              class="bg-white text-primary tabs-header"
-              active-color="primary"
-              indicator-color="primary"
-              align="left"
-              narrow-indicator
-              dense
-            >
+            <q-tabs v-model="tab" class="bg-white text-primary tabs-header" active-color="primary"
+              indicator-color="primary" align="left" narrow-indicator dense>
               <q-tab name="encuestas" icon="description" label="Encuestas" />
               <q-tab name="analisis" icon="analytics" label="Análisis" />
               <q-tab name="geografico" icon="map" label="Geográfico" />
@@ -150,14 +147,8 @@
                     <p class="panel-subtitle">Todas las encuestas asociadas a este proyecto de investigación</p>
                   </div>
 
-                  <q-btn
-                    unelevated
-                    color="primary"
-                    icon="add"
-                    label="Nueva Encuesta"
-                    class="desktop-only"
-                    @click="nuevaEncuesta"
-                  />
+                  <q-btn unelevated color="primary" icon="add" label="Nueva Encuesta" class="desktop-only"
+                    @click="nuevaEncuesta" />
                 </div>
 
                 <!-- Estado de carga de encuestas -->
@@ -200,11 +191,11 @@
                           <q-btn flat round dense color="grey-7" icon="edit">
                             <q-tooltip>Editar</q-tooltip>
                           </q-btn>
-                          <q-btn flat round dense color="grey-7" icon="content_copy">
-                            <q-tooltip>Duplicar</q-tooltip>
+                          <q-btn flat round dense color="blue-7" icon="assignment_ind" @click="asignarEncuesta(enc)">
+                            <q-tooltip>Asignar</q-tooltip>
                           </q-btn>
-                          <q-btn flat round dense color="primary" icon="visibility">
-                            <q-tooltip>Ver Estadísticas</q-tooltip>
+                          <q-btn flat round dense color="primary" icon="visibility" @click.stop="verEncuesta(enc)">
+                            <q-tooltip>Vista Previa</q-tooltip>
                           </q-btn>
                         </div>
                       </q-item-section>
@@ -234,15 +225,8 @@
                 </div>
 
                 <div class="mobile-actions">
-                  <q-btn
-                    unelevated
-                    color="primary"
-                    icon="add"
-                    class="mobile-only fab-button"
-                    round
-                    size="md"
-                    @click="nuevaEncuesta"
-                  >
+                  <q-btn unelevated color="primary" icon="add" class="mobile-only fab-button" round size="md"
+                    @click="nuevaEncuesta">
                     <q-tooltip>Nueva Encuesta</q-tooltip>
                   </q-btn>
                 </div>
@@ -280,11 +264,13 @@
     </div>
 
     <!-- Dialog crear encuesta -->
-    <EncuestaFormDialog
-      v-model="openEncuesta"
-      :proyecto-id="proyecto.id"
-      @save="onEncuestaSave"
-    />
+    <EncuestaFormDialog v-model="openEncuesta" :proyecto-id="proyecto.id" @save="onEncuestaSave" />
+
+    <!-- Dialog vista previa encuesta -->
+    <EncuestaPreview v-model="showEncuestaPreview" :encuesta-id="selectedEncuestaId" />
+
+    <!-- Dialog asignación de encuestadores -->
+    <EncuestaAsignacionDialog v-model="showAsignacionDialog" :encuesta-id="selectedEncuestaId" @refresh="loadEncuestas" @close="showAsignacionDialog = false" />
   </q-page>
 </template>
 
@@ -295,6 +281,30 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { useAuthStore } from 'src/stores/auth.store'
 import EncuestaFormDialog from 'components/encuestadores/EncuestaFormDialog.vue'
+import EncuestaPreview from 'components/encuestadores/EncuestaPreview.vue'
+import EncuestaAsignacionDialog from 'components/encuestadores/EncuestaAsignacionDialog.vue'
+
+const showEncuestaPreview = ref(false)
+const selectedEncuestaId = ref(null)
+const selectedEncuesta = ref(null)
+const showAsignacionDialog = ref(false)
+
+function verEncuesta(encuesta) {
+  selectedEncuesta.value = encuesta ?? null;
+  selectedEncuestaId.value = encuesta?.id ?? null;
+  showEncuestaPreview.value = !!selectedEncuestaId.value;
+}
+
+function editarEncuesta(encuestaId) {
+  console.log('Editando encuesta con ID:', encuestaId)
+  // Aquí implementa la lógica para editar la encuesta
+}
+
+function asignarEncuesta(encuesta) {
+  selectedEncuesta.value = encuesta ?? null;
+  selectedEncuestaId.value = encuesta?.id ?? null;
+  showAsignacionDialog.value = true;
+}
 
 // Obtener parámetros y servicios
 const route = useRoute()
@@ -687,7 +697,10 @@ function exportarDatos() {
   gap: 24px;
 }
 
-.proyecto-info-card, .tabs-card, .stat-card, .encuesta-item {
+.proyecto-info-card,
+.tabs-card,
+.stat-card,
+.encuesta-item {
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   overflow: hidden;
@@ -823,7 +836,8 @@ function exportarDatos() {
   }
 }
 
-.estado-concluido, .estado-finalizado {
+.estado-concluido,
+.estado-finalizado {
   .stat-card-value {
     color: #673ab7;
   }
@@ -868,7 +882,8 @@ function exportarDatos() {
 }
 
 /* Estado de carga y errores de página completa */
-.full-page-loader, .full-page-error {
+.full-page-loader,
+.full-page-error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1122,7 +1137,8 @@ function exportarDatos() {
 }
 
 /* Efectos de hover para mejorar la experiencia interactiva */
-.action-btn, .encuesta-actions .q-btn {
+.action-btn,
+.encuesta-actions .q-btn {
   transition: all 0.2s ease;
 
   &:hover {
