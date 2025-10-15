@@ -267,7 +267,7 @@ async function loadEncuestaData() {
   error.value = null
 
   try {
-    const response = await api.get(`/api/encuestas/${props.encuestaId}`)
+    const response = await api.get(`/encuestas/${props.encuestaId}`)
 
     // Asegurarse de que tenga la estructura correcta
     encuesta.value = {

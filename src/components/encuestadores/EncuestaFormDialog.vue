@@ -964,7 +964,7 @@ async function onSubmit() {
     console.log('Enviando encuesta:', payload)
 
     // Enviar a la API
-    const response = await api.post('/api/encuestas', payload)
+    const response = await api.post('/encuestas', payload)
     const data = response.data.data || response.data
 
     // Notificar éxito

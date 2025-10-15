@@ -751,14 +751,14 @@ export default {
       formData.append('_method', 'PUT')
 
       // Actualizar usuario existente
-      response = await api.post(`/api/usuarios/${props.editUser.id}`, formData, {
+      response = await api.post(`/usuarios/${props.editUser.id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       })
     } else {
       // Crear nuevo usuario
-      response = await api.post('/api/usuarios', formData, {
+      response = await api.post('/usuarios', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

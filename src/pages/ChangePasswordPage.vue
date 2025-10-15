@@ -129,7 +129,7 @@ async function checkAuthentication() {
     if (!auth.user) {
       try {
         console.log("Obteniendo info del usuario con token:", auth.token.substring(0, 10) + '...')
-        const { data } = await api.get('/api/auth/user')
+        const { data } = await api.get('/auth/user')
         const payload = data?.user ?? data
         console.log("Datos del usuario recibidos:", payload)
 
@@ -217,7 +217,7 @@ const onSubmit = async () => {
     }
 
     console.log('Enviando solicitud de cambio de contraseña...')
-    const response = await api.post('/api/auth/change-password', {
+    const response = await api.post('/auth/change-password', {
       current_password: form.value.currentPassword,
       password: form.value.newPassword,
       password_confirmation: form.value.confirmPassword,

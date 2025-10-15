@@ -249,7 +249,7 @@ async function onSubmit() {
     console.log('Enviando proyecto con datos:', payload)
 
     // Enviar solicitud a la API
-    const response = await api.post('/api/proyectos', payload)
+    const response = await api.post('/proyectos', payload)
     const data = response.data.data || response.data
 
     // Notificar éxito

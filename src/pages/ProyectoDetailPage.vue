@@ -363,7 +363,7 @@ async function loadProyecto() {
   const id = route.params.id
 
   try {
-    const response = await api.get(`/api/proyectos/${id}`)
+    const response = await api.get(`/proyectos/${id}`)
     proyecto.value = response.data
     return response.data
   } catch (err) {
@@ -375,7 +375,7 @@ async function loadProyecto() {
 // Cargar usuarios
 async function loadUsuarios() {
   try {
-    const response = await api.get('/api/usuarios')
+    const response = await api.get('/usuarios')
     if (response.data.data) {
       usuarios.value = response.data.data
     } else {
@@ -395,7 +395,7 @@ async function loadEncuestas() {
   loadingEncuestas.value = true
 
   try {
-    const response = await api.get('/api/encuestas', {
+    const response = await api.get('/encuestas', {
       params: {
         proyecto_id: proyecto.value.id
       }

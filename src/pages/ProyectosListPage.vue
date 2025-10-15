@@ -162,7 +162,7 @@ async function loadProyectos() {
 
   try {
     // Usar la ruta correcta de la API según tu controlador
-    const response = await api.get('/api/proyectos', {
+    const response = await api.get('/proyectos', {
       params: {
         // Agregar parámetros opcionales si es necesario
         per_page: 20 // Número de proyectos por página
@@ -270,7 +270,7 @@ async function verificarEstadosProyectos(proyectosData) {
 // Función para actualizar el estado de un proyecto en el servidor
 async function actualizarEstadoProyecto(id, nuevoEstado) {
   try {
-    const response = await api.put(`/api/proyectos/${id}`, {
+    const response = await api.put(`/proyectos/${id}`, {
       estado: nuevoEstado
     })
     return response.data
@@ -283,7 +283,7 @@ async function actualizarEstadoProyecto(id, nuevoEstado) {
 // Cargar usuarios (para obtener nombres de responsables)
 async function loadUsuarios() {
   try {
-    const response = await api.get('/api/usuarios')
+    const response = await api.get('/usuarios')
     if (response.data.data) {
       usuarios.value = response.data.data
     } else {

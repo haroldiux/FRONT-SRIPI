@@ -296,7 +296,7 @@ const editarObjetivo = (asignacion) => {
   }).onOk(async (nuevoObjetivo) => {
     try {
       // Implementación para actualizar el objetivo de asignación
-      const response = await api.put(`/api/asignaciones/${asignacion.id}`, {
+      const response = await api.put(`/asignaciones/${asignacion.id}`, {
         objetivo: parseInt(nuevoObjetivo)
       })
 
@@ -326,7 +326,7 @@ const editarObjetivo = (asignacion) => {
 
 const loadEncuesta = async () => {
   try {
-    const response = await api.get(`/api/encuestas/${props.encuestaId}`)
+    const response = await api.get(`/encuestas/${props.encuestaId}`)
     encuesta.value = response.data
   } catch (error) {
     console.error('Error al cargar encuesta:', error)
@@ -341,7 +341,7 @@ const loadEncuesta = async () => {
 const loadUsuarios = async () => {
   loadingUsers.value = true
   try {
-    const response = await api.get('/api/usuarios')
+    const response = await api.get('/usuarios')
     usuarios.value = response.data.data || response.data || []
   } catch (error) {
     console.error('Error al cargar usuarios:', error)
@@ -360,7 +360,7 @@ const loadAsignaciones = async () => {
 
   loadingAsignaciones.value = true
   try {
-    const response = await api.get('/api/asignaciones', {
+    const response = await api.get('/asignaciones', {
       params: {
         encuesta_id: props.encuestaId
       }
@@ -382,7 +382,7 @@ const assignUser = async (user, objetivoValue) => {
   if (!user || !props.encuestaId) return
 
   try {
-    const response = await api.post('/api/asignaciones', {
+    const response = await api.post('/asignaciones', {
       encuesta_id: props.encuestaId,
       usuario_id: user.id,
       objetivo: objetivoValue || 1 // Usar el valor proporcionado o 1 por defecto
@@ -416,7 +416,7 @@ const removeAsignacion = async (asignacion) => {
     persistent: true
   }).onOk(async () => {
     try {
-      await api.delete(`/api/asignaciones/${asignacion.id}`)
+      await api.delete(`/asignaciones/${asignacion.id}`)
 
       // Eliminar de la lista
       asignaciones.value = asignaciones.value.filter(a => a.id !== asignacion.id)

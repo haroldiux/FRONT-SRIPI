@@ -414,7 +414,7 @@ export default {
         const { page, rowsPerPage, sortBy, descending } = props.pagination || pagination.value
 
         // Obtener usuarios desde la API
-        const response = await api.get('/api/usuarios', {
+        const response = await api.get('/usuarios', {
           params: {
             page,
             perPage: rowsPerPage,
@@ -517,7 +517,7 @@ export default {
         console.log(`Cambiando estado del usuario ${user.id} (${user.usuario}) - Estado actual: ${user.estado}`)
 
         // Llamar a la API para cambiar el estado
-        const response = await api.post(`/api/usuarios/${user.id}/toggle-status`)
+        const response = await api.post(`/usuarios/${user.id}/toggle-status`)
 
         if (response.data && response.data.data) {
           console.log('Respuesta del servidor:', response.data)

@@ -76,10 +76,11 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Función login
+  // Función login - CORREGIDO URL
   async function login(credentials) {
     try {
-      const response = await api.post('/api/auth/login', credentials)
+      // Removido el /api al inicio de la ruta
+      const response = await api.post('/auth/login', credentials)
 
       // Verificar si el usuario está activo
       if (response.data.user.estado === 0 || response.data.user.estado === false) {
@@ -101,7 +102,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  // Función logout mejorada
+  // Función logout mejorada - CORREGIDO URL
   async function logout() {
     // Primero verificar si hay un token válido antes de intentar hacer logout en el servidor
     if (token.value) {
@@ -109,8 +110,8 @@ export const useAuthStore = defineStore('auth', () => {
         // Configurar el header de autorización antes de la petición
         api.defaults.headers.common['Authorization'] = `Bearer ${token.value}`;
 
-        // Intentar logout en el servidor
-        await api.post('/api/auth/logout');
+        // Intentar logout en el servidor - Removido el /api al inicio
+        await api.post('/auth/logout');
         console.log('Logout exitoso en el servidor');
       } catch (error) {
         // No es crítico si falla el logout en el servidor
