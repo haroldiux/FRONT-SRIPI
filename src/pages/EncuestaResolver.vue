@@ -59,7 +59,7 @@
             <q-separator />
 
             <!-- Contenido de la encuesta -->
-            <q-form ref="encuestaForm" @submit="guardarRespuestas">
+            <q-form ref="encuestaForm" @submit="confirmarEnvio">
               <!-- Secciones y preguntas -->
               <template v-for="(seccion, seccionIndex) in encuesta.secciones" :key="seccion.id">
                 <q-card-section :class="seccionIndex % 2 === 0 ? '' : 'bg-grey-1'" class="seccion-container">
@@ -145,31 +145,29 @@
                 <q-separator v-if="seccionIndex < encuesta.secciones.length - 1" />
               </template>
 
-              <!-- Sección de ubicación geográfica -->
-              <q-card-section class="bg-blue-1">
-                <div class="text-h6 q-mb-md">
+              <!-- Sección de ubicación geográfica mejorada -->
+              <q-card-section class="bg-blue-1 location-section">
+                <div class="text-h6 q-mb-sm">
                   <q-icon name="location_on" class="q-mr-xs" />
                   Ubicación
                 </div>
-                <p class="text-grey-8">Para completar la encuesta, es necesario registrar la ubicación actual.</p>
+                <p class="text-grey-8 q-mb-md">Para completar la encuesta, es necesario registrar la ubicación actual.</p>
 
-                <!-- Mostrar mapa con ubicación actual -->
-                <div class="q-mb-md">
+                <!-- Mapa con ubicación actual -->
+                <div class="map-container q-mb-md">
                   <div id="map" style="width: 100%; height: 300px; border-radius: 8px;" ref="mapContainer"></div>
                 </div>
 
-                <div class="row q-col-gutter-md">
-                  <div class="col-12 col-sm-6">
-                    <q-input outlined dense readonly v-model="coordenadas.lat" label="Latitud" />
-                  </div>
-                  <div class="col-12 col-sm-6">
-                    <q-input outlined dense readonly v-model="coordenadas.lng" label="Longitud" />
-                  </div>
-                </div>
-
+                <!-- Botón de calibrar ubicación -->
                 <div class="row justify-center q-mt-md">
-                  <q-btn color="primary" icon="gps_fixed" label="Calibrar ubicación" @click="obtenerUbicacionActual"
-                    :loading="cargandoUbicacion" />
+                  <q-btn
+                    color="primary"
+                    icon="gps_fixed"
+                    label="CALIBRAR UBICACIÓN"
+                    @click="obtenerUbicacionActual"
+                    :loading="cargandoUbicacion"
+                    class="calibrate-btn"
+                  />
                 </div>
               </q-card-section>
 
@@ -177,8 +175,20 @@
 
               <!-- Botones de acción -->
               <q-card-actions align="right" class="bg-grey-1 q-pa-md">
-                <q-btn label="Limpiar respuestas" outline color="grey-7" @click="limpiarRespuestas" class="q-mr-sm" />
-                <q-btn label="Guardar y enviar" type="submit" color="primary" :loading="guardando" />
+                <q-btn
+                  label="LIMPIAR RESPUESTAS"
+                  outline
+                  color="grey-7"
+                  @click="confirmarLimpiar"
+                  class="q-mr-sm"
+                />
+                <q-btn
+                  label="GUARDAR Y ENVIAR"
+                  type="submit"
+                  color="primary"
+                  :loading="guardando"
+                  :disable="!coordenadas.lat || !coordenadas.lng"
+                />
               </q-card-actions>
             </q-form>
           </q-card>
@@ -205,7 +215,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { api } from 'src/boot/axios'
 import { useQuasar, date } from 'quasar'
 import { useAuthStore } from 'src/stores/auth.store'
@@ -214,6 +224,7 @@ import 'leaflet/dist/leaflet.css'
 // Variables y constantes
 const $q = useQuasar()
 const route = useRoute()
+const router = useRouter()
 const auth = useAuthStore()
 
 // Referencias
@@ -242,6 +253,7 @@ const progreso = computed(() => {
 })
 
 // Cargar encuesta por ID
+// Modificar la función cargarEncuesta para no llamar a obtenerUbicacionActual automáticamente
 async function cargarEncuesta() {
   const encuestaId = route.params.id
   if (!encuestaId) {
@@ -274,7 +286,7 @@ async function cargarEncuesta() {
     // Cargar mapa después de que el DOM esté listo
     setTimeout(() => {
       inicializarMapa()
-      obtenerUbicacionActual()
+      // No llamamos a obtenerUbicacionActual() automáticamente
     }, 500)
 
   } catch (err) {
@@ -385,7 +397,7 @@ function obtenerUbicacionActual() {
 
     navigator.geolocation.getCurrentPosition(
       position => {
-        // Guardar coordenadas con máxima precisión (11 decimales)
+        // Guardar coordenadas (no visibles para el usuario pero necesarias para el envío)
         coordenadas.value = {
           lat: position.coords.latitude.toFixed(11),
           lng: position.coords.longitude.toFixed(11)
@@ -455,12 +467,19 @@ function actualizarMapa(lat, lng) {
   })
 }
 
-// Limpiar respuestas
-function limpiarRespuestas() {
+// Confirmar limpieza de respuestas
+function confirmarLimpiar() {
   $q.dialog({
-    title: '¿Limpiar respuestas?',
+    title: 'Limpiar respuestas',
     message: '¿Estás seguro de que deseas borrar todas las respuestas?',
-    cancel: true,
+    cancel: {
+      label: 'Cancelar',
+      flat: true
+    },
+    ok: {
+      label: 'Sí, limpiar todo',
+      color: 'negative'
+    },
     persistent: true
   }).onOk(() => {
     inicializarRespuestas()
@@ -469,6 +488,83 @@ function limpiarRespuestas() {
       message: 'Todas las respuestas han sido borradas',
       position: 'top'
     })
+  })
+}
+
+// Confirmar envío de respuestas
+function confirmarEnvio() {
+  // Verificar si se tiene ubicación
+  if (!coordenadas.value.lat || !coordenadas.value.lng) {
+    $q.notify({
+      type: 'negative',
+      message: 'Debe calibrar su ubicación antes de enviar la encuesta',
+      position: 'top'
+    })
+    return
+  }
+
+  // Confirmar envío
+  $q.dialog({
+    title: 'Confirmar envío',
+    message: '¿Está seguro que desea enviar esta encuesta?',
+    ok: {
+      label: 'Sí, enviar',
+      color: 'primary'
+    },
+    cancel: {
+      label: 'Cancelar',
+      flat: true
+    },
+    persistent: true
+  }).onOk(async () => {
+    try {
+      guardando.value = true
+
+      // Preparar datos para envío
+      const datos = prepararDatosParaEnvio()
+
+      // Enviar datos al servidor
+      await api.post('/envios', datos)
+
+      guardando.value = false
+
+      $q.notify({
+        type: 'positive',
+        message: 'Encuesta enviada correctamente',
+        position: 'top'
+      })
+
+      // Incrementar contador de envíos
+      totalEnvios.value++
+
+      // Redireccionar a la página de encuestas asignadas
+      router.push('/encuestadores')
+    } catch (err) {
+      guardando.value = false
+      console.error('Error al guardar respuestas:', err)
+
+      // Mostrar mensaje de error específico si viene del servidor
+      const mensaje = err.response?.data?.message || 'Error al enviar la encuesta'
+
+      $q.notify({
+        type: 'negative',
+        message: mensaje,
+        position: 'top'
+      })
+
+      // Si hay errores de validación específicos, mostrarlos
+      if (err.response?.data?.errors) {
+        const errors = err.response.data.errors
+        Object.keys(errors).forEach(key => {
+          $q.notify({
+            type: 'negative',
+            message: errors[key][0],
+            position: 'top',
+            timeout: 3000
+          })
+        })
+      }
+    }
   })
 }
 
@@ -530,79 +626,6 @@ function prepararDatosParaEnvio() {
   }
 }
 
-// Guardar respuestas
-async function guardarRespuestas() {
-  // Verificar si se tiene ubicación
-  if (!coordenadas.value.lat || !coordenadas.value.lng) {
-    $q.notify({
-      type: 'negative',
-      message: 'Debe calibrar su ubicación antes de enviar la encuesta',
-      position: 'top'
-    })
-    return
-  }
-
-  // Verificar si ya se completó el objetivo
-  if (totalEnvios.value >= objetivo.value) {
-    $q.dialog({
-      title: 'Objetivo completado',
-      message: `Ya has completado el objetivo de ${objetivo.value} encuestas. ¿Deseas enviar una adicional?`,
-      ok: 'Sí, enviar',
-      cancel: 'Cancelar',
-      persistent: true
-    }).onCancel(() => {
-      return
-    })
-  }
-
-  try {
-    guardando.value = true
-
-    // Preparar datos para envío
-    const datos = prepararDatosParaEnvio()
-
-    // Enviar datos al servidor
-    await api.post('/envios', datos)
-
-    guardando.value = false
-    completado.value = true
-
-    // Incrementar contador de envíos
-    totalEnvios.value++
-
-    $q.notify({
-      type: 'positive',
-      message: 'Encuesta enviada correctamente',
-      position: 'top'
-    })
-  } catch (err) {
-    guardando.value = false
-    console.error('Error al guardar respuestas:', err)
-
-    // Mostrar mensaje de error específico si viene del servidor
-    const mensaje = err.response?.data?.message || 'Error al enviar la encuesta'
-
-    $q.notify({
-      type: 'negative',
-      message: mensaje,
-      position: 'top'
-    })
-
-    // Si hay errores de validación específicos, mostrarlos
-    if (err.response?.data?.errors) {
-      const errors = err.response.data.errors
-      Object.keys(errors).forEach(key => {
-        $q.notify({
-          type: 'negative',
-          message: errors[key][0],
-          position: 'top',
-          timeout: 3000
-        })
-      })
-    }
-  }
-}
-
 // Funciones auxiliares
 function formatDate(dateStr) {
   if (!dateStr) return 'No especificada'
@@ -621,10 +644,12 @@ onMounted(() => {
   cargarEncuesta()
 })
 </script>
-<style scoped>
+
+<style lang="scss" scoped>
 .encuesta-card {
   border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .seccion-container {
@@ -638,5 +663,46 @@ onMounted(() => {
 
 .pregunta-container:last-child {
   border-bottom: none;
+}
+
+.location-section {
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.map-container {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.calibrate-btn {
+  width: 250px;
+  height: 48px;
+  border-radius: 24px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Ajustes para dispositivos móviles
+@media (max-width: 600px) {
+  .map-container {
+    height: 250px;
+  }
+
+  .calibrate-btn {
+    width: 100%;
+  }
 }
 </style>

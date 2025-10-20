@@ -57,27 +57,27 @@
           <q-item-section avatar>
             <q-icon name="dashboard" />
           </q-item-section>
-          <q_item-section>Dashboard</q_item-section>
+          <q-item-section>Dashboard</q-item-section>
         </q-item>
 
         <!-- GESTIÓN DE PROYECTOS - solo para admin y supervisor -->
         <template v-if="userIsAdmin() || userIsSupervisor()">
-          <q_item-label header class="text-uppercase text-grey-7">
+          <q-item-label header class="text-uppercase text-grey-7">
             GESTIÓN DE PROYECTOS
-          </q_item-label>
+          </q-item-label>
 
-          <q_item
+          <q-item
             clickable
             v-ripple
             :to="{ name: 'proyectos.list' }"
             :active="route.name?.includes('proyectos')"
             active-class="bg-blue-1 text-primary"
           >
-            <q_item-section avatar>
-              <q_icon name="folder" />
-            </q_item-section>
-            <q_item-section>Proyectos</q_item-section>
-          </q_item>
+            <q-item-section avatar>
+              <q-icon name="folder" />
+            </q-item-section>
+            <q-item-section>Proyectos</q-item-section>
+          </q-item>
         </template>
 
         <!-- ADMINISTRACIÓN - solo visible para administradores -->
