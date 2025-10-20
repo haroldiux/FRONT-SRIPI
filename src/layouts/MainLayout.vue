@@ -1,7 +1,7 @@
 <!-- MainLayout.vue -->
 <template>
   <q-layout view="hHh lpR fFf">
-    <!-- Header simple pero efectivo -->
+    <!-- Header simple -->
     <q-header elevated class="bg-primary">
       <q-toolbar>
         <q-btn
@@ -9,152 +9,114 @@
           dense
           round
           icon="menu"
-          aria-label="Menu"
-          @click="left = !left"
+          aria-label="Menú"
+          @click="drawer = !drawer"
         />
 
-        <q-toolbar-title class="row items-center">
-          <span>Sistema de Encuestas</span>
+        <q-toolbar-title>
+          Sistema de Encuestas
         </q-toolbar-title>
 
-        <!-- Dropdown de usuario -->
-        <q-btn-dropdown
-          v-if="auth.isAuth && auth.user"
-          flat
-          no-caps
-          dense
-          :label="auth.user ? `${auth.user.nombres} ${auth.user.apellidos}` : 'Usuario'"
-          icon="account-circle"
-        >
-          <q-list>
-            <q-item clickable v-close-popup @click="goToProfile">
-              <q-item-section avatar>
-                <q-icon name="person" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>Mi Perfil</q-item-label>
-              </q-item-section>
-            </q-item>
-
-            <q-separator />
-
-            <q-item clickable v-close-popup @click="logout">
-              <q-item-section avatar>
-                <q-icon name="logout" color="negative" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label>Cerrar Sesión</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-btn-dropdown>
+        <!-- Botón de logout simple -->
+        <q-btn flat round icon="logout" @click="logout" />
       </q-toolbar>
     </q-header>
 
-    <!-- Drawer -->
+    <!-- Drawer lateral -->
     <q-drawer
-      v-model="left"
+      v-model="drawer"
       show-if-above
       bordered
-      content-class="bg-white"
       :width="250"
       v-if="auth.isAuth"
     >
-      <!-- Logo simplificado -->
-      <div class="q-pa-md flex items-center">
-        <div class="text-primary text-h6 text-weight-bold">
-          <q-avatar color="primary" text-color="white" class="q-mr-md">
-            <span>SE</span>
+      <!-- Información del usuario que cambia según quien inicia sesión -->
+      <q-item class="q-py-md bg-grey-2">
+        <q-item-section avatar>
+          <q-avatar color="primary" text-color="white">
+            {{ getUserInitials(auth.user) }}
           </q-avatar>
-          Sistema
-        </div>
-      </div>
+        </q-item-section>
+        <q-item-section>
+          <q-item-label>{{ getUserName() }}</q-item-label>
+        </q-item-section>
+      </q-item>
 
       <q-separator />
 
-      <!-- Menú -->
-      <q-list>
+      <!-- Menú navegación -->
+      <q-list padding>
+        <!-- Dashboard para todos -->
         <q-item
           clickable
           v-ripple
           :to="{ name: 'dashboard' }"
           :active="route.name === 'dashboard'"
-          active-class="bg-primary text-white"
+          active-class="bg-blue-1 text-primary"
         >
           <q-item-section avatar>
             <q-icon name="dashboard" />
           </q-item-section>
-          <q-item-section>
-            <q-item-label>Dashboard</q-item-label>
-          </q-item-section>
+          <q_item-section>Dashboard</q_item-section>
         </q-item>
 
-        <q-item
-          clickable
-          v-ripple
-          :to="{ name: 'proyectos.list' }"
-          :active="route.name?.includes('proyectos')"
-          active-class="bg-primary text-white"
-        >
-          <q-item-section avatar>
-            <q-icon name="folder" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Proyectos</q-item-label>
-          </q-item-section>
-        </q-item>
+        <!-- GESTIÓN DE PROYECTOS - solo para admin y supervisor -->
+        <template v-if="userIsAdmin() || userIsSupervisor()">
+          <q_item-label header class="text-uppercase text-grey-7">
+            GESTIÓN DE PROYECTOS
+          </q_item-label>
 
-        <q-item
-          clickable
-          v-ripple
-          :to="{ name: 'proyectos.new' }"
-          active-class="bg-primary text-white"
-        >
-          <q-item-section avatar>
-            <q-icon name="add-circle" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Nuevo Proyecto</q-item-label>
-          </q-item-section>
-        </q-item>
+          <q_item
+            clickable
+            v-ripple
+            :to="{ name: 'proyectos.list' }"
+            :active="route.name?.includes('proyectos')"
+            active-class="bg-blue-1 text-primary"
+          >
+            <q_item-section avatar>
+              <q_icon name="folder" />
+            </q_item-section>
+            <q_item-section>Proyectos</q_item-section>
+          </q_item>
+        </template>
 
-        <q-item
-          clickable
-          v-ripple
-          :to="{ name: 'usuarios.list' }"
-          :active="route.name?.includes('usuarios')"
-          active-class="bg-primary text-white"
-          v-if="hasPermission(['admin', 'supervisor'])"
-        >
-          <q-item-section avatar>
-            <q-icon name="people" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Usuarios</q-item-label>
-          </q-item-section>
-        </q-item>
+        <!-- ADMINISTRACIÓN - solo visible para administradores -->
+        <template v-if="userIsAdmin() || userIsSupervisor()">
+          <q-item-label header class="text-uppercase text-grey-7">
+            ADMINISTRACIÓN
+          </q-item-label>
 
-        <!-- Sección de Encuestadores (actualizada) -->
-        <q-expansion-item
-          v-if="hasPermission(['encuestador'])"
-          :value="route.name?.includes('encuestadores')"
-          icon="assignment"
-          label="Mis Encuestas"
-          header-class="text-weight-bold"
-        >
+          <q-item
+            clickable
+            v-ripple
+            :to="{ name: 'usuarios.list' }"
+            :active="route.name?.includes('usuarios')"
+            active-class="bg-blue-1 text-primary"
+          >
+            <q-item-section avatar>
+              <q-icon name="people" />
+            </q-item-section>
+            <q-item-section>Usuarios</q-item-section>
+          </q-item>
+        </template>
+
+        <!-- MIS ENCUESTAS - solo visible para encuestadores -->
+        <template v-if="userIsEncuestador()">
+          <q-item-label header class="text-uppercase text-grey-7">
+            MIS ENCUESTAS
+          </q-item-label>
+
           <q-item
             clickable
             v-ripple
             :to="{ name: 'encuestadores.list' }"
             :active="route.name === 'encuestadores.list'"
-            active-class="bg-primary text-white"
+            active-class="bg-blue-1 text-primary"
           >
             <q-item-section avatar>
               <q-icon name="assignment" />
             </q-item-section>
-            <q-item-section>
-              <q-item-label>Encuestas Asignadas</q-item-label>
-            </q-item-section>
+            <q-item-section>Encuestas Asignadas</q-item-section>
           </q-item>
 
           <q-item
@@ -162,74 +124,34 @@
             v-ripple
             :to="{ name: 'encuestadores.envios' }"
             :active="route.name === 'encuestadores.envios'"
-            active-class="bg-primary text-white"
+            active-class="bg-blue-1 text-primary"
           >
             <q-item-section avatar>
               <q-icon name="history" />
             </q-item-section>
-            <q-item-section>
-              <q-item-label>Historial de Envíos</q-item-label>
-            </q-item-section>
+            <q-item-section>Historial de Envíos</q-item-section>
           </q-item>
-        </q-expansion-item>
-
-        <!-- Para administradores y supervisores -->
-        <q-item
-          clickable
-          v-ripple
-          :to="{ name: 'encuestadores.list' }"
-          :active="route.name?.includes('encuestadores')"
-          active-class="bg-primary text-white"
-          v-if="hasPermission(['admin', 'supervisor'])"
-        >
-          <q-item-section avatar>
-            <q-icon name="badge" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Encuestadores</q-item-label>
-          </q-item-section>
-        </q-item>
-
-        <q-separator v-if="hasPermission(['admin'])" />
-
-        <q-item
-          clickable
-          v-ripple
-          v-if="hasPermission(['admin'])"
-        >
-          <q-item-section avatar>
-            <q-icon name="settings" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Configuración</q-item-label>
-          </q-item-section>
-        </q-item>
+        </template>
       </q-list>
-
-      <!-- Información del usuario -->
-      <div class="absolute-bottom q-pa-md" v-if="auth.user">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar color="primary" text-color="white">
-              <span>{{ getUserInitials }}</span>
-            </q-avatar>
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>{{ auth.user ? `${auth.user.nombres} ${auth.user.apellidos}` : 'Usuario' }}</q-item-label>
-            <q-item-label caption>{{ auth.user ? auth.user.usuario : '' }}</q-item-label>
-          </q-item-section>
-        </q-item>
-      </div>
     </q-drawer>
 
+    <!-- Contenido principal -->
     <q-page-container>
+      <div v-if="showWelcomeMessage" class="welcome-message">
+        <q-banner class="bg-green text-white" rounded>
+          <template v-slot:avatar>
+            <q-icon name="check_circle" />
+          </template>
+          Bienvenido, {{ getUserName() }}
+        </q-banner>
+      </div>
       <router-view />
     </q-page-container>
   </q-layout>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'src/stores/auth.store'
@@ -240,85 +162,136 @@ const $q = useQuasar()
 const auth = useAuthStore()
 const setupActivityMonitor = inject('setupActivityMonitor', null)
 
-// Estado del drawer
-const left = ref(false)
+// Estado
+const drawer = ref(false)
+const showWelcomeMessage = ref(false)
 
-// Obtener iniciales del usuario para el avatar
-const getUserInitials = computed(() => {
-  if (!auth.user || !auth.user.nombres || !auth.user.apellidos) return '?'
+// Obtener iniciales del usuario basado en su nombre
+function getUserInitials(user) {
+  if (!user) return '';
 
-  const firstNameInitial = auth.user.nombres.charAt(0)
-  const lastNameInitial = auth.user.apellidos.charAt(0)
+  // Si existe nombres, obtener la primera letra
+  let initials = '';
 
-  return `${firstNameInitial}${lastNameInitial}`
-})
+  if (user.nombres) {
+    const nombresArray = user.nombres.split(' ');
+    initials += nombresArray[0].charAt(0);
 
-// Verificar si el usuario tiene un rol específico
-function hasPermission(roles) {
-  if (!Array.isArray(roles)) {
-    roles = [roles]
+    // Si hay apellidos, añadir la primera letra del primer apellido
+    if (user.apellidos) {
+      const apellidosArray = user.apellidos.split(' ');
+      initials += apellidosArray[0].charAt(0);
+    }
+  } else if (user.usuario) {
+    // Alternativa si no hay nombres
+    initials = user.usuario.substring(0, 2).toUpperCase();
   }
 
-  // Mapeo de roles por ID
-  const roleMap = {
-    1: 'admin',
-    2: 'supervisor',
-    3: 'encuestador'
-  }
-
-  // Obtener el rol del usuario
-  const userRole = auth.user && auth.user.rol_id ? roleMap[auth.user.rol_id] : null
-
-  // Verificar si el usuario tiene alguno de los roles permitidos
-  return roles.includes(userRole)
+  return initials || 'U';
 }
 
-// Ir al perfil del usuario
-function goToProfile() {
-  $q.notify({
-    type: 'info',
-    message: 'Función de perfil en desarrollo',
-    position: 'top'
-  })
+// Obtener nombre del usuario para mostrar
+function getUserName() {
+  if (!auth.user) return '';
+
+  if (auth.user.nombres) {
+    return auth.user.nombres;
+  }
+
+  // Si no hay nombres, usar el usuario
+  return auth.user.usuario || 'Usuario';
+}
+
+// Verificar si el usuario es administrador
+function userIsAdmin() {
+  return auth.user && auth.user.rol_id === 1;
+}
+
+// Verificar si el usuario es responsable/supervisor
+function userIsSupervisor() {
+  return auth.user && auth.user.rol_id === 2;
+}
+
+// Verificar si el usuario es encuestador
+function userIsEncuestador() {
+  return auth.user && auth.user.rol_id === 3;
 }
 
 // Cerrar sesión
 function logout() {
   $q.dialog({
     title: 'Cerrar Sesión',
-    message: '¿Está seguro que desea cerrar sesión?',
-    cancel: true,
-    persistent: true
+    message: '¿Está seguro que desea salir?',
+    persistent: true,
+    ok: {
+      label: 'Salir',
+      color: 'negative',
+      flat: false
+    },
+    cancel: {
+      label: 'Cancelar',
+      flat: true
+    }
   }).onOk(async () => {
     try {
       await auth.logout()
       router.push('/login')
     } catch (error) {
       console.error('Error al cerrar sesión:', error)
-      // En caso de error, forzar redirección manual
-      window.location.href = '/login?logout=error'
+      window.location.href = '/login'
     }
   })
 }
 
-// Configurar el monitor de actividad al montar el componente
+// Inicialización
 onMounted(() => {
   if (setupActivityMonitor) {
     setupActivityMonitor()
   }
+
+  // Mostrar mensaje de bienvenida por 3 segundos
+  showWelcomeMessage.value = true
+  setTimeout(() => {
+    showWelcomeMessage.value = false
+  }, 3000)
+
+  // Cerrar drawer en dispositivos móviles después de navegar
+  if (window.innerWidth < 768) {
+    router.afterEach(() => {
+      drawer.value = false
+    })
+  }
 })
 </script>
 
-<style lang="scss" scoped>
-// Estilos básicos
-.q-item.active-item {
-  background-color: #1976d2;
-  color: white;
+<style>
+.bg-blue-1 {
+  background-color: rgba(25, 118, 210, 0.1);
 }
 
-.q-drawer {
-  .q-item:hover {
-    background-color: rgba(0,0,0,0.03);
+.q-drawer .q-item {
+  min-height: 48px;
+}
+
+.q-item-label.header {
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  padding: 8px 16px 4px;
+  color: #757575;
+}
+
+.welcome-message {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 2000;
+  max-width: 300px;
+}
+
+/* Mejora para dispositivos táctiles */
+@media (max-width: 768px) {
+  .q-drawer .q-item {
+    min-height: 54px;
   }
 }
 </style>
