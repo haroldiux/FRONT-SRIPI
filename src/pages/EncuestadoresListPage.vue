@@ -7,14 +7,7 @@
           <p class="text-subtitle1 q-mb-none">Aquí encontrarás todas las encuestas que debes completar</p>
         </div>
         <div class="col-12 col-md-4 q-pt-sm q-pt-md-none">
-          <q-input
-            v-model="filter"
-            outlined
-            dense
-            clearable
-            placeholder="Buscar encuestas"
-            class="full-width"
-          >
+          <q-input v-model="filter" outlined dense clearable placeholder="Buscar encuestas" class="full-width">
             <template v-slot:append>
               <q-icon name="search" />
             </template>
@@ -76,40 +69,15 @@
       <!-- Filtros adicionales -->
       <div class="row items-center q-mb-md">
         <div class="col-12 col-md-auto q-mb-sm q-mb-md-none">
-          <q-select
-            v-model="filtroEstado"
-            :options="opcionesEstado"
-            outlined
-            dense
-            label="Estado"
-            emit-value
-            map-options
-            clearable
-            class="q-mr-sm"
-            style="min-width: 150px"
-          />
+          <q-select v-model="filtroEstado" :options="opcionesEstado" outlined dense label="Estado" emit-value
+            map-options clearable class="q-mr-sm" style="min-width: 150px" />
         </div>
         <div class="col-12 col-md-auto">
-          <q-select
-            v-model="ordenarPor"
-            :options="opcionesOrden"
-            outlined
-            dense
-            label="Ordenar por"
-            emit-value
-            map-options
-            class="q-mr-sm"
-            style="min-width: 200px"
-          />
+          <q-select v-model="ordenarPor" :options="opcionesOrden" outlined dense label="Ordenar por" emit-value
+            map-options class="q-mr-sm" style="min-width: 200px" />
         </div>
         <div class="col-12 col-md-grow q-mt-sm q-mt-md-none text-right">
-          <q-btn
-            color="primary"
-            icon="refresh"
-            label="Actualizar"
-            @click="cargarAsignaciones"
-            :loading="cargando"
-          />
+          <q-btn color="primary" icon="refresh" label="Actualizar" @click="cargarAsignaciones" :loading="cargando" />
         </div>
       </div>
 
@@ -135,15 +103,8 @@
                 <div class="col-12 col-md-4">
                   <div class="text-h6 text-primary">{{ asignacion.encuesta.titulo }}</div>
                   <div class="text-subtitle2">
-                    <q-chip
-                      v-if="asignacion.encuesta.proyecto"
-                      dense
-                      outline
-                      color="secondary"
-                      text-color="secondary"
-                      icon="folder"
-                      class="q-mr-xs"
-                    >
+                    <q-chip v-if="asignacion.encuesta.proyecto" dense outline color="secondary" text-color="secondary"
+                      icon="folder" class="q-mr-xs">
                       {{ asignacion.encuesta.proyecto.titulo }}
                     </q-chip>
                   </div>
@@ -154,23 +115,13 @@
                   <div class="row items-center">
                     <div class="col-7">
                       <div class="text-subtitle2 q-mb-xs">Progreso:</div>
-                      <q-linear-progress
-                        :value="getProgreso(asignacion)"
-                        :color="getProgresoColor(asignacion)"
-                        size="md"
-                        rounded
-                      />
+                      <q-linear-progress :value="getProgreso(asignacion)" :color="getProgresoColor(asignacion)"
+                        size="md" rounded />
                     </div>
                     <div class="col-5 text-center">
-                      <q-circular-progress
-                        :value="getProgreso(asignacion) * 100"
-                        size="60px"
-                        :color="getProgresoColor(asignacion)"
-                        class="q-ma-md"
-                        show-value
-                        font-size="12px"
-                        track-color="grey-3"
-                      >
+                      <q-circular-progress :value="getProgreso(asignacion) * 100" size="60px"
+                        :color="getProgresoColor(asignacion)" class="q-ma-md" show-value font-size="12px"
+                        track-color="grey-3">
                         {{ Math.round(getProgreso(asignacion) * 100) }}%
                       </q-circular-progress>
                     </div>
@@ -185,22 +136,14 @@
                 <div class="col-12 col-md-4 text-right">
                   <div class="row items-center justify-end">
                     <div class="col-12 col-md-auto">
-                      <q-badge
-                        :color="getEstadoColor(asignacion)"
-                        class="q-py-xs q-px-sm"
-                        rounded
-                      >
+                      <q-badge :color="getEstadoColor(asignacion)" class="q-py-xs q-px-sm" rounded>
                         {{ getEstadoTexto(asignacion) }}
                       </q-badge>
                     </div>
                     <div class="col-12 col-md-auto q-mt-sm q-mt-md-none q-ml-md">
-                      <q-btn
-                        color="primary"
-                        icon="add_task"
-                        label="Realizar encuesta"
-                        :to="`/encuestadores/encuestar/${asignacion.encuesta.id}`"
-                        :disable="!asignacion.estado"
-                      />
+                      <q-btn color="primary" icon="add_task" label="Realizar encuesta"
+                        :to="`/encuestadores/encuestar/${asignacion.encuesta.id}`" :disable="!asignacion.estado" />
+                      <q-btn color="secondary" icon="history" label="Ver mis envíos" to="/encuestadores/envios" flat />
                     </div>
                   </div>
                 </div>
@@ -209,13 +152,8 @@
 
             <!-- Detalles adicionales (expandible) -->
             <q-separator />
-            <q-expansion-item
-              icon="info"
-              label="Ver detalles"
-              caption="Más información sobre esta encuesta"
-              header-class="text-primary"
-              expand-icon-class="text-primary"
-            >
+            <q-expansion-item icon="info" label="Ver detalles" caption="Más información sobre esta encuesta"
+              header-class="text-primary" expand-icon-class="text-primary">
               <q-card>
                 <q-card-section>
                   <div class="row q-col-gutter-md">
@@ -257,13 +195,7 @@
                         <q-item-label caption>{{ formatDateTime(envio.created_at) }}</q-item-label>
                       </q-item-section>
                       <q-item-section side>
-                        <q-btn
-                          flat
-                          round
-                          icon="visibility"
-                          color="primary"
-                          :to="`/encuestadores/envio/${envio.id}`"
-                        />
+                        <q-btn flat round icon="visibility" color="primary" :to="`/encuestadores/envio/${envio.id}`" />
                       </q-item-section>
                     </q-item>
                   </q-list>
@@ -281,13 +213,8 @@
 
       <!-- Paginación -->
       <div class="row justify-center q-mt-lg" v-if="totalPages > 1">
-        <q-pagination
-          v-model="currentPage"
-          :max="totalPages"
-          direction-links
-          boundary-links
-          @update:model-value="cargarAsignaciones"
-        />
+        <q-pagination v-model="currentPage" :max="totalPages" direction-links boundary-links
+          @update:model-value="cargarAsignaciones" />
       </div>
     </div>
   </q-page>
@@ -580,6 +507,7 @@ export default defineComponent({
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

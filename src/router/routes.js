@@ -1,10 +1,9 @@
-// routes.js - SOLUCIÓN DE EMERGENCIA PARA BUCLE INFINITO
+// routes.js
 const routes = [
   // RUTAS PRINCIPALES
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    // QUITAR EL BEFOREENTER PARA EVITAR REDIRECCIONES INFINITAS
     children: [
       {
         path: '',
@@ -35,20 +34,37 @@ const routes = [
         path: 'usuarios',
         name: 'usuarios.list',
         component: () => import('pages/ListaUsuarioPage.vue'),
+      },
+
+      // Nuevas rutas para el sistema de encuestas
+      {
+        path: 'encuestadores/encuestar/:id',
+        name: 'encuestadores.encuestar',
+        component: () => import('pages/EncuestaResolver.vue'),
+      },
+      {
+        path: 'encuestadores/envios',
+        name: 'encuestadores.envios',
+        component: () => import('pages/EnviosListPage.vue'),
+      },
+      {
+        path: 'encuestadores/envio/:id',
+        name: 'encuestadores.envio.detalle',
+        component: () => import('pages/EnvioDetailPage.vue'),
       }
     ],
   },
 
   // Ruta de login
   {
-    path: '/login',  // Esto es correcto, siempre debe comenzar con /
+    path: '/login',
     component: () => import('layouts/AuthLayout.vue'),
     children: [
       {
-        path: '',  // Ruta vacía para indicar la ruta padre
+        path: '',
         name: 'login-page',
         component: () => import('pages/LoginPage.vue'),
-        meta: { guest: true },          // <- importante
+        meta: { guest: true },
       }
     ]
   },
@@ -56,17 +72,16 @@ const routes = [
   // Redirección
   {
     path: '/:catchAll(.*)*',
-    redirect: '/login'  // Esto es correcto
+    redirect: '/login'
   },
 
-  // CAMBIO DE CONTRASEÑA - SIMPLIFICADO SIN REDIRECTS
+  // CAMBIO DE CONTRASEÑA
   {
     path: '/change-password',
     name: 'change-password',
     component: () => import('pages/ChangePasswordPage.vue'),
-    meta: { guest: true },          // <- importante
+    meta: { guest: true },
   },
-
 ]
 
 export default routes

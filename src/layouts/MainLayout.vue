@@ -24,7 +24,7 @@
           no-caps
           dense
           :label="auth.user ? `${auth.user.nombres} ${auth.user.apellidos}` : 'Usuario'"
-          icon="account_circle"
+          icon="account-circle"
         >
           <q-list>
             <q-item clickable v-close-popup @click="goToProfile">
@@ -111,7 +111,7 @@
           active-class="bg-primary text-white"
         >
           <q-item-section avatar>
-            <q-icon name="add_circle" />
+            <q-icon name="add-circle" />
           </q-item-section>
           <q-item-section>
             <q-item-label>Nuevo Proyecto</q-item-label>
@@ -134,12 +134,53 @@
           </q-item-section>
         </q-item>
 
+        <!-- Sección de Encuestadores (actualizada) -->
+        <q-expansion-item
+          v-if="hasPermission(['encuestador'])"
+          :value="route.name?.includes('encuestadores')"
+          icon="assignment"
+          label="Mis Encuestas"
+          header-class="text-weight-bold"
+        >
+          <q-item
+            clickable
+            v-ripple
+            :to="{ name: 'encuestadores.list' }"
+            :active="route.name === 'encuestadores.list'"
+            active-class="bg-primary text-white"
+          >
+            <q-item-section avatar>
+              <q-icon name="assignment" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Encuestas Asignadas</q-item-label>
+            </q-item-section>
+          </q-item>
+
+          <q-item
+            clickable
+            v-ripple
+            :to="{ name: 'encuestadores.envios' }"
+            :active="route.name === 'encuestadores.envios'"
+            active-class="bg-primary text-white"
+          >
+            <q-item-section avatar>
+              <q-icon name="history" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label>Historial de Envíos</q-item-label>
+            </q-item-section>
+          </q-item>
+        </q-expansion-item>
+
+        <!-- Para administradores y supervisores -->
         <q-item
           clickable
           v-ripple
           :to="{ name: 'encuestadores.list' }"
           :active="route.name?.includes('encuestadores')"
           active-class="bg-primary text-white"
+          v-if="hasPermission(['admin', 'supervisor'])"
         >
           <q-item-section avatar>
             <q-icon name="badge" />
