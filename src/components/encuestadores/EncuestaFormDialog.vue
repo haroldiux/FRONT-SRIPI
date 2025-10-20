@@ -329,8 +329,8 @@
                           </div>
                           <q-slider
                             v-model="preg.previewValue"
-                            :min="preg.min"
-                            :max="preg.max"
+                            :min="preg.min || 0"
+                            :max="preg.max || 10"
                             color="purple-6"
                             markers
                             label
@@ -751,31 +751,35 @@ function typeChanged(sectionIndex, questionIndex, value) {
       { id: uid(), texto: 'Opción 1', valor: null },
       { id: uid(), texto: 'Opción 2', valor: null }
     ]
-    delete question.min
-    delete question.max
+    // Borrar propiedades de escala si existían
+    question.min = null
+    question.max = null
 
     // Valor por defecto según tipo
     question.previewValue = value === 'single' ? null : []
   }
   else if (value === 'scale') {
-    // Inicializar escala
+    // Inicializar escala con valores por defecto
     question.min = 0
     question.max = 10
-    delete question.opciones
+    // Borrar opciones si existían
+    question.opciones = []
 
     // Valor por defecto para escala
     question.previewValue = question.min
   }
   else {
     // Limpiar opciones/escala para otros tipos
-    delete question.opciones
-    delete question.min
-    delete question.max
+    question.opciones = []
+    question.min = null
+    question.max = null
 
     // Valor por defecto según tipo
     question.previewValue = value === 'number' ? 0 : ''
   }
 }
+
+
 
 // FUNCIONES PARA OPCIONES
 function addOpcion(sectionIndex, questionIndex) {
@@ -910,19 +914,21 @@ function buildEncuestaPayload() {
     fechaInicio: toISODateFromDMY(formData.value.fechaInicio),
     fechaFinal: toISODateFromDMY(formData.value.fechaFinal),
     activa: !!formData.value.activa,
-    secciones: formData.value.secciones.map(seccion => ({
+    secciones: formData.value.secciones.map((seccion, secIndex) => ({
       titulo: seccion.titulo.trim(),
-      preguntas: seccion.preguntas.map((pregunta, index) => ({
+      orden: secIndex + 1, // Agregar orden explícito para secciones
+      preguntas: seccion.preguntas.map((pregunta, pregIndex) => ({
         enunciado: pregunta.enunciado.trim(),
         tipo: mapTipoToBackend(pregunta.tipo),
         obligatoria: !!pregunta.obligatoria,
-        orden: index + 1,
+        orden: pregIndex + 1, // Asignar orden basado en el índice
         min: pregunta.tipo === 'scale' ? pregunta.min : null,
         max: pregunta.tipo === 'scale' ? pregunta.max : null,
         opciones: ['single', 'multi'].includes(pregunta.tipo)
-          ? pregunta.opciones.map(opcion => ({
+          ? pregunta.opciones.map((opcion, optIndex) => ({
               texto: opcion.texto.trim(),
-              valor: opcion.valor
+              valor: opcion.valor,
+              orden: optIndex + 1 // Asignar orden para opciones
             }))
           : []
       }))

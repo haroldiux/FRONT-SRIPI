@@ -59,8 +59,8 @@
             <div class="project-info">
               <div class="info-item">
                 <q-icon name="event" size="18px" color="grey-7" />
-                <span class="info-label">Fecha de creación:</span>
-                <span class="info-value">{{ formatFecha(proyecto.created_at) }}</span>
+                <span class="info-label">Fecha de inicio:</span>
+                <span class="info-value">{{ formatFecha(proyecto.fecha_inicio) }}</span>
               </div>
 
               <div class="info-item" v-if="proyecto.fecha_fin">
@@ -298,29 +298,37 @@ async function loadUsuarios() {
 
 // Formatear fecha directamente desde el formato de la base de datos
 function formatFecha(dateString) {
-  if (!dateString) return ''
+  if (!dateString) return '';
 
   try {
     // Extraer la fecha en formato YYYY-MM-DD directamente
     if (typeof dateString === 'string') {
       // Si la fecha viene en formato ISO con hora (YYYY-MM-DDThh:mm:ss)
       if (dateString.includes('T')) {
-        const partes = dateString.split('T')[0].split('-')
-        return `${partes[2]}/${partes[1]}/${partes[0]}`
+        const partes = dateString.split('T')[0].split('-');
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
       }
       // Si la fecha viene en formato simple YYYY-MM-DD
       else if (dateString.includes('-')) {
-        const partes = dateString.split('-')
-        return `${partes[2]}/${partes[1]}/${partes[0]}`
+        const partes = dateString.split('-');
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
       }
       // Si ya viene formateada, devolverla tal cual
-      return dateString
+      return dateString;
     }
 
-    return dateString
+    // Si es un objeto Date
+    if (dateString instanceof Date) {
+      const day = String(dateString.getDate()).padStart(2, '0');
+      const month = String(dateString.getMonth() + 1).padStart(2, '0');
+      const year = dateString.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    return dateString;
   } catch (error) {
-    console.error('Error al formatear fecha:', error)
-    return dateString
+    console.error('Error al formatear fecha:', error);
+    return dateString || '';
   }
 }
 

@@ -138,13 +138,13 @@
                       <!-- Escala -->
                       <div v-else-if="pregunta.tipo === 'scale'" class="q-mt-md">
                         <div class="row justify-between q-mb-xs">
-                          <div class="text-caption">{{ pregunta.min }}</div>
-                          <div class="text-caption">{{ pregunta.max }}</div>
+                          <div class="text-caption">{{ pregunta.min || 0 }}</div>
+                          <div class="text-caption">{{ pregunta.max || 10 }}</div>
                         </div>
                         <q-slider
                           v-model="respuestas[getQuestionKey(i, pregIndex)]"
-                          :min="pregunta.min"
-                          :max="pregunta.max"
+                          :min="pregunta.min || 0"
+                          :max="pregunta.max || 10"
                           :step="1"
                           label
                           markers
