@@ -3,20 +3,20 @@
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
     persistent
-    transition-show="scale"
-    transition-hide="scale"
+    transition-show="fade"
+    transition-hide="fade"
   >
-    <q-card class="proyecto-dialog">
+    <q-card class="proyecto-dialog" data-aos="zoom-in" data-aos-duration="400">
       <div class="dialog-header">
         <div class="text-h6">Crear Nuevo Proyecto</div>
-        <q-btn icon="close" flat round dense v-close-popup @click="$emit('cancel')" />
+        <q-btn icon="close" flat round dense v-close-popup @click="$emit('cancel')" class="close-button" />
       </div>
 
       <q-separator />
 
       <q-form ref="formRef" @submit="onSubmit" class="form-container">
         <!-- Título -->
-        <div class="form-field">
+        <div class="form-field" data-aos="fade-up" data-aos-delay="100">
           <label class="field-label">Título del Proyecto <span class="required">*</span></label>
           <q-input
             v-model="form.titulo"
@@ -29,7 +29,7 @@
         </div>
 
         <!-- Descripción -->
-        <div class="form-field">
+        <div class="form-field" data-aos="fade-up" data-aos-delay="150">
           <label class="field-label">Descripción</label>
           <q-input
             v-model="form.descripcion"
@@ -43,17 +43,17 @@
         </div>
 
         <!-- Responsable (no editable) -->
-        <div class="form-field">
+        <div class="form-field" data-aos="fade-up" data-aos-delay="200">
           <label class="field-label">Responsable</label>
           <div class="responsable-field">
-            <q-icon name="person" size="20px" color="primary" class="q-mr-sm" />
+            <q-icon name="person" size="20px" class="responsable-icon q-mr-sm" />
             <span class="responsable-nombre">{{ nombreUsuarioActual }}</span>
-            <span class="asignado-badge"></span>
+            <span class="asignado-badge">Asignado</span>
           </div>
         </div>
 
         <!-- Fechas en fila -->
-        <div class="row q-col-gutter-md">
+        <div class="row q-col-gutter-md" data-aos="fade-up" data-aos-delay="250">
           <!-- Fecha de Inicio -->
           <div class="col-12 col-sm-6">
             <div class="form-field">
@@ -63,16 +63,17 @@
                 outlined
                 dense
                 :rules="[val => !!val || 'La fecha de inicio es requerida']"
-                class="full-width"
+                class="full-width date-input"
               >
                 <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
+                  <q-icon name="event" class="cursor-pointer date-icon">
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                       <q-date
                         v-model="form.fecha_inicio"
                         mask="YYYY-MM-DD"
                         today-btn
                         :options="fechaOptions"
+                        class="custom-date-picker"
                       >
                         <div class="row items-center justify-end">
                           <q-btn v-close-popup label="Cerrar" color="primary" flat />
@@ -93,16 +94,17 @@
                 v-model="form.fecha_fin"
                 outlined
                 dense
-                class="full-width"
+                class="full-width date-input"
               >
                 <template v-slot:append>
-                  <q-icon name="event" class="cursor-pointer">
+                  <q-icon name="event" class="cursor-pointer date-icon">
                     <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                       <q-date
                         v-model="form.fecha_fin"
                         mask="YYYY-MM-DD"
                         today-btn
                         :options="fechaOptions"
+                        class="custom-date-picker"
                       >
                         <div class="row items-center justify-end">
                           <q-btn v-close-popup label="Cerrar" color="primary" flat />
@@ -117,7 +119,7 @@
         </div>
 
         <!-- Estado del proyecto -->
-        <div class="form-field">
+        <div class="form-field" data-aos="fade-up" data-aos-delay="300">
           <label class="field-label">Estado del proyecto</label>
           <q-select
             v-model="form.estado"
@@ -131,7 +133,7 @@
         </div>
 
         <!-- Botones de acción -->
-        <div class="form-actions">
+        <div class="form-actions" data-aos="fade-up" data-aos-delay="350">
           <q-btn
             flat
             label="CANCELAR"
@@ -153,10 +155,11 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { useAuthStore } from 'src/stores/auth.store'
+import AOS from 'aos'
 
 defineProps({
   modelValue: {
@@ -222,7 +225,17 @@ const nombreUsuarioActual = computed(() => {
   return 'Usuario no identificado'
 })
 
-// Enviar formulario
+// Inicializar AOS si está disponible
+onMounted(() => {
+  if (typeof AOS !== 'undefined') {
+    AOS.init({
+      duration: 600,
+      easing: 'ease-out',
+      once: true
+    })
+  }
+})
+
 // Enviar formulario
 async function onSubmit() {
   try {
@@ -299,7 +312,6 @@ async function onSubmit() {
   }
 }
 
-
 // Resetear formulario a valores por defecto
 function resetForm() {
   form.value = {
@@ -315,108 +327,255 @@ function resetForm() {
 </script>
 
 <style lang="scss" scoped>
+// Variables de colores personalizados
+$purple: #663399;
+$teal: #009999;
+$light-teal: #00AAAA;
+$white: #FFFFFF;
+
+// Configuración de colores para Quasar
+:root {
+  --q-primary: #{$purple};
+  --q-secondary: #{$purple};
+  --q-accent: #{$teal};
+}
+
 .proyecto-dialog {
-  border-radius: 10px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 10px 40px rgba($purple, 0.2);
   max-width: 600px;
   width: 100%;
+  border: 1px solid rgba($purple, 0.1);
+  transform: translateY(0);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 50px rgba($purple, 0.25);
+  }
 }
 
 .dialog-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  background: linear-gradient(90deg, #1976d2, #2196f3);
-  color: white;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  color: $white;
+}
+
+.close-button {
+  opacity: 0.9;
+  transition: all 0.2s ease;
+
+  &:hover {
+    opacity: 1;
+    transform: rotate(90deg);
+    background: rgba($white, 0.1);
+  }
 }
 
 .form-container {
-  padding: 24px;
+  padding: 28px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 22px;
   max-height: calc(90vh - 120px);
   overflow-y: auto;
+  background: $white;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba($purple, 0.05);
+    border-radius: 10px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba($teal, 0.5);
+    border-radius: 10px;
+
+    &:hover {
+      background: rgba($teal, 0.7);
+    }
+  }
 }
 
 .form-field {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .field-label {
-  font-weight: 500;
-  color: #374151;
+  font-weight: 600;
+  color: $purple;
   font-size: 14px;
+  letter-spacing: 0.02em;
 }
 
 .required {
-  color: #e53935;
+  color: #ff4081;
   font-weight: bold;
+  margin-left: 2px;
 }
 
 .form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 16px;
-  margin-top: 8px;
-  padding-top: 16px;
-  border-top: 1px solid #f0f0f0;
+  margin-top: 12px;
+  padding-top: 20px;
+  border-top: 1px solid rgba($purple, 0.1);
 }
 
 .cancel-btn {
-  color: #64748b;
+  color: rgba($purple, 0.7);
   font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 10px 20px;
+  border-radius: 10px;
+
+  &:hover {
+    background: rgba($purple, 0.05);
+    color: $purple;
+    transform: translateX(-2px);
+  }
 }
 
 .submit-btn {
-  background: linear-gradient(90deg, #1976d2, #2196f3);
-  font-weight: 500;
-  border-radius: 6px;
-  padding: 8px 20px;
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  font-weight: 600;
+  border-radius: 10px;
+  padding: 10px 24px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba($purple, 0.2);
+  letter-spacing: 0.03em;
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    box-shadow: 0 6px 16px rgba($purple, 0.35);
+    transform: translateY(-2px) translateX(2px);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba($purple, 0.3);
   }
 }
 
 :deep(.q-field__control) {
-  background-color: #f9fafb;
+  background-color: rgba($white, 0.8);
+  border: 1px solid rgba($purple, 0.1);
+  transition: all 0.3s ease;
 
   &:hover {
-    background-color: white;
+    background-color: $white;
+    border-color: rgba($teal, 0.3);
+    box-shadow: 0 2px 8px rgba($teal, 0.1);
   }
 }
 
 :deep(.q-field--focused .q-field__control) {
-  background-color: white;
+  background-color: $white;
+  border-color: $teal;
+  box-shadow: 0 2px 10px rgba($teal, 0.15);
 }
 
 .responsable-field {
   display: flex;
   align-items: center;
-  background-color: #f5f8ff;
-  border: 1px solid #d1e4fe;
-  border-radius: 8px;
-  padding: 10px 16px;
-  min-height: 40px;
+  background: linear-gradient(to right, rgba($purple, 0.05), rgba($teal, 0.05));
+  border: 1px solid rgba($purple, 0.1);
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-height: 44px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba($purple, 0.08);
+    border-color: rgba($teal, 0.2);
+  }
+}
+
+.responsable-icon {
+  color: $purple;
 }
 
 .responsable-nombre {
-  font-weight: 500;
+  font-weight: 600;
   flex-grow: 1;
-  color: #1976d2;
+  color: $purple;
+  font-size: 14px;
 }
 
 .asignado-badge {
-  background-color: #e1f5fe;
-  color: #0288d1;
+  background: linear-gradient(135deg, rgba($purple, 0.2) 0%, rgba($teal, 0.2) 100%);
+  color: $teal;
   font-size: 12px;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  box-shadow: 0 2px 6px rgba($teal, 0.1);
+}
+
+.date-input {
+  position: relative;
+  transition: all 0.3s ease;
+
+  &:hover {
+    .date-icon {
+      color: $teal;
+    }
+  }
+}
+
+.date-icon {
+  color: rgba($purple, 0.7);
+  transition: all 0.2s ease;
+}
+
+:deep(.custom-date-picker) {
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba($purple, 0.15);
+  overflow: hidden;
+
+  .q-date__header {
+    background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  }
+
+  .q-date__today {
+    color: $teal;
+  }
+}
+
+@media (max-width: 600px) {
+  .proyecto-dialog {
+    width: 90%;
+  }
+
+  .form-container {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .submit-btn,
+  .cancel-btn {
+    width: 100%;
+    padding: 12px;
+  }
 }
 </style>

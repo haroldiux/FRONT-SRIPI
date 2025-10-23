@@ -1,62 +1,63 @@
 <template>
   <q-page padding>
-    <!-- Header mejorado -->
-    <div class="row items-center justify-between q-mb-xl">
+    <!-- Header mejorado con animación -->
+    <div class="row items-center justify-between q-mb-xl header-section" data-aos="fade-down" data-aos-duration="800">
       <div>
-        <h4 class="text-h4 text-weight-bold q-ma-none">Gestión de Usuarios</h4>
+        <h4 class="text-h4 text-weight-bold q-ma-none text-purple">Gestión de Usuarios</h4>
         <p class="text-grey-7 q-mt-sm q-mb-none">Administra los usuarios del sistema</p>
       </div>
-      <q-btn unelevated color="primary" icon="add" label="Nuevo Usuario" @click="onCreateUser" v-if="canCreateUser"
-        size="md" class="q-px-lg" />
+      <q-btn unelevated color="teal" icon="add" label="Nuevo Usuario" @click="onCreateUser" v-if="canCreateUser"
+        size="md" class="q-px-lg pulse-button" />
     </div>
 
     <!-- Card con tabla y filtros mejorados -->
-    <q-card flat bordered class="shadow-1">
+    <q-card flat bordered class="shadow-5 card-container" data-aos="zoom-in" data-aos-duration="600">
       <q-card-section class="q-pa-lg">
-        <!-- Filtros mejorados -->
+        <!-- Filtros mejorados con animaciones -->
         <div class="row q-col-gutter-md q-mb-lg">
-          <div class="col-12 col-md-5">
+          <div class="col-12 col-md-5" data-aos="fade-right" data-aos-delay="100">
             <q-input v-model="filters.search" debounce="300" placeholder="Buscar por código, nombre o apellido..."
-              outlined clearable @update:model-value="onFilter">
+              outlined clearable @update:model-value="onFilter" class="input-transition">
               <template v-slot:prepend>
-                <q-icon name="search" />
+                <q-icon name="search" color="teal" />
               </template>
             </q-input>
           </div>
 
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-md-3" data-aos="fade-right" data-aos-delay="200">
             <q-select v-model="filters.role" :options="roleOptions" label="Filtrar por Rol" outlined clearable
-              emit-value map-options @update:model-value="onFilter">
+              emit-value map-options @update:model-value="onFilter" class="input-transition">
               <template v-slot:prepend>
-                <q-icon name="badge" />
+                <q-icon name="badge" color="teal" />
               </template>
             </q-select>
           </div>
 
-          <div class="col-6 col-md-3">
+          <div class="col-6 col-md-3" data-aos="fade-right" data-aos-delay="300">
             <q-select v-model="filters.status" :options="statusOptions" label="Filtrar por Estado" outlined clearable
-              emit-value map-options @update:model-value="onFilter">
+              emit-value map-options @update:model-value="onFilter" class="input-transition">
               <template v-slot:prepend>
-                <q-icon name="toggle_on" />
+                <q-icon name="toggle_on" color="teal" />
               </template>
             </q-select>
           </div>
 
-          <div class="col-12 col-md-1 flex items-center">
-            <q-btn flat round color="grey-7" icon="filter_list_off" @click="clearFilters" size="md">
+          <div class="col-12 col-md-1 flex items-center" data-aos="fade-right" data-aos-delay="400">
+            <q-btn flat round color="purple" icon="filter_list_off" @click="clearFilters" size="md"
+              class="rotate-on-hover">
               <q-tooltip>Limpiar filtros</q-tooltip>
             </q-btn>
           </div>
         </div>
 
-        <!-- Tabla mejorada -->
+        <!-- Tabla mejorada con animaciones y nueva paleta de colores -->
         <q-table ref="tableRef" :rows="users" :columns="columns" row-key="id" :pagination="pagination"
           :loading="loading" @request="onRequest" binary-state-sort :rows-per-page-options="[10, 20, 50, 100]" flat
-          class="custom-table">
+          class="custom-table" :class="{ 'table-loaded': !loading }">
           <!-- Header personalizado -->
           <template v-slot:header="props">
-            <q-tr :props="props" class="bg-grey-2">
-              <q-th v-for="col in props.cols" :key="col.name" :props="props" class="text-weight-bold text-grey-8">
+            <q-tr :props="props" class="bg-light-teal">
+              <q-th v-for="col in props.cols" :key="col.name" :props="props" class="text-weight-bold text-white">
                 {{ col.label }}
               </q-th>
             </q-tr>
@@ -65,7 +66,7 @@
           <!-- Código de Usuario -->
           <template v-slot:body-cell-usuario="props">
             <q-td :props="props">
-              <div class="text-weight-medium text-primary">
+              <div class="text-weight-medium text-purple">
                 {{ props.row.usuario }}
               </div>
             </q-td>
@@ -83,7 +84,7 @@
           <!-- Rol con mejor diseño -->
           <template v-slot:body-cell-rol_id="props">
             <q-td :props="props">
-              <q-chip :color="getRoleColor(props.row.rol_id)" text-color="white" size="sm" class="q-px-md">
+              <q-chip :color="getRoleColor(props.row.rol_id)" text-color="white" size="sm" class="q-px-md fade-in-chip">
                 <q-icon :name="getRoleIcon(props.row.rol_id)" size="16px" class="q-mr-xs" />
                 {{ getRoleLabel(props.row.rol_id) }}
               </q-chip>
@@ -93,7 +94,8 @@
           <!-- Estado con badge mejorado -->
           <template v-slot:body-cell-estado="props">
             <q-td :props="props">
-              <q-badge :color="getEstadoColor(props.row)" :label="getEstadoLabel(props.row)" class="q-px-md q-py-xs" />
+              <q-badge :color="getEstadoColor(props.row)" :label="getEstadoLabel(props.row)"
+                class="q-px-md q-py-xs status-badge" />
             </q-td>
           </template>
 
@@ -109,16 +111,17 @@
           <!-- Acciones mejoradas -->
           <template v-slot:body-cell-actions="props">
             <q-td :props="props">
-              <div class="row q-gutter-xs justify-center">
-                <q-btn flat round dense color="blue-grey-7" icon="visibility" @click="viewUser(props.row)" size="sm">
+              <div class="row q-gutter-xs justify-center action-buttons">
+                <q-btn flat round dense color="teal" icon="visibility" @click="viewUser(props.row)" size="sm"
+                  class="action-btn">
                   <q-tooltip>Ver detalles</q-tooltip>
                 </q-btn>
-                <q-btn flat round dense color="amber-8" icon="edit" @click="editUser(props.row)" size="sm"
-                  v-if="canEditUser()">
+                <q-btn flat round dense color="purple" icon="edit" @click="editUser(props.row)" size="sm"
+                  v-if="canEditUser()" class="action-btn">
                   <q-tooltip>Editar</q-tooltip>
                 </q-btn>
                 <q-btn flat round dense :color="getToggleButtonColor(props.row)" :icon="getToggleButtonIcon(props.row)"
-                  @click="toggleUserStatus(props.row)" size="sm" v-if="canToggleUserStatus">
+                  @click="toggleUserStatus(props.row)" size="sm" v-if="canToggleUserStatus" class="action-btn">
                   <q-tooltip>{{ getToggleButtonTooltip(props.row) }}</q-tooltip>
                 </q-btn>
               </div>
@@ -127,14 +130,16 @@
 
           <!-- Loading personalizado -->
           <template v-slot:loading>
-            <q-inner-loading showing color="primary" />
+            <q-inner-loading showing>
+              <q-spinner-dots color="purple" size="50px" />
+            </q-inner-loading>
           </template>
 
           <!-- Sin datos -->
           <template v-slot:no-data>
-            <div class="full-width column flex-center q-pa-xl">
-              <q-icon size="4em" name="person_off" color="grey-5" />
-              <span class="text-grey-7 text-h6 q-mt-md">No se encontraron usuarios</span>
+            <div class="full-width column flex-center q-pa-xl empty-state" data-aos="fade-up">
+              <q-icon size="4em" name="person_off" color="teal" />
+              <span class="text-purple text-h6 q-mt-md">No se encontraron usuarios</span>
               <span class="text-grey-6 q-mt-sm">Intenta ajustar los filtros de búsqueda</span>
             </div>
           </template>
@@ -143,9 +148,9 @@
     </q-card>
 
     <!-- Dialog para ver detalles -->
-    <q-dialog v-model="viewDialog">
-      <q-card style="min-width: 450px">
-        <q-card-section class="bg-blue-grey-1">
+    <q-dialog v-model="viewDialog" transition-show="scale" transition-hide="scale">
+      <q-card style="min-width: 450px" class="dialog-card">
+        <q-card-section class="bg-purple text-white">
           <div class="text-h6 text-weight-medium">
             <q-icon name="account_circle" size="28px" class="q-mr-sm" />
             Detalles del Usuario
@@ -156,21 +161,21 @@
 
         <q-card-section class="q-pa-lg">
           <div class="q-gutter-md" v-if="selectedUser">
-            <div class="row">
+            <div class="row detail-row" data-aos="fade-right" data-aos-delay="100">
               <div class="col-5 text-grey-7 text-weight-medium">Código:</div>
-              <div class="col-7 text-weight-bold">{{ selectedUser.usuario }}</div>
+              <div class="col-7 text-weight-bold text-purple">{{ selectedUser.usuario }}</div>
             </div>
 
             <q-separator />
 
-            <div class="row">
+            <div class="row detail-row" data-aos="fade-right" data-aos-delay="200">
               <div class="col-5 text-grey-7 text-weight-medium">Nombre Completo:</div>
               <div class="col-7">{{ selectedUser.nombres }} {{ selectedUser.apellidos }}</div>
             </div>
 
             <q-separator />
 
-            <div class="row">
+            <div class="row detail-row" data-aos="fade-right" data-aos-delay="300">
               <div class="col-5 text-grey-7 text-weight-medium">Rol:</div>
               <div class="col-7">
                 <q-chip :color="getRoleColor(selectedUser.rol_id)" text-color="white" size="sm">
@@ -181,16 +186,17 @@
 
             <q-separator />
 
-            <div class="row">
+            <div class="row detail-row" data-aos="fade-right" data-aos-delay="400">
               <div class="col-5 text-grey-7 text-weight-medium">Estado:</div>
               <div class="col-7">
-                <q-badge :color="getEstadoColor(selectedUser)" :label="getEstadoLabel(selectedUser)" />
+                <q-badge :color="getEstadoColor(selectedUser)" :label="getEstadoLabel(selectedUser)"
+                  class="status-badge" />
               </div>
             </div>
 
             <q-separator />
 
-            <div class="row">
+            <div class="row detail-row" data-aos="fade-right" data-aos-delay="500">
               <div class="col-5 text-grey-7 text-weight-medium">Fecha Registro:</div>
               <div class="col-7">{{ formatDate(selectedUser.created_at) }}</div>
             </div>
@@ -198,10 +204,10 @@
             <!-- Documento SUS para estudiantes -->
             <template v-if="selectedUser.rol_id === 3 && selectedUser.sus">
               <q-separator />
-              <div class="row">
+              <div class="row detail-row" data-aos="fade-right" data-aos-delay="600">
                 <div class="col-5 text-grey-7 text-weight-medium">Documento SUS:</div>
                 <div class="col-7">
-                  <q-btn color="blue" label="Ver documento" icon="description" flat dense
+                  <q-btn color="teal" label="Ver documento" icon="description" flat dense class="doc-button"
                     @click="viewSusFile(selectedUser.sus)" />
                 </div>
               </div>
@@ -212,21 +218,24 @@
         <q-separator />
 
         <q-card-actions align="right" class="q-pa-md">
-          <q-btn flat label="Cerrar" color="primary" v-close-popup class="q-px-lg" />
+          <q-btn flat label="Cerrar" color="teal" v-close-popup class="q-px-lg close-btn" />
         </q-card-actions>
       </q-card>
     </q-dialog>
 
     <!-- Componente CrearUsuarioForm -->
-    <crear-usuario-form v-model="showUserForm" :edit-user="userToEdit" @save="onUserSaved" />
+    <div class="form-container" :class="{ 'form-visible': showUserForm }">
+      <crear-usuario-form v-model="showUserForm" :edit-user="userToEdit" @save="onUserSaved" />
+    </div>
   </q-page>
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
 import CrearUsuarioForm from 'components/usuarios/CrearUsuarioForm.vue'
 import { api } from 'boot/axios'
+import AOS from 'aos'
 
 export default {
   name: 'ListaUsuarioPage',
@@ -321,6 +330,26 @@ export default {
       { label: 'Inactivo', value: 0 }
     ]
 
+    // Inicializar AOS
+    const initAOS = () => {
+      if (typeof AOS !== 'undefined') {
+        AOS.init({
+          duration: 800,
+          once: false,
+          mirror: true
+        });
+      } else {
+        console.warn('AOS no está disponible');
+      }
+    };
+
+    // Refrescar AOS en cambios
+    const refreshAOS = () => {
+      if (typeof AOS !== 'undefined') {
+        AOS.refresh();
+      }
+    };
+
     // Permisos
     // Asumimos que es admin para pruebas
     const currentUserRole = ref(1)
@@ -337,20 +366,18 @@ export default {
       return currentUserRole.value === 1
     }
 
-    // CORRECCIÓN: Cambiado a computed para que funcione correctamente en la plantilla
     const canToggleUserStatus = computed(() => {
       return [1, 2].includes(currentUserRole.value)
     })
 
     // Funciones de utilidad para el estado
-    // NUEVAS FUNCIONES PARA MANEJAR EL ESTADO CORRECTAMENTE
     const getEstadoValue = (user) => {
       // Normaliza el valor del estado a un número (1 o 0)
       return user && user.estado === 1 ? 1 : 0
     }
 
     const getEstadoColor = (user) => {
-      return getEstadoValue(user) === 1 ? 'positive' : 'grey-5'
+      return getEstadoValue(user) === 1 ? 'teal' : 'grey-5'
     }
 
     const getEstadoLabel = (user) => {
@@ -358,7 +385,7 @@ export default {
     }
 
     const getToggleButtonColor = (user) => {
-      return getEstadoValue(user) === 1 ? 'red-6' : 'green-6'
+      return getEstadoValue(user) === 1 ? 'red-6' : 'teal'
     }
 
     const getToggleButtonIcon = (user) => {
@@ -372,9 +399,9 @@ export default {
     // Funciones auxiliares
     const getRoleColor = (roleId) => {
       const colors = {
-        1: 'red-7',
-        2: 'orange-7',
-        3: 'blue-7'
+        1: 'purple',
+        2: 'teal',
+        3: 'light-teal'
       }
       return colors[roleId] || 'grey'
     }
@@ -451,12 +478,16 @@ export default {
         pagination.value.rowsPerPage = rowsPerPage
         pagination.value.sortBy = sortBy
         pagination.value.descending = descending
+
+        // Refrescar AOS después de cargar datos
+        setTimeout(refreshAOS, 100)
       } catch (error) {
         console.error('Error al cargar usuarios:', error)
         $q.notify({
           type: 'negative',
           message: error.response?.data?.message || 'Error al cargar los usuarios',
-          position: 'top'
+          position: 'top',
+          classes: 'notification-custom'
         })
         users.value = []
         pagination.value.rowsNumber = 0
@@ -479,39 +510,59 @@ export default {
       filters.role = null
       filters.status = null
       onFilter()
+
+      // Animación al limpiar filtros
+      $q.notify({
+        type: 'info',
+        message: 'Filtros limpiados',
+        position: 'top-right',
+        classes: 'notification-custom',
+        timeout: 1000
+      })
     }
 
     const onCreateUser = () => {
+      // Resetear el usuario antes de mostrar el formulario
       userToEdit.value = null
-      showUserForm.value = true
+      // Pequeño delay para evitar problemas de inicialización
+      setTimeout(() => {
+        showUserForm.value = true
+      }, 50)
     }
 
     const viewUser = (user) => {
       selectedUser.value = user
       viewDialog.value = true
+
+      // Refrescar AOS cuando se abre el diálogo
+      setTimeout(refreshAOS, 100)
     }
 
     const editUser = (user) => {
+      // Primero asignar el usuario para editar
       userToEdit.value = { ...user }
-      showUserForm.value = true
+      // Pequeño delay para evitar problemas de inicialización en el componente hijo
+      setTimeout(() => {
+        // Luego mostrar el formulario
+        showUserForm.value = true
+      }, 50)
     }
 
     const viewSusFile = (fileUrl) => {
       if (fileUrl) {
-        // Usar la ruta web directa en lugar de la API
-        const url = `${api.defaults.baseURL.replace('/api', '')}/ver-documento/${encodeURIComponent(fileUrl)}`;
+        // Usar la ruta pública sin token
+        const url = `${api.defaults.baseURL}/ver-sus/${encodeURIComponent(fileUrl)}`;
         console.log(`Intentando abrir: ${url}`);
         window.open(url, '_blank');
       } else {
         $q.notify({
           type: 'warning',
           message: 'No hay documento disponible',
-          position: 'top'
+          position: 'top',
+          classes: 'notification-custom'
         });
       }
     }
-
-    // CORRECCIÓN: Función toggleUserStatus completamente implementada
     const toggleUserStatus = async (user) => {
       try {
         console.log(`Cambiando estado del usuario ${user.id} (${user.usuario}) - Estado actual: ${user.estado}`)
@@ -533,11 +584,13 @@ export default {
             console.log(`Estado actualizado: ${users.value[index].estado}`)
           }
 
-          // Mostrar notificación de éxito
+          // Mostrar notificación animada de éxito
           $q.notify({
             type: 'positive',
             message: `Usuario ${getEstadoValue(user) === 1 ? 'desactivado' : 'activado'} correctamente`,
-            position: 'top'
+            position: 'top',
+            classes: 'notification-custom',
+            timeout: 2000
           })
         }
       } catch (error) {
@@ -545,7 +598,8 @@ export default {
         $q.notify({
           type: 'negative',
           message: error.response?.data?.message || 'Error al cambiar el estado del usuario',
-          position: 'top'
+          position: 'top',
+          classes: 'notification-custom'
         })
       }
     }
@@ -554,17 +608,32 @@ export default {
       // Refrescar la lista después de guardar
       tableRef.value.requestServerInteraction()
 
+      // Notificación animada
       $q.notify({
         type: 'positive',
         message: userToEdit.value ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente',
-        position: 'top'
+        position: 'top',
+        classes: 'notification-custom',
+        timeout: 2000
       })
     }
 
     // Lifecycle
     onMounted(() => {
-      tableRef.value.requestServerInteraction()
-    })
+      // Inicializar AOS
+      initAOS();
+
+      // Cargar datos
+      tableRef.value.requestServerInteraction();
+
+      // Añadir las clases de colores personalizados al body para uso global
+      document.body.classList.add('custom-theme');
+    });
+
+    onUnmounted(() => {
+      // Limpiar clases al desmontar
+      document.body.classList.remove('custom-theme');
+    });
 
     return {
       loading,
@@ -606,19 +675,298 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+// Variables de colores
+:root {
+  --purple: #663399;
+  --teal: #009999;
+  --light-teal: #00AAAA;
+  --white: #FFFFFF;
+}
+
+// Tema personalizado global
+.custom-theme {
+  .q-notification {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  .notification-custom {
+    border-left: 4px solid var(--teal);
+    font-weight: 500;
+  }
+}
+
+// Clases de colores personalizados
+.bg-purple {
+  background-color: var(--purple) !important;
+}
+
+.bg-teal {
+  background-color: var(--teal) !important;
+}
+
+.bg-light-teal {
+  background-color: var(--light-teal) !important;
+}
+
+.text-purple {
+  color: var(--purple) !important;
+}
+
+.text-teal {
+  color: var(--teal) !important;
+}
+
+.text-light-teal {
+  color: var(--light-teal) !important;
+}
+
+// Animaciones y estilos específicos
+.pulse-button {
+  transition: transform 0.3s, box-shadow 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 153, 153, 0.3);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 153, 153, 0.5);
+  }
+}
+
+.card-container {
+  transition: all 0.3s ease;
+  border-radius: 12px;
+  overflow: hidden;
+  border-color: rgba(0, 153, 153, 0.2);
+
+  &:hover {
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08) !important;
+    transform: translateY(-2px);
+  }
+}
+
+.input-transition {
+  transition: all 0.3s;
+
+  &:focus-within {
+    transform: translateY(-2px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  }
+}
+
+.rotate-on-hover {
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: rotate(90deg);
+  }
+}
+
+.fade-in-chip {
+  animation: fadeIn 0.5s ease;
+}
+
+.status-badge {
+  transition: all 0.3s;
+  transform-origin: center;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+.action-buttons {
+  .action-btn {
+    transition: all 0.2s ease;
+    opacity: 0.8;
+
+    &:hover {
+      opacity: 1;
+      transform: translateY(-2px);
+    }
+  }
+}
+
 .custom-table {
+  border-radius: 8px;
+  overflow: hidden;
+  transition: opacity 0.5s;
+  opacity: 0.92;
+
+  &.table-loaded {
+    opacity: 1;
+  }
+
   :deep(.q-table__top) {
     padding: 12px 16px;
   }
 
-  :deep(.q-table thead tr),
-  :deep(.q-table tbody td) {
+  :deep(.q-table thead tr) {
     height: 60px;
   }
 
+  :deep(.q-table tbody tr) {
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
+    height: 60px;
+
+    &:hover {
+      background-color: rgba(0, 153, 153, 0.05) !important;
+      transform: translateX(3px);
+    }
+  }
+
+  :deep(.q-table tbody td) {
+    transition: all 0.3s;
+    border-bottom: 1px solid rgba(0, 153, 153, 0.1);
+  }
+
   :deep(.q-table__bottom) {
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    border-top: 1px solid rgba(0, 153, 153, 0.12);
+    background-color: #f9fafb;
+  }
+
+  :deep(.q-table__control) {
+    transition: all 0.2s;
+
+    &:hover {
+      color: var(--teal);
+    }
+  }
+
+  :deep(.q-table__sort-icon) {
+    transition: transform 0.3s ease;
+    color: var(--teal);
+  }
+}
+
+// Animación para empty state
+.empty-state {
+  animation: fadeInUp 0.8s ease;
+}
+
+// Estilos para el modal
+.dialog-card {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+
+  .detail-row {
+    padding: 6px 0;
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: rgba(0, 153, 153, 0.05);
+    }
+  }
+
+  .doc-button {
+    transition: all 0.3s;
+
+    &:hover {
+      background-color: rgba(0, 153, 153, 0.1);
+      color: var(--purple);
+    }
+  }
+
+  .close-btn {
+    transition: all 0.3s;
+
+    &:hover {
+      background-color: rgba(0, 153, 153, 0.1);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+// Animaciones para la sección del encabezado
+.header-section {
+  margin-bottom: 30px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid rgba(0, 153, 153, 0.1);
+}
+
+// Transiciones de formulario
+.form-container {
+  position: relative;
+  opacity: 0;
+  transform: translateX(50px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+
+  &.form-visible {
+    opacity: 1;
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+}
+
+// Animaciones keyframe
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Estilos para añadir foco en elementos interactivos
+.q-btn,
+.q-select,
+.q-input {
+  &:focus {
+    outline: 2px solid rgba(0, 153, 153, 0.3);
+    outline-offset: 2px;
+  }
+}
+
+// Mejora de accesibilidad - aumento de contraste en elementos clave
+.text-grey-7 {
+  color: #555 !important;
+}
+
+// Efectos de hover para chips y badges
+.q-chip,
+.q-badge {
+  transition: all 0.3s;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+// Estilos responsivos
+@media (max-width: 768px) {
+  .header-section {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .q-btn {
+      margin-top: 16px;
+      align-self: stretch;
+    }
+  }
+
+  .custom-table {
+    :deep(.q-table tbody tr) {
+      &:hover {
+        transform: none;
+      }
+    }
   }
 }
 </style>

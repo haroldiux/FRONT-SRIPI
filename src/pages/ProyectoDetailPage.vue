@@ -2,8 +2,8 @@
   <q-page class="proyecto-detail-page">
     <EncuestaPreview v-model="showEncuestaPreview" :encuesta-id="selectedEncuestaId" @edit="editarEncuesta"
       @close="showEncuestaPreview = false" />
-    <!-- Header con fondo azul y degradado sutil -->
-    <div class="header-container">
+    <!-- Header con fondo de degradado en la nueva paleta -->
+    <div class="header-container" data-aos="fade-down" data-aos-duration="600">
       <div class="header-content">
         <div class="breadcrumb">
           <q-btn flat dense to="/proyectos" class="breadcrumb-btn">
@@ -19,9 +19,9 @@
             </q-badge>
           </div>
           <div class="header-actions">
-            <q-btn unelevated color="white" text-color="primary" class="action-btn" icon-right="add"
+            <q-btn unelevated color="accent" text-color="white" class="action-btn" icon-right="add"
               label="Nueva Encuesta" @click="nuevaEncuesta" />
-            <q-btn unelevated color="white" text-color="primary" class="action-btn" icon-right="file_download"
+            <q-btn unelevated color="accent" text-color="white" class="action-btn" icon-right="file_download"
               label="Exportar" @click="exportarDatos" />
           </div>
         </div>
@@ -29,29 +29,29 @@
     </div>
 
     <!-- Estado de carga -->
-    <div v-if="loading" class="full-page-loader">
+    <div v-if="loading" class="full-page-loader" data-aos="fade-up">
       <q-spinner-dots color="primary" size="40px" />
       <div class="q-mt-sm text-subtitle1">Cargando información del proyecto...</div>
     </div>
 
     <!-- Error al cargar -->
-    <div v-else-if="error" class="full-page-error">
+    <div v-else-if="error" class="full-page-error" data-aos="fade-up">
       <q-icon name="error_outline" size="50px" color="negative" />
       <h5 class="q-mt-md q-mb-sm">Error al cargar el proyecto</h5>
       <p class="text-grey-8">{{ error }}</p>
-      <q-btn color="primary" label="Reintentar" icon="refresh" class="q-mt-md" @click="loadData" />
+      <q-btn color="primary" label="Reintentar" icon="refresh" class="q-mt-md retry-btn" @click="loadData" />
     </div>
 
     <!-- Contenido principal -->
     <div v-else class="page-content">
       <div class="content-grid">
         <!-- Panel de información principal -->
-        <div class="info-panel">
+        <div class="info-panel" data-aos="fade-right" data-aos-delay="100">
           <!-- Tarjeta de información del proyecto -->
           <q-card flat bordered class="proyecto-info-card">
             <q-card-section class="proyecto-info-header">
               <div class="info-title">
-                <q-icon name="info" color="primary" />
+                <q-icon name="info" />
                 <span>Información del Proyecto</span>
               </div>
             </q-card-section>
@@ -106,7 +106,7 @@
 
           <!-- Tarjetas de indicadores clave -->
           <div class="stats-cards">
-            <q-card flat bordered class="stat-card">
+            <q-card flat bordered class="stat-card" data-aos="fade-up" data-aos-delay="150">
               <q-card-section class="stat-card-content">
                 <div class="stat-card-value">{{ encuestas.length }}</div>
                 <div class="stat-card-label">Encuestas</div>
@@ -115,7 +115,7 @@
               </q-card-section>
             </q-card>
 
-            <q-card flat bordered class="stat-card" :class="getEstadoClass(proyecto.estado, proyecto)">
+            <q-card flat bordered class="stat-card" :class="getEstadoClass(proyecto.estado, proyecto)" data-aos="fade-up" data-aos-delay="200">
               <q-card-section class="stat-card-content">
                 <div class="stat-card-value estado-value">{{ getEstadoLabel(proyecto.estado, proyecto) }}</div>
                 <div class="stat-card-label">Estado</div>
@@ -127,10 +127,10 @@
         </div>
 
         <!-- Panel de contenido principal con tabs -->
-        <div class="content-panel">
+        <div class="content-panel" data-aos="fade-left" data-aos-delay="150">
           <q-card flat bordered class="tabs-card">
             <q-tabs v-model="tab" class="bg-white text-primary tabs-header" active-color="primary"
-              indicator-color="primary" align="left" narrow-indicator dense>
+              indicator-color="accent" align="left" narrow-indicator dense>
               <q-tab name="encuestas" icon="description" label="Encuestas" />
               <q-tab name="analisis" icon="analytics" label="Análisis" />
               <q-tab name="geografico" icon="map" label="Geográfico" />
@@ -147,29 +147,35 @@
                     <p class="panel-subtitle">Todas las encuestas asociadas a este proyecto de investigación</p>
                   </div>
 
-                  <q-btn unelevated color="primary" icon="add" label="Nueva Encuesta" class="desktop-only"
+                  <q-btn unelevated color="primary" icon="add" label="Nueva Encuesta" class="desktop-only new-survey-btn"
                     @click="nuevaEncuesta" />
                 </div>
 
                 <!-- Estado de carga de encuestas -->
-                <div v-if="loadingEncuestas" class="section-loader">
+                <div v-if="loadingEncuestas" class="section-loader" data-aos="fade">
                   <q-spinner color="primary" size="24px" />
                   <span class="q-ml-sm">Cargando encuestas...</span>
                 </div>
 
                 <!-- Sin encuestas -->
-                <div v-else-if="!encuestas.length" class="empty-state">
+                <div v-else-if="!encuestas.length" class="empty-state" data-aos="zoom-in" data-aos-delay="100">
                   <div class="empty-state-icon">
                     <q-icon name="assignment" size="48px" />
                   </div>
                   <h3 class="empty-state-title">No hay encuestas</h3>
                   <p class="empty-state-description">Comienza creando tu primera encuesta para este proyecto</p>
-                  <q-btn unelevated color="primary" icon="add" label="Nueva Encuesta" @click="nuevaEncuesta" />
+                  <q-btn unelevated color="primary" icon="add" label="Nueva Encuesta" class="empty-state-btn" @click="nuevaEncuesta" />
                 </div>
 
                 <!-- Lista de encuestas -->
                 <div v-else class="encuestas-list">
-                  <q-card v-for="enc in encuestas" :key="enc.id" bordered flat class="encuesta-item">
+                  <q-card v-for="(enc, index) in encuestas"
+                          :key="enc.id"
+                          bordered
+                          flat
+                          class="encuesta-item"
+                          data-aos="fade-up"
+                          :data-aos-delay="100 + (index * 50)">
                     <q-item class="encuesta-header">
                       <q-item-section avatar>
                         <q-avatar :color="enc.activa ? 'green-1' : 'grey-3'" text-color="green" class="encuesta-icon">
@@ -180,7 +186,7 @@
                       <q-item-section>
                         <q-item-label class="encuesta-title">{{ enc.titulo }}</q-item-label>
                         <q-item-label caption>
-                          <q-badge :color="enc.activa ? 'green' : 'grey'" outline>
+                          <q-badge :color="enc.activa ? 'accent' : 'grey'" outline>
                             {{ enc.activa ? 'Activa' : 'Inactiva' }}
                           </q-badge>
                         </q-item-label>
@@ -188,13 +194,13 @@
 
                       <q-item-section side>
                         <div class="encuesta-actions">
-                          <q-btn flat round dense color="grey-7" icon="edit">
+                          <q-btn flat round dense color="grey-7" icon="edit" class="action-icon">
                             <q-tooltip>Editar</q-tooltip>
                           </q-btn>
-                          <q-btn flat round dense color="blue-7" icon="assignment_ind" @click="asignarEncuesta(enc)">
+                          <q-btn flat round dense color="accent" icon="assignment_ind" @click="asignarEncuesta(enc)" class="action-icon">
                             <q-tooltip>Asignar</q-tooltip>
                           </q-btn>
-                          <q-btn flat round dense color="primary" icon="visibility" @click.stop="verEncuesta(enc)">
+                          <q-btn flat round dense color="primary" icon="visibility" @click.stop="verEncuesta(enc)" class="action-icon">
                             <q-tooltip>Vista Previa</q-tooltip>
                           </q-btn>
                         </div>
@@ -219,7 +225,7 @@
                     </q-card-section>
 
                     <q-card-actions align="right">
-                      <q-btn flat color="primary" label="Ver estadísticas" icon-right="visibility" />
+                      <q-btn flat color="primary" label="Ver estadísticas" icon-right="visibility" class="stats-btn" />
                     </q-card-actions>
                   </q-card>
                 </div>
@@ -234,26 +240,26 @@
 
               <!-- Panel de Análisis -->
               <q-tab-panel name="analisis" class="tab-panel">
-                <div class="coming-soon">
+                <div class="coming-soon" data-aos="fade-up">
                   <img src="https://cdn.quasar.dev/img/parallax2.jpg" class="placeholder-image" alt="Análisis">
                   <div class="coming-soon-overlay">
                     <q-icon name="analytics" size="56px" color="white" />
                     <h3>Módulo de Análisis</h3>
                     <p>Aquí podrás visualizar estadísticas detalladas y gráficos de las encuestas</p>
-                    <q-badge color="primary" class="q-mt-md">Próximamente</q-badge>
+                    <q-badge color="primary" class="q-mt-md coming-soon-badge">Próximamente</q-badge>
                   </div>
                 </div>
               </q-tab-panel>
 
               <!-- Panel Geográfico -->
               <q-tab-panel name="geografico" class="tab-panel">
-                <div class="coming-soon">
+                <div class="coming-soon" data-aos="fade-up">
                   <img src="https://cdn.quasar.dev/img/mountains.jpg" class="placeholder-image" alt="Mapa">
                   <div class="coming-soon-overlay">
                     <q-icon name="map" size="56px" color="white" />
                     <h3>Visualización Geográfica</h3>
                     <p>Aquí podrás ver la distribución geográfica de las respuestas</p>
-                    <q-badge color="primary" class="q-mt-md">Próximamente</q-badge>
+                    <q-badge color="primary" class="q-mt-md coming-soon-badge">Próximamente</q-badge>
                   </div>
                 </div>
               </q-tab-panel>
@@ -279,6 +285,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
+import AOS from 'aos'
 import { useAuthStore } from 'src/stores/auth.store'
 import EncuestaFormDialog from 'components/encuestadores/EncuestaFormDialog.vue'
 import EncuestaPreview from 'components/encuestadores/EncuestaPreview.vue'
@@ -333,6 +340,15 @@ const currentUser = computed(() => {
 
 // Cargar datos iniciales
 onMounted(async () => {
+  // Inicializar AOS si está disponible
+  if (typeof AOS !== 'undefined') {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true
+    })
+  }
+
   await loadData()
 })
 
@@ -522,15 +538,15 @@ function getEstadoClass(estado, proyecto) {
 function getEstadoBadgeColor(estado, proyecto) {
   // Si la fecha fin ya pasó, mostrar como "Finalizado" sin importar el estado actual
   if (proyecto && isProyectoFinalizado(proyecto)) {
-    return 'purple'
+    return 'secondary'
   }
 
   const colors = {
-    'inicio': 'blue',
-    'en curso': 'green',
-    'concluido': 'purple',
+    'inicio': 'primary',
+    'en curso': 'accent',
+    'concluido': 'secondary',
     'pausado': 'orange',
-    'finalizado': 'purple'
+    'finalizado': 'secondary'
   }
   return colors[estado] || 'grey'
 }
@@ -587,35 +603,96 @@ function exportarDatos() {
 </script>
 
 <style lang="scss">
+/* Variables de colores personalizados */
+$purple: #663399;
+$teal: #009999;
+$light-teal: #00AAAA;
+$white: #FFFFFF;
+
+/* Configuración de colores para Quasar */
+:root {
+  --q-primary: #{$purple};
+  --q-secondary: #{$purple};
+  --q-accent: #{$teal};
+}
+
 /* Estilos profesionales con alta atención al detalle */
 .proyecto-detail-page {
   background-color: #f8f9fa;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba($purple, 0.02) 0%, rgba($teal, 0.02) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
-/* Header estilo empresarial con degradado profesional */
+/* Header con degradado en la nueva paleta de colores */
 .header-container {
-  background: linear-gradient(to right, #1565C0, #1976d2);
-  padding: 24px 0;
-  color: white;
-  box-shadow: 0 2px 10px rgba(25, 118, 210, 0.2);
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  padding: 28px 0;
+  color: $white;
+  box-shadow: 0 4px 20px rgba($purple, 0.25);
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    right: -30px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -20px;
+    left: -20px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+  }
 }
 
 .header-content {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .breadcrumb {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .breadcrumb-btn {
   color: rgba(255, 255, 255, 0.9);
   font-size: 14px;
   padding-left: 0;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: $white;
+    transform: translateX(-3px);
+  }
 }
 
 .header-title-row {
@@ -631,21 +708,32 @@ function exportarDatos() {
   flex-wrap: wrap;
 
   h1 {
-    color: white;
-    font-size: 28px;
-    font-weight: 600;
+    color: $white;
+    font-size: 32px;
+    font-weight: 700;
     margin: 0;
     margin-right: 16px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
   }
 }
 
 .estado-badge {
   font-size: 13px;
-  padding: 6px 12px;
-  border-radius: 16px;
+  padding: 6px 14px;
+  border-radius: 30px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 500;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  background: rgba($white, 0.2);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba($white, 0.3);
 }
 
 .header-actions {
@@ -660,11 +748,64 @@ function exportarDatos() {
 }
 
 .action-btn {
-  font-weight: 500;
-  border-radius: 4px;
+  font-weight: 600;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 8px 16px;
+  letter-spacing: 0.03em;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.3));
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+  }
 
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba($purple, 0.3);
+
+    &::after {
+      transform: translateX(100%);
+    }
+  }
+
+  &:active {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba($purple, 0.25);
+  }
+}
+
+.new-survey-btn {
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  box-shadow: 0 4px 15px rgba($purple, 0.25);
+  font-weight: 600;
+  letter-spacing: 0.5px;
+
+  &:hover {
+    box-shadow: 0 6px 18px rgba($purple, 0.4);
+  }
+}
+
+.retry-btn {
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba($purple, 0.35);
+    transform: translateY(-2px);
   }
 }
 
@@ -673,13 +814,15 @@ function exportarDatos() {
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 24px 16px;
+  padding: 30px 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .content-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 30px;
 
   @media (min-width: 960px) {
     grid-template-columns: 320px 1fr;
@@ -701,20 +844,22 @@ function exportarDatos() {
 .tabs-card,
 .stat-card,
 .encuesta-item {
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba($purple, 0.08);
   overflow: hidden;
-  transition: box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+  border-color: rgba($purple, 0.1);
 
   &:hover {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 8px 24px rgba($purple, 0.12);
+    transform: translateY(-3px);
   }
 }
 
 .proyecto-info-header {
-  padding: 16px;
-  background-color: #f9f9f9;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 18px 20px;
+  background: linear-gradient(to right, rgba($purple, 0.05), rgba($teal, 0.05));
+  border-bottom: 1px solid rgba($purple, 0.08);
 }
 
 .info-title {
@@ -722,15 +867,21 @@ function exportarDatos() {
   align-items: center;
   font-weight: 600;
   font-size: 16px;
-  color: #1976d2;
+  color: $purple;
 
   .q-icon {
-    margin-right: 8px;
+    margin-right: 10px;
+    color: $teal;
   }
 }
 
 .info-section {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 
   &:last-child {
     margin-bottom: 0;
@@ -738,28 +889,34 @@ function exportarDatos() {
 }
 
 .info-label {
-  font-size: 13px;
-  color: #616161;
-  margin-bottom: 4px;
+  font-size: 14px;
+  color: rgba($purple, 0.7);
+  margin-bottom: 6px;
   display: flex;
   align-items: center;
+  font-weight: 500;
+
+  .q-icon {
+    color: $teal;
+  }
 }
 
 .info-value {
   font-size: 15px;
-  color: #212121;
-  font-weight: 500;
+  color: $purple;
+  font-weight: 600;
 
   &.description {
     font-weight: 400;
-    line-height: 1.5;
+    line-height: 1.6;
+    color: rgba($purple, 0.8);
   }
 }
 
 .dates-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
+  gap: 20px;
 
   @media (min-width: 480px) and (max-width: 959px) {
     grid-template-columns: 1fr 1fr;
@@ -769,81 +926,103 @@ function exportarDatos() {
 /* Tarjetas de estadísticas */
 .stats-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
 }
 
 .stat-card {
   position: relative;
   overflow: hidden;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba($purple, 0.1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, $purple, $teal);
+    opacity: 0.8;
+  }
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba($purple, 0.15);
+  }
 }
 
 .stat-card-content {
-  padding: 16px;
+  padding: 20px;
   text-align: center;
 }
 
 .stat-card-value {
-  font-size: 32px;
+  font-size: 36px;
   font-weight: 700;
-  color: #1976d2;
-  margin-bottom: 4px;
+  color: $purple;
+  margin-bottom: 6px;
+  text-shadow: 0 1px 1px rgba($purple, 0.1);
 
   &.estado-value {
-    font-size: 24px;
+    font-size: 26px;
   }
 }
 
 .stat-card-label {
-  font-size: 14px;
-  color: #616161;
+  font-size: 15px;
+  color: rgba($purple, 0.8);
   font-weight: 600;
   margin-bottom: 4px;
+  letter-spacing: 0.02em;
 }
 
 .stat-card-subtext {
-  font-size: 12px;
-  color: #9e9e9e;
+  font-size: 13px;
+  color: rgba($purple, 0.6);
+  font-weight: 500;
 }
 
 .stat-icon {
   position: absolute;
-  bottom: 8px;
-  right: 8px;
+  bottom: 12px;
+  right: 12px;
   font-size: 36px;
-  opacity: 0.1;
-  color: #1976d2;
+  opacity: 0.15;
+  color: $teal;
 }
 
 /* Estados */
 .estado-inicio {
   .stat-card-value {
-    color: #1976d2;
+    color: $purple;
   }
 
   .stat-icon {
-    color: #1976d2;
+    color: $purple;
   }
 }
 
 .estado-encurso {
   .stat-card-value {
-    color: #2e7d32;
+    color: $teal;
   }
 
   .stat-icon {
-    color: #2e7d32;
+    color: $teal;
   }
 }
 
 .estado-concluido,
 .estado-finalizado {
   .stat-card-value {
-    color: #673ab7;
+    color: $purple;
   }
 
   .stat-icon {
-    color: #673ab7;
+    color: $purple;
   }
 }
 
@@ -874,11 +1053,23 @@ function exportarDatos() {
 }
 
 .tabs-header {
-  border-radius: 8px 8px 0 0;
+  border-radius: 16px 16px 0 0;
+
+  .q-tab {
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: rgba($purple, 0.05);
+    }
+
+    &--active {
+      font-weight: 600;
+    }
+  }
 }
 
 .tab-panel {
-  padding: 24px;
+  padding: 28px;
 }
 
 /* Estado de carga y errores de página completa */
@@ -888,13 +1079,14 @@ function exportarDatos() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
-  margin: 24px auto;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 60px 30px;
+  margin: 30px auto;
+  background-color: $white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba($purple, 0.08);
   max-width: 500px;
   text-align: center;
+  border: 1px solid rgba($purple, 0.1);
 }
 
 /* Estado de carga en secciones */
@@ -902,8 +1094,11 @@ function exportarDatos() {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  color: #616161;
+  padding: 30px;
+  color: rgba($purple, 0.7);
+  background: rgba($purple, 0.03);
+  border-radius: 12px;
+  font-weight: 500;
 }
 
 /* Panel de encuestas */
@@ -911,20 +1106,32 @@ function exportarDatos() {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 
 .panel-title {
-  font-size: 20px;
-  font-weight: 600;
-  margin: 0 0 4px 0;
-  color: #1f2937;
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  color: $purple;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 40px;
+    height: 3px;
+    background: $teal;
+    border-radius: 10px;
+  }
 }
 
 .panel-subtitle {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0;
+  font-size: 15px;
+  color: rgba($purple, 0.7);
+  margin: 8px 0 0 0;
 }
 
 /* Estado vacío */
@@ -933,75 +1140,149 @@ function exportarDatos() {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 48px 24px;
-  background-color: #f5f7fa;
-  border-radius: 8px;
+  padding: 60px 30px;
+  background: linear-gradient(to right, rgba($purple, 0.02), rgba($teal, 0.02));
+  border-radius: 16px;
   text-align: center;
   margin-top: 16px;
+  border: 1px dashed rgba($teal, 0.2);
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: rgba($teal, 0.3);
+    box-shadow: 0 8px 30px rgba($purple, 0.05);
+  }
 }
 
 .empty-state-icon {
-  margin-bottom: 16px;
-  color: #bdbdbd;
-  background-color: #f5f5f5;
+  margin-bottom: 24px;
+  color: rgba($purple, 0.5);
+  background-color: rgba($teal, 0.1);
   border-radius: 50%;
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    background-color: rgba($teal, 0.15);
+  }
 }
 
 .empty-state-title {
-  font-size: 18px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: #424242;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 10px 0;
+  color: $purple;
 }
 
 .empty-state-description {
-  color: #757575;
-  margin: 0 0 24px 0;
+  color: rgba($purple, 0.7);
+  margin: 0 0 26px 0;
   max-width: 400px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.empty-state-btn {
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  font-weight: 600;
+  padding: 10px 24px;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba($purple, 0.35);
+    transform: translateY(-3px) scale(1.05);
+  }
 }
 
 /* Lista de encuestas */
 .encuestas-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 20px;
 }
 
 /* Encuesta individual */
 .encuesta-item {
   overflow: hidden;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border-radius: 16px;
+  border: 1px solid rgba($purple, 0.1);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(to bottom, $purple, $teal);
+    opacity: 0.7;
+  }
 }
 
 .encuesta-header {
-  background-color: #fafafa;
-  padding: 12px 16px;
+  background: linear-gradient(to right, rgba($purple, 0.03), rgba($teal, 0.03));
+  padding: 14px 18px;
 }
 
 .encuesta-title {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 600;
-  color: #1f2937;
+  color: $purple;
 }
 
 .encuesta-icon {
   font-size: 20px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: rotate(5deg);
+  }
 }
 
 .encuesta-actions {
   display: flex;
+  gap: 8px;
+}
+
+.action-icon {
+  transition: all 0.3s ease;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: rgba($purple, 0);
+    transition: all 0.2s ease;
+    z-index: -1;
+  }
+
+  &:hover {
+    transform: translateY(-3px);
+
+    &::before {
+      background: rgba($purple, 0.1);
+    }
+  }
 }
 
 .encuesta-description {
-  color: #424242;
-  font-size: 14px;
+  color: rgba($purple, 0.8);
+  font-size: 15px;
   line-height: 1.6;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   max-height: 60px;
   overflow: hidden;
   display: -webkit-box;
@@ -1012,29 +1293,67 @@ function exportarDatos() {
 .encuesta-metadata {
   display: flex;
   flex-wrap: wrap;
-  gap: 16px;
+  gap: 18px;
   font-size: 13px;
-  color: #757575;
+  color: rgba($purple, 0.7);
 }
 
 .meta-item {
   display: flex;
   align-items: center;
+
+  .q-icon {
+    color: $teal;
+  }
+}
+
+.stats-btn {
+  transition: all 0.3s ease;
+  font-weight: 500;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: $purple;
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+
+    &::after {
+      width: 80%;
+    }
+  }
 }
 
 /* Componentes Coming Soon */
 .coming-soon {
   position: relative;
-  border-radius: 8px;
+  border-radius: 16px;
   overflow: hidden;
-  height: 300px;
+  height: 350px;
+  box-shadow: 0 8px 30px rgba($purple, 0.15);
 }
 
 .placeholder-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: blur(3px) brightness(0.7);
+  filter: blur(1px) brightness(0.6);
+  transform: scale(1.05);
+  transition: all 0.5s ease;
+
+  &:hover {
+    filter: blur(0px) brightness(0.7);
+    transform: scale(1);
+  }
 }
 
 .coming-soon-overlay {
@@ -1049,19 +1368,34 @@ function exportarDatos() {
   justify-content: center;
   text-align: center;
   padding: 24px;
-  color: white;
+  color: $white;
+  background: linear-gradient(to bottom, rgba($purple, 0.1), rgba($purple, 0.4));
 
   h3 {
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 28px;
+    font-weight: 700;
     margin: 16px 0 8px 0;
-    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
   }
 
   p {
-    margin: 0 0 16px 0;
+    margin: 0 0 24px 0;
     max-width: 400px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .coming-soon-badge {
+    background: rgba($white, 0.2);
+    backdrop-filter: blur(8px);
+    color: $white;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    letter-spacing: 0.5px;
+    border: 1px solid rgba($white, 0.3);
   }
 }
 
@@ -1072,8 +1406,8 @@ function exportarDatos() {
   @media (max-width: 599px) {
     display: block;
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    bottom: 30px;
+    right: 30px;
     z-index: 10;
   }
 }
@@ -1095,54 +1429,48 @@ function exportarDatos() {
 }
 
 .fab-button {
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  box-shadow: 0 6px 20px rgba($purple, 0.35);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4);
+    transform: translateY(-5px) rotate(5deg);
+    box-shadow: 0 10px 25px rgba($purple, 0.45);
   }
 }
 
 /* Media queries adicionales */
 @media (max-width: 767px) {
   .header-container {
-    padding: 16px 0;
+    padding: 20px 0;
   }
 
   .header-title h1 {
-    font-size: 24px;
+    font-size: 26px;
   }
 
   .stat-card-value {
-    font-size: 28px;
+    font-size: 30px;
   }
 
   .tab-panel {
-    padding: 16px;
+    padding: 20px;
   }
 
   .panel-title {
-    font-size: 18px;
+    font-size: 20px;
+  }
+
+  .empty-state {
+    padding: 40px 20px;
   }
 }
 
-/* Animaciones sutiles */
-.encuesta-item {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  }
-}
-
-/* Efectos de hover para mejorar la experiencia interactiva */
-.action-btn,
-.encuesta-actions .q-btn {
-  transition: all 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1px);
+@media (min-width: 768px) and (max-width: 1023px) {
+  .encuestas-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
   }
 }
 </style>

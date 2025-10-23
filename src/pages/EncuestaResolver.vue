@@ -2,56 +2,79 @@
   <q-page padding class="encuesta-page">
     <!-- Estado de carga -->
     <div v-if="loading" class="flex flex-center q-pa-xl">
-      <div class="column items-center">
-        <q-spinner-dots size="80px" color="primary" />
-        <div class="text-h6 q-mt-md">Cargando encuesta...</div>
+      <div class="column items-center loading-container" data-aos="fade-up" data-aos-duration="800">
+        <q-spinner-dots size="80px" color="purple" />
+        <div class="text-h5 text-purple q-mt-md">Cargando encuesta...</div>
+        <div class="loading-progress">
+          <div class="loading-bar"></div>
+        </div>
       </div>
     </div>
 
     <!-- Estado de error -->
     <div v-else-if="error" class="flex flex-center q-pa-xl">
-      <div class="column items-center">
+      <div class="column items-center error-container" data-aos="fade-up" data-aos-duration="800">
         <q-icon name="error_outline" size="80px" color="negative" />
-        <div class="text-h6 q-mt-md">{{ error }}</div>
-        <q-btn color="primary" label="Reintentar" class="q-mt-lg" @click="cargarEncuesta" />
+        <div class="text-h5 text-weight-bold text-purple q-mt-md">{{ error }}</div>
+        <p class="text-center q-mt-md text-grey-8">Ocurrió un problema al intentar cargar la encuesta. Por favor intente nuevamente.</p>
+        <q-btn
+          color="teal"
+          label="Reintentar"
+          class="q-mt-lg retry-btn"
+          icon="refresh"
+          @click="cargarEncuesta"
+        />
       </div>
     </div>
 
     <!-- Formulario de encuesta -->
     <div v-else-if="encuesta && encuesta.id">
-      <div class="row q-col-gutter-md">
+      <div class="row q-col-gutter-lg">
         <div class="col-12 col-lg-8 offset-lg-2">
-          <q-card flat bordered class="encuesta-card">
+          <q-card flat bordered class="encuesta-card" data-aos="fade-up" data-aos-duration="1000">
             <!-- Cabecera -->
-            <q-card-section class="bg-primary text-white header-section">
-              <div class="text-h5">{{ encuesta.titulo }}</div>
-              <div class="text-subtitle2" v-if="encuesta.descripcion">{{ encuesta.descripcion }}</div>
-              <div class="text-caption q-mt-sm" v-if="encuesta.fechaFinal">
+            <q-card-section class="header-section">
+              <div class="text-h4 text-white text-weight-bold">{{ encuesta.titulo }}</div>
+              <div class="text-subtitle1 text-white opacity-8 q-mt-sm" v-if="encuesta.descripcion">{{ encuesta.descripcion }}</div>
+              <div class="text-caption text-white q-mt-sm deadline" v-if="encuesta.fechaFinal">
+                <q-icon name="event" size="18px" class="q-mr-xs" />
                 Disponible hasta: {{ formatDate(encuesta.fechaFinal) }}
               </div>
             </q-card-section>
 
-            <q-separator />
-
             <!-- Información de progreso -->
-            <q-card-section class="progress-section">
-              <div class="row items-center q-col-gutter-md">
+            <q-card-section class="progress-section" data-aos="fade-right" data-aos-duration="600" data-aos-delay="200">
+              <div class="row items-center q-col-gutter-lg">
                 <div class="col-12 col-sm-8">
-                  <div class="text-subtitle1">
+                  <div class="text-h6 text-purple">
                     <q-icon name="fact_check" class="q-mr-xs" />
-                    Progreso de envíos:
+                    Progreso de envíos
                   </div>
-                  <div class="text-body2 q-mt-sm">
-                    <q-badge color="primary" outline class="q-mr-sm">{{ totalEnvios }}</q-badge>
-                    enviado{{ totalEnvios !== 1 ? 's' : '' }} de
-                    <q-badge color="primary" outline class="q-mr-sm">{{ objetivo }}</q-badge>
+                  <div class="text-body1 q-mt-sm">
+                    Has completado <q-badge color="purple" class="badge-custom q-mr-xs">{{ totalEnvios }}</q-badge>
+                    de <q-badge color="teal" class="badge-custom">{{ objetivo }}</q-badge> encuestas asignadas
                   </div>
                 </div>
                 <div class="col-12 col-sm-4 text-center">
-                  <q-circular-progress :value="progreso * 100" size="60px" :color="getProgresoColor()" class="q-ma-md"
-                    show-value font-size="12px" track-color="grey-3">
-                    {{ Math.round(progreso * 100) }}%
+                  <q-circular-progress
+                    :value="progreso * 100"
+                    size="80px"
+                    :color="getProgresoColor()"
+                    class="progress-circle shadow-3"
+                    show-value
+                    font-size="16px"
+                    track-color="grey-3"
+                    :thickness="0.2"
+                  >
+                    <div class="text-weight-bold">{{ Math.round(progreso * 100) }}%</div>
                   </q-circular-progress>
+                </div>
+              </div>
+
+              <!-- Barra de progreso horizontal -->
+              <div class="progress-bar-container q-mt-md">
+                <div class="progress-bar-bg">
+                  <div class="progress-bar-fill" :style="`width: ${Math.round(progreso * 100)}%`" :class="getProgresoColor()"></div>
                 </div>
               </div>
             </q-card-section>
@@ -62,76 +85,167 @@
             <q-form ref="encuestaForm" @submit="confirmarEnvio">
               <!-- Secciones y preguntas -->
               <template v-for="(seccion, seccionIndex) in encuesta.secciones" :key="seccion.id">
-                <q-card-section :class="seccionIndex % 2 === 0 ? 'seccion-par' : 'seccion-impar'" class="seccion-container">
-                  <div class="text-h6 q-mb-md section-title">{{ seccionIndex + 1 }}. {{ seccion.titulo }}</div>
+                <q-card-section
+                  :class="seccionIndex % 2 === 0 ? 'seccion-par' : 'seccion-impar'"
+                  class="seccion-container"
+                  data-aos="fade-up"
+                  :data-aos-delay="seccionIndex * 100"
+                  data-aos-duration="800"
+                >
+                  <div class="seccion-header">
+                    <div class="text-h5 text-weight-bold section-title">{{ seccionIndex + 1 }}. {{ seccion.titulo }}</div>
+                    <div class="section-badge q-ml-sm" :class="seccionIndex % 2 === 0 ? 'bg-purple' : 'bg-teal'">Sección {{ seccionIndex + 1 }}</div>
+                  </div>
+
                   <p v-if="seccion.descripcion" class="q-mb-lg section-description">{{ seccion.descripcion }}</p>
 
                   <!-- Preguntas de la sección -->
-                  <div v-for="(pregunta, preguntaIndex) in seccion.preguntas" :key="pregunta.id"
-                    class="pregunta-container q-mb-lg">
+                  <div
+                    v-for="(pregunta, preguntaIndex) in seccion.preguntas"
+                    :key="pregunta.id"
+                    class="pregunta-container q-mb-xl"
+                    data-aos="fade-right"
+                    :data-aos-delay="preguntaIndex * 80 + 100"
+                    data-aos-duration="600"
+                  >
                     <div class="row items-center q-mb-sm question-header">
                       <div class="text-subtitle1 question-text">
-                        {{ seccionIndex + 1 }}.{{ preguntaIndex + 1 }}. {{ pregunta.enunciado }}
+                        <span class="question-number">{{ seccionIndex + 1 }}.{{ preguntaIndex + 1 }}.</span> {{ pregunta.enunciado }}
                       </div>
                       <q-badge v-if="pregunta.obligatoria" color="negative" class="q-ml-sm required-badge">
-                        Obligatoria
+                        <q-icon name="priority_high" size="12px" class="q-mr-xs" /> Obligatoria
                       </q-badge>
                     </div>
 
                     <!-- Campo para respuesta según tipo -->
                     <div class="q-pl-md q-mt-sm answer-container">
                       <!-- Texto corto -->
-                      <q-input v-if="pregunta.tipo === 'text'" outlined dense placeholder="Escriba su respuesta aquí"
-                        v-model="respuestas[pregunta.id]" class="custom-input"
-                        :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []" />
+                      <q-input
+                        v-if="pregunta.tipo === 'text'"
+                        outlined
+                        dense
+                        placeholder="Escriba su respuesta aquí"
+                        v-model="respuestas[pregunta.id]"
+                        class="custom-input"
+                        :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []"
+                      >
+                        <template v-slot:prepend>
+                          <q-icon name="short_text" color="purple" />
+                        </template>
+                        <template v-slot:append>
+                          <q-icon name="check_circle" color="teal" v-if="respuestas[pregunta.id]" />
+                        </template>
+                      </q-input>
 
                       <!-- Texto largo -->
-                      <q-input v-else-if="pregunta.tipo === 'textarea'" type="textarea" outlined autogrow
-                        placeholder="Escriba su respuesta aquí" v-model="respuestas[pregunta.id]" class="custom-input"
-                        :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []" />
+                      <q-input
+                        v-else-if="pregunta.tipo === 'textarea'"
+                        type="textarea"
+                        outlined
+                        autogrow
+                        placeholder="Escriba su respuesta aquí"
+                        v-model="respuestas[pregunta.id]"
+                        class="custom-input"
+                        :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []"
+                        counter
+                      >
+                        <template v-slot:prepend>
+                          <q-icon name="notes" color="purple" />
+                        </template>
+                        <template v-slot:append>
+                          <q-icon name="check_circle" color="teal" v-if="respuestas[pregunta.id]" />
+                        </template>
+                      </q-input>
 
                       <!-- Número -->
-                      <q-input v-else-if="pregunta.tipo === 'number'" type="number" outlined dense placeholder="0"
-                        v-model.number="respuestas[pregunta.id]" class="custom-input"
-                        :rules="pregunta.obligatoria ? [val => val !== null && val !== undefined && val !== '' || 'Este campo es obligatorio'] : []" />
+                      <q-input
+                        v-else-if="pregunta.tipo === 'number'"
+                        type="number"
+                        outlined
+                        dense
+                        placeholder="0"
+                        v-model.number="respuestas[pregunta.id]"
+                        class="custom-input"
+                        :rules="pregunta.obligatoria ? [val => val !== null && val !== undefined && val !== '' || 'Este campo es obligatorio'] : []"
+                      >
+                        <template v-slot:prepend>
+                          <q-icon name="numbers" color="purple" />
+                        </template>
+                        <template v-slot:append>
+                          <q-icon name="check_circle" color="teal" v-if="respuestas[pregunta.id] !== null && respuestas[pregunta.id] !== undefined && respuestas[pregunta.id] !== ''" />
+                        </template>
+                      </q-input>
 
                       <!-- Opciones simples (radio) -->
-                      <div v-else-if="pregunta.tipo === 'single'" class="q-mt-sm">
-                        <q-option-group v-model="respuestas[pregunta.id]"
-                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))" type="radio"
-                          color="primary"
-                          :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []" />
+                      <div v-else-if="pregunta.tipo === 'single'" class="q-mt-sm option-container">
+                        <q-option-group
+                          v-model="respuestas[pregunta.id]"
+                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))"
+                          type="radio"
+                          color="teal"
+                          class="custom-radio"
+                          :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []"
+                        />
                       </div>
 
                       <!-- Opciones múltiples (checkbox) -->
-                      <div v-else-if="pregunta.tipo === 'multi'" class="q-mt-sm">
-                        <q-option-group v-model="respuestas[pregunta.id]"
-                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))" type="checkbox"
-                          color="primary"
-                          :rules="pregunta.obligatoria ? [val => val && val.length > 0 || 'Debe seleccionar al menos una opción'] : []" />
+                      <div v-else-if="pregunta.tipo === 'multi'" class="q-mt-sm option-container">
+                        <q-option-group
+                          v-model="respuestas[pregunta.id]"
+                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))"
+                          type="checkbox"
+                          color="purple"
+                          class="custom-checkbox"
+                          :rules="pregunta.obligatoria ? [val => val && val.length > 0 || 'Debe seleccionar al menos una opción'] : []"
+                        />
                       </div>
 
                       <!-- Escala -->
-                      <div v-else-if="pregunta.tipo === 'scale'" class="q-mt-md scale-container">
-                        <div class="row justify-between q-mb-xs scale-labels">
-                          <div class="text-caption">{{ pregunta.min }}</div>
-                          <div class="text-caption">{{ pregunta.max }}</div>
+                      <div v-else-if="pregunta.tipo === 'scale'" class="scale-container">
+                        <div class="scale-labels">
+                          <div class="scale-min">{{ pregunta.min }}</div>
+                          <div class="scale-max">{{ pregunta.max }}</div>
                         </div>
-                        <q-slider v-model="respuestas[pregunta.id]" :min="pregunta.min" :max="pregunta.max" :step="1"
-                          label markers color="primary" class="custom-slider" />
+                        <div class="scale-value-display">
+                          <span class="text-h6 text-purple">{{ respuestas[pregunta.id] }}</span>
+                        </div>
+                        <q-slider
+                          v-model="respuestas[pregunta.id]"
+                          :min="pregunta.min"
+                          :max="pregunta.max"
+                          :step="1"
+                          label
+                          markers
+                          color="teal"
+                          class="custom-slider"
+                        />
                       </div>
 
                       <!-- Fecha -->
                       <div v-else-if="pregunta.tipo === 'date'" class="q-mt-sm">
-                        <q-input outlined dense placeholder="dd/mm/aaaa" mask="##/##/####" class="custom-input"
+                        <q-input
+                          outlined
+                          dense
+                          placeholder="dd/mm/aaaa"
+                          mask="##/##/####"
+                          class="custom-input date-input"
                           v-model="respuestas[pregunta.id]"
-                          :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []">
+                          :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []"
+                        >
+                          <template v-slot:prepend>
+                            <q-icon name="event" color="purple" />
+                          </template>
                           <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
-                              <q-popup-proxy transition-show="scale" transition-hide="scale">
-                                <q-date v-model="respuestas[pregunta.id]" mask="DD/MM/YYYY">
-                                  <div class="row justify-end">
-                                    <q-btn v-close-popup flat label="Cerrar" color="primary" />
+                              <q-popup-proxy transition-show="scale" transition-hide="scale" class="date-popup">
+                                <q-date
+                                  v-model="respuestas[pregunta.id]"
+                                  mask="DD/MM/YYYY"
+                                  color="teal"
+                                  today-btn
+                                >
+                                  <div class="row justify-end q-pa-sm">
+                                    <q-btn v-close-popup flat label="Seleccionar" color="teal" />
                                   </div>
                                 </q-date>
                               </q-popup-proxy>
@@ -146,49 +260,84 @@
               </template>
 
               <!-- Sección de ubicación geográfica mejorada -->
-              <q-card-section class="location-section">
-                <div class="text-h6 q-mb-sm location-title">
-                  <q-icon name="location_on" class="q-mr-xs" />
-                  Ubicación
+              <q-card-section class="location-section" data-aos="fade-up" data-aos-duration="800">
+                <div class="location-header">
+                  <div class="text-h5 text-weight-bold location-title">
+                    <q-icon name="location_on" class="q-mr-sm" />
+                    Ubicación
+                  </div>
+                  <div class="location-status" v-if="coordenadas.lat && coordenadas.lng">
+                    <q-chip color="positive" text-color="white" icon="check_circle">
+                      Ubicación capturada
+                    </q-chip>
+                  </div>
                 </div>
-                <p class="text-grey-8 q-mb-md location-description">Para completar la encuesta, es necesario registrar la ubicación actual.</p>
+
+                <p class="text-grey-8 q-mb-md location-description">
+                  Para completar la encuesta, es necesario registrar la ubicación actual.
+                  <span class="text-negative" v-if="!coordenadas.lat || !coordenadas.lng"> (Pendiente)</span>
+                </p>
 
                 <!-- Mapa con ubicación actual -->
-                <div class="map-container q-mb-md">
-                  <div id="map" style="width: 100%; height: 300px; border-radius: 8px;" ref="mapContainer"></div>
+                <div class="map-container q-mb-md" :class="{'map-with-location': coordenadas.lat && coordenadas.lng}">
+                  <div id="map" style="width: 100%; height: 350px; border-radius: 12px;" ref="mapContainer"></div>
                 </div>
 
                 <!-- Botón de calibrar ubicación -->
-                <div class="row justify-center q-mt-md">
+                <div class="row justify-center q-mt-lg">
                   <q-btn
-                    color="secondary"
+                    color="teal"
                     icon="gps_fixed"
                     label="CALIBRAR UBICACIÓN"
                     @click="obtenerUbicacionActual"
                     :loading="cargandoUbicacion"
                     class="calibrate-btn"
+                    size="lg"
                   />
+                </div>
+
+                <!-- Coordenadas (solo para debug) -->
+                <div class="coordinates-display q-mt-md" v-if="coordenadas.lat && coordenadas.lng">
+                  <div class="text-subtitle1 text-teal">Coordenadas capturadas:</div>
+                  <div class="row q-col-gutter-md q-mt-xs">
+                    <div class="col-6">
+                      <q-input dense outlined readonly label="Latitud" v-model="coordenadas.lat" class="coordinate-input">
+                        <template v-slot:prepend>
+                          <q-icon name="north" color="teal" />
+                        </template>
+                      </q-input>
+                    </div>
+                    <div class="col-6">
+                      <q-input dense outlined readonly label="Longitud" v-model="coordenadas.lng" class="coordinate-input">
+                        <template v-slot:prepend>
+                          <q-icon name="east" color="teal" />
+                        </template>
+                      </q-input>
+                    </div>
+                  </div>
                 </div>
               </q-card-section>
 
               <q-separator />
 
               <!-- Botones de acción -->
-              <q-card-actions align="right" class="action-buttons q-pa-md">
+              <q-card-actions class="action-buttons q-pa-lg">
                 <q-btn
                   label="LIMPIAR RESPUESTAS"
                   outline
-                  color="accent"
+                  color="purple"
                   @click="confirmarLimpiar"
                   class="q-mr-sm clear-btn"
+                  icon="delete_sweep"
                 />
                 <q-btn
                   label="GUARDAR Y ENVIAR"
                   type="submit"
-                  color="primary"
+                  color="teal"
                   :loading="guardando"
                   :disable="!coordenadas.lat || !coordenadas.lng"
                   class="submit-btn"
+                  icon-right="send"
                 />
               </q-card-actions>
             </q-form>
@@ -199,15 +348,18 @@
 
     <!-- Estado completado -->
     <div v-else-if="completado" class="flex flex-center q-pa-xl">
-      <div class="column items-center success-container">
-        <q-icon name="check_circle" size="80px" color="positive" />
-        <div class="text-h6 q-mt-md">¡Gracias por completar la encuesta!</div>
-        <p class="text-center q-mt-md">
-          Tus respuestas han sido guardadas exitosamente.
+      <div class="column items-center success-container" data-aos="zoom-in" data-aos-duration="800">
+        <div class="success-icon">
+          <q-icon name="check_circle" size="80px" color="positive" />
+          <div class="success-confetti"></div>
+        </div>
+        <div class="text-h4 text-purple text-weight-bold q-mt-lg">¡Gracias por completar la encuesta!</div>
+        <p class="text-subtitle1 text-center q-mt-md q-mb-xl">
+          Tus respuestas han sido guardadas exitosamente y contribuirán significativamente a nuestro estudio.
         </p>
-        <div class="q-gutter-md q-mt-lg">
-          <q-btn color="primary" label="Realizar otra encuesta" to="/encuestadores" class="action-btn" />
-          <q-btn outline color="primary" label="Ver mis envíos" to="/encuestadores/envios" class="action-btn" />
+        <div class="row q-gutter-md q-mt-md">
+          <q-btn color="teal" label="Realizar otra encuesta" to="/encuestadores" class="action-btn" icon="list_alt" />
+          <q-btn outline color="purple" label="Ver mis envíos" to="/encuestadores/envios" class="action-btn" icon="history" />
         </div>
       </div>
     </div>
@@ -215,12 +367,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from 'src/boot/axios'
 import { useQuasar, date } from 'quasar'
 import { useAuthStore } from 'src/stores/auth.store'
 import 'leaflet/dist/leaflet.css'
+import AOS from 'aos'
 
 // Variables y constantes
 const $q = useQuasar()
@@ -246,6 +399,27 @@ const completado = ref(false)
 const asignacion = ref(null)
 const totalEnvios = ref(0)
 const objetivo = ref(0)
+
+// Inicializar AOS (si está disponible)
+const initAOS = () => {
+  if (typeof AOS !== 'undefined') {
+    AOS.init({
+      duration: 800,
+      once: false,
+      mirror: true,
+      offset: 50
+    });
+  }
+};
+
+// Refrescar AOS
+const refreshAOS = () => {
+  if (typeof AOS !== 'undefined') {
+    setTimeout(() => {
+      AOS.refresh();
+    }, 200);
+  }
+};
 
 // Cálculos derivados
 const progreso = computed(() => {
@@ -287,6 +461,7 @@ async function cargarEncuesta() {
     setTimeout(() => {
       inicializarMapa()
       // No llamamos a obtenerUbicacionActual() automáticamente
+      refreshAOS(); // Refrescar AOS después de cargar todo
     }, 500)
 
   } catch (err) {
@@ -423,7 +598,11 @@ function obtenerUbicacionActual() {
           position: 'top',
           progress: true,
           timeout: 2000,
-          classes: 'notification-custom'
+          classes: 'notification-custom',
+          icon: 'location_on',
+          multiLine: true,
+          html: true,
+          caption: 'Las coordenadas han sido guardadas con precisión'
         })
       },
       error => {
@@ -450,7 +629,12 @@ function obtenerUbicacionActual() {
           position: 'top',
           progress: true,
           timeout: 3000,
-          classes: 'notification-custom'
+          classes: 'notification-custom',
+          icon: 'error',
+          multiLine: true,
+          actions: [
+            { label: 'Reintentar', color: 'white', handler: () => obtenerUbicacionActual() }
+          ]
         })
       },
       options
@@ -463,7 +647,8 @@ function obtenerUbicacionActual() {
       position: 'top',
       progress: true,
       timeout: 3000,
-      classes: 'notification-custom'
+      classes: 'notification-custom',
+      icon: 'error'
     })
   }
 }
@@ -527,7 +712,8 @@ function confirmarLimpiar() {
     },
     ok: {
       label: 'Sí, limpiar todo',
-      color: 'negative'
+      color: 'negative',
+      unelevated: true
     },
     persistent: true,
     class: 'custom-dialog'
@@ -539,7 +725,8 @@ function confirmarLimpiar() {
       position: 'top',
       progress: true,
       timeout: 2000,
-      classes: 'notification-custom'
+      classes: 'notification-custom',
+      icon: 'delete_sweep'
     })
   })
 }
@@ -554,18 +741,22 @@ function confirmarEnvio() {
       position: 'top',
       progress: true,
       timeout: 3000,
-      classes: 'notification-custom'
+      classes: 'notification-custom',
+      icon: 'gps_off'
     })
     return
   }
 
-  // Confirmar envío
+  // Confirmar envío con diálogo mejorado
   $q.dialog({
     title: 'Confirmar envío',
-    message: '¿Está seguro que desea enviar esta encuesta?',
+    message: '¿Está seguro que desea enviar esta encuesta? Una vez enviada, no podrá modificar sus respuestas.',
+    html: true,
     ok: {
       label: 'Sí, enviar',
-      color: 'primary'
+      color: 'teal',
+      unelevated: true,
+      icon: 'send'
     },
     cancel: {
       label: 'Cancelar',
@@ -573,10 +764,19 @@ function confirmarEnvio() {
       color: 'grey-7'
     },
     persistent: true,
-    class: 'custom-dialog'
+    class: 'confirm-dialog'
   }).onOk(async () => {
     try {
       guardando.value = true
+
+      // Mostrar spinner personalizado
+      $q.loading.show({
+        message: 'Enviando encuesta...',
+        spinnerColor: 'teal',
+        spinnerSize: 80,
+        messageColor: 'purple',
+        backgroundColor: 'rgba(255, 255, 255, 0.9)'
+      })
 
       // Preparar datos para envío
       const datos = prepararDatosParaEnvio()
@@ -585,14 +785,17 @@ function confirmarEnvio() {
       await api.post('/envios', datos)
 
       guardando.value = false
+      $q.loading.hide()
 
+      // Notificación de éxito mejorada
       $q.notify({
         type: 'positive',
         message: 'Encuesta enviada correctamente',
         position: 'top',
         progress: true,
         timeout: 2000,
-        classes: 'notification-custom'
+        classes: 'notification-custom success-notification',
+        icon: 'check_circle'
       })
 
       // Incrementar contador de envíos
@@ -601,13 +804,19 @@ function confirmarEnvio() {
       // Mostrar animación de completado antes de redireccionar
       completado.value = true
 
+      // Refrescar AOS para la animación de completado
+      nextTick(() => {
+        refreshAOS()
+      })
+
       // Redireccionar después de una breve espera para mostrar la animación
       setTimeout(() => {
         router.push('/encuestadores')
-      }, 2000)
+      }, 3000)
 
     } catch (err) {
       guardando.value = false
+      $q.loading.hide()
       console.error('Error al guardar respuestas:', err)
 
       // Mostrar mensaje de error específico si viene del servidor
@@ -619,7 +828,8 @@ function confirmarEnvio() {
         position: 'top',
         progress: true,
         timeout: 3000,
-        classes: 'notification-custom'
+        classes: 'notification-custom error-notification',
+        icon: 'error'
       })
 
       // Si hay errores de validación específicos, mostrarlos
@@ -632,7 +842,8 @@ function confirmarEnvio() {
             position: 'top',
             timeout: 3000,
             progress: true,
-            classes: 'notification-custom'
+            classes: 'notification-custom validation-error',
+            icon: 'error_outline'
           })
         })
       }
@@ -707,12 +918,16 @@ function formatDate(dateStr) {
 function getProgresoColor() {
   if (progreso.value >= 1) return 'positive'
   if (progreso.value >= 0.7) return 'secondary'
-  if (progreso.value >= 0.3) return 'primary'
+  if (progreso.value >= 0.3) return 'teal'
   return 'negative'
 }
 
 // Ciclo de vida del componente
 onMounted(() => {
+  // Inicializar AOS
+  initAOS()
+
+  // Cargar encuesta
   cargarEncuesta()
 
   // Configurar tema para Quasar
@@ -723,167 +938,321 @@ onMounted(() => {
 <style lang="scss">
 // Definición de variables de colores
 :root {
-  --color-primary: #663399;
-  --color-secondary: #009999;
-  --color-accent: #00AAAA;
-  --color-background: #FFFFFF;
-  --color-text: #333333;
-  --color-text-light: #666666;
-  --color-border: #EEEEEE;
+  --purple: #663399;
+  --teal: #009999;
+  --light-teal: #00AAAA;
+  --white: #FFFFFF;
 }
 
 // Sobrescribir clases de Quasar con nuestros colores personalizados
 .q-page {
-  background-color: #f5f5f7;
+  background-color: #f5f7fa;
+  min-height: 100vh;
 }
 
-.bg-primary {
-  background-color: var(--color-primary) !important;
+.text-purple {
+  color: var(--purple) !important;
 }
 
-.text-primary {
-  color: var(--color-primary) !important;
+.text-teal {
+  color: var(--teal) !important;
 }
 
-.bg-secondary {
-  background-color: var(--color-secondary) !important;
+.bg-purple {
+  background-color: var(--purple) !important;
 }
 
-.text-secondary {
-  color: var(--color-secondary) !important;
-}
-
-.bg-accent {
-  background-color: var(--color-accent) !important;
-}
-
-.text-accent {
-  color: var(--color-accent) !important;
+.bg-teal {
+  background-color: var(--teal) !important;
 }
 
 // Estilos generales de la página
 .encuesta-page {
-  min-height: 100vh;
-  background-color: #f5f5f7;
   padding-top: 20px;
   padding-bottom: 40px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f0f2f5 100%);
+}
+
+// Contenedor de carga
+.loading-container {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  animation: fadeIn 0.6s ease-out;
+  width: 300px;
+
+  .loading-progress {
+    width: 200px;
+    height: 4px;
+    background-color: rgba(102, 51, 153, 0.1);
+    border-radius: 2px;
+    margin-top: 20px;
+    overflow: hidden;
+
+    .loading-bar {
+      width: 30%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--purple), var(--teal));
+      border-radius: 2px;
+      animation: loading 1.5s infinite ease-in-out;
+    }
+  }
+}
+
+@keyframes loading {
+  0% {
+    width: 0%;
+    margin-left: 0%;
+  }
+  50% {
+    width: 30%;
+    margin-left: 70%;
+  }
+  100% {
+    width: 0%;
+    margin-left: 0%;
+  }
+}
+
+// Contenedor de error
+.error-container {
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+
+  .retry-btn {
+    background: linear-gradient(135deg, var(--teal), var(--light-teal)) !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 153, 153, 0.3);
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0, 153, 153, 0.4);
+    }
+  }
 }
 
 // Estilos para la tarjeta principal
 .encuesta-card {
   border-radius: 16px !important;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12) !important;
+  transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  border: none !important;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
   }
 }
 
 // Cabecera
-// Cabecera
 .header-section {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)) !important;
-  padding: 24px !important;
+  background: linear-gradient(135deg, var(--purple) 0%, var(--teal) 100%) !important;
+  padding: 30px !important;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100px;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    animation: shine 3s infinite;
+  }
+
+  .deadline {
+    background: rgba(0, 0, 0, 0.1);
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-top: 12px !important;
+    border-left: 3px solid rgba(255, 255, 255, 0.4);
+  }
+}
+
+@keyframes shine {
+  0% {
+    left: -100px;
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.5;
+  }
+  60% {
+    opacity: 0.3;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
 }
 
 // Sección de progreso
 .progress-section {
-  background-color: rgba(0, 153, 153, 0.1) !important;
-  border-left: 4px solid var(--color-secondary);
-  transition: all 0.3s ease;
+  background: linear-gradient(to right, rgba(102, 51, 153, 0.05), rgba(0, 153, 153, 0.05)) !important;
+  border-left: 4px solid var(--teal);
+  padding: 24px !important;
+
+  .badge-custom {
+    font-size: 16px;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-weight: bold;
+  }
+
+  .progress-circle {
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: scale(1.05);
+    }
+  }
+
+  .progress-bar-container {
+    margin-top: 16px;
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 8px;
+      background-color: rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+
+      .progress-bar-fill {
+        height: 100%;
+        border-radius: 4px;
+        transition: width 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+
+        &.positive {
+          background: linear-gradient(90deg, var(--teal), #21ba45);
+        }
+
+        &.secondary {
+          background: linear-gradient(90deg, var(--teal), var(--light-teal));
+        }
+
+        &.teal {
+          background: linear-gradient(90deg, var(--purple), var(--teal));
+        }
+
+        &.negative {
+          background: linear-gradient(90deg, #c10015, var(--purple));
+        }
+      }
+    }
+  }
 }
 
 // Secciones
 .seccion-par {
-  background-color: var(--color-background);
-  border-left: 3px solid var(--color-primary);
+  background-color: var(--white);
+  border-left: 4px solid var(--purple);
 }
 
 .seccion-impar {
   background-color: rgba(102, 51, 153, 0.05);
-  border-left: 3px solid var(--color-secondary);
+  border-left: 4px solid var(--teal);
 }
 
 .seccion-container {
-  padding: 28px !important;
+  padding: 30px !important;
   transition: all 0.3s ease;
 
   &:hover {
-    background-color: rgba(0, 170, 170, 0.05);
+    background-color: rgba(0, 170, 170, 0.03);
+  }
+
+  .seccion-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+
+    .section-badge {
+      font-size: 12px;
+      padding: 3px 10px;
+      border-radius: 30px;
+      color: white;
+      font-weight: 500;
+    }
   }
 }
 
 // Títulos y descripciones de sección
 .section-title {
-  color: var(--color-primary);
-  font-weight: 600;
+  color: var(--purple);
   position: relative;
-  padding-bottom: 8px;
-
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 40px;
-    height: 3px;
-    background-color: var(--color-accent);
-  }
 }
 
 .section-description {
-  color: var(--color-text-light);
+  color: #666;
   font-style: italic;
+  border-left: 3px solid rgba(102, 51, 153, 0.2);
+  padding-left: 12px;
+  margin-left: 5px;
+  font-size: 16px;
 }
 
 // Preguntas
 .pregunta-container {
-  padding: 16px;
-  margin-bottom: 24px !important;
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: 20px;
+  margin-bottom: 30px !important;
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
-  border-left: 2px solid transparent;
+  border-left: 3px solid rgba(0, 153, 153, 0.3);
 
   &:hover {
-    border-left: 2px solid var(--color-accent);
-    transform: translateX(2px);
-    background-color: rgba(255, 255, 255, 0.9);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+    transform: translateX(5px);
+    background-color: rgba(255, 255, 255, 1);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    border-left: 3px solid var(--teal);
   }
 }
 
 .question-header {
-  display: flex;
-  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed rgba(102, 51, 153, 0.2);
 }
 
 .question-text {
   font-weight: 500;
-  color: var(--color-primary);
+  color: var(--purple);
+  font-size: 18px;
+
+  .question-number {
+    color: var(--teal);
+    font-weight: 700;
+  }
 }
 
 .required-badge {
   background-color: #ff5252 !important;
   font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
   animation: pulse 2s infinite;
 }
 
 @keyframes pulse {
-  0% { opacity: 0.8; }
-  50% { opacity: 1; }
-  100% { opacity: 0.8; }
+  0% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.8; transform: scale(1); }
 }
 
 // Contenedores de respuesta
 .answer-container {
-  padding: 12px 0;
+  padding: 16px 0;
 }
 
 // Inputs personalizados
@@ -892,80 +1261,174 @@ onMounted(() => {
 
   .q-field__control {
     background-color: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(0, 153, 153, 0.3);
-    border-radius: 8px;
+    border: 1px solid rgba(0, 153, 153, 0.2);
+    border-radius: 10px;
   }
 
   &.q-field--focused {
     .q-field__control {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 2px rgba(102, 51, 153, 0.2);
+      border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(102, 51, 153, 0.15);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+.date-input {
+  .q-field__control {
+    border-color: rgba(102, 51, 153, 0.3);
+  }
+}
+
+.date-popup {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+// Contenedor de opciones
+.option-container {
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+
+  .custom-radio, .custom-checkbox {
+    .q-radio__inner, .q-checkbox__inner {
+      transition: all 0.2s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+
+    .q-radio__label, .q-checkbox__label {
+      font-size: 16px;
+      padding: 8px 0;
     }
   }
 }
 
 // Sliders personalizados
 .scale-container {
-  padding: 8px 12px;
+  padding: 20px;
   background-color: rgba(255, 255, 255, 0.7);
-  border-radius: 8px;
-}
+  border-radius: 12px;
+  margin-top: 16px;
+  border: 1px solid rgba(0, 153, 153, 0.1);
 
-.custom-slider {
-  .q-slider__track-container {
-    height: 6px;
-    background: rgba(102, 51, 153, 0.1);
+  .scale-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-weight: 500;
+
+    .scale-min {
+      color: var(--purple);
+    }
+
+    .scale-max {
+      color: var(--teal);
+    }
   }
 
-  .q-slider__selection {
-    background: linear-gradient(90deg, var(--color-secondary), var(--color-primary));
+  .scale-value-display {
+    text-align: center;
+    margin-bottom: 16px;
+    min-height: 30px;
   }
 
-  .q-slider__thumb {
-    background: var(--color-primary);
-    width: 18px;
-    height: 18px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    transition: transform 0.2s ease;
+  .custom-slider {
+    height: 40px;
 
-    &:hover {
-      transform: scale(1.2);
+    .q-slider__track-container {
+      height: 8px;
+      background: rgba(102, 51, 153, 0.1);
+      border-radius: 4px;
+    }
+
+    .q-slider__selection {
+      background: linear-gradient(90deg, var(--purple), var(--teal));
+      border-radius: 4px;
+    }
+
+    .q-slider__thumb {
+      background: var(--teal);
+      width: 22px;
+      height: 22px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+      &:hover {
+        transform: scale(1.2);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+      }
+    }
+
+    .q-slider__pin-value-marker {
+      background: var(--purple);
+      color: white;
+      font-weight: bold;
     }
   }
 }
 
 // Sección de ubicación
 .location-section {
-  background: linear-gradient(to right, rgba(102, 51, 153, 0.05), rgba(0, 153, 153, 0.05));
-  padding: 28px !important;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-}
+  background: linear-gradient(to right, rgba(102, 51, 153, 0.03), rgba(0, 153, 153, 0.05));
+  padding: 30px !important;
+  border-radius: 0;
 
-.location-title {
-  color: var(--color-primary);
-  display: flex;
-  align-items: center;
-
-  .q-icon {
-    color: var(--color-secondary);
+  .location-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
   }
-}
 
-.location-description {
-  color: var(--color-text);
-  margin-left: 28px;
-}
+  .location-title {
+    color: var(--purple);
+    display: flex;
+    align-items: center;
 
-.map-container {
-  border: 1px solid #e0e0e0;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+    .q-icon {
+      color: var(--teal);
+    }
+  }
 
-  &:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  .location-description {
+    color: #555;
+    margin-left: 32px;
+    font-size: 16px;
+  }
+
+  .map-container {
+    border: 1px solid rgba(0, 153, 153, 0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s ease;
+
+    &:hover {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+    }
+
+    &.map-with-location {
+      border: 2px solid var(--teal);
+      box-shadow: 0 6px 16px rgba(0, 153, 153, 0.15);
+    }
+  }
+
+  .coordinates-display {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 16px;
+    border-left: 3px solid var(--teal);
+
+    .coordinate-input {
+      .q-field__control {
+        background-color: white;
+      }
+    }
   }
 }
 
@@ -975,24 +1438,35 @@ onMounted(() => {
   transition: all 0.3s ease;
 
   svg {
-    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+    filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.4));
+    transform-origin: bottom center;
+    animation: markerBounce 2s infinite ease-in-out;
   }
+}
+
+@keyframes markerBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 
 // Botón de calibrar
 .calibrate-btn {
-  background: linear-gradient(135deg, var(--color-secondary), var(--color-accent)) !important;
-  width: 250px;
-  height: 48px;
-  border-radius: 24px;
+  background: linear-gradient(135deg, var(--teal), var(--light-teal)) !important;
+  border-radius: 28px;
   font-weight: 500;
   letter-spacing: 0.5px;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 10px rgba(0, 153, 153, 0.3);
+  box-shadow: 0 5px 15px rgba(0, 153, 153, 0.3);
+  width: 300px;
+  height: 56px;
+
+  .q-btn__content {
+    font-size: 16px;
+  }
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow: 0 6px 14px rgba(0, 153, 153, 0.4);
+    box-shadow: 0 8px 20px rgba(0, 153, 153, 0.4);
   }
 
   &:active {
@@ -1002,111 +1476,186 @@ onMounted(() => {
 
 // Botones de acción
 .action-buttons {
-  background-color: rgba(102, 51, 153, 0.03);
-  padding: 20px !important;
+  background: linear-gradient(to right, rgba(102, 51, 153, 0.03), rgba(0, 153, 153, 0.05));
+  padding: 24px !important;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  display: flex;
+  justify-content: space-between;
 }
 
 .clear-btn {
-  border: 1px solid var(--color-accent);
-  border-radius: 8px;
+  border: 2px solid var(--purple);
+  border-radius: 10px;
   transition: all 0.3s ease;
+  padding: 0 24px;
+  height: 48px;
 
   &:hover {
-    background-color: rgba(0, 153, 153, 0.1);
+    background-color: rgba(102, 51, 153, 0.1);
     transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(102, 51, 153, 0.2);
   }
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary)) !important;
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(102, 51, 153, 0.3);
+  background: linear-gradient(135deg, var(--teal), var(--light-teal)) !important;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 153, 153, 0.3);
   transition: all 0.3s ease;
+  padding: 0 32px;
+  height: 48px;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(102, 51, 153, 0.4);
+  &:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 153, 153, 0.4);
   }
 
-  &:active {
-    transform: translateY(0);
+  &:active:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    background: rgba(0, 0, 0, 0.2) !important;
+
+    &::after {
+      content: '(Calibre ubicación)';
+      font-size: 12px;
+      margin-left: 8px;
+      opacity: 0.8;
+    }
   }
 }
 
 // Estado de éxito
 .success-container {
-  background-color: rgba(255, 255, 255, 0.9);
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  padding: 50px 40px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
+  max-width: 600px;
   animation: fadeIn 0.5s ease-out;
+  border-top: 5px solid var(--teal);
+
+  .success-icon {
+    position: relative;
+    display: inline-block;
+
+    .success-confetti {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image:
+        radial-gradient(circle, var(--purple) 2px, transparent 2px),
+        radial-gradient(circle, var(--teal) 3px, transparent 3px),
+        radial-gradient(circle, var(--light-teal) 1px, transparent 1px);
+      background-size: 30px 30px, 40px 40px, 25px 25px;
+      animation: rotate 10s linear infinite;
+      opacity: 0.6;
+    }
+  }
+}
+
+@keyframes rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .action-btn {
-  border-radius: 8px;
+  border-radius: 10px;
   transition: all 0.3s ease;
+  padding: 0 24px;
+  height: 45px;
 
   &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   }
 }
 
 // Diálogos personalizados
-.custom-dialog {
-  border-radius: 16px;
+.custom-dialog, .confirm-dialog {
+  .q-dialog__inner > div {
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
 
-  .q-card {
-    border-radius: 16px;
-    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .q-card__section {
-    padding: 20px 24px;
-  }
-
-  .q-card__actions {
-    padding: 16px 24px;
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, var(--purple), var(--teal));
+    }
   }
 }
 
 // Notificaciones personalizadas
 .notification-custom {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  margin: 8px;
+  border-left: 4px solid transparent;
 
   &.bg-positive {
-    background: linear-gradient(135deg, #21ba45, var(--color-secondary)) !important;
+    border-left-color: var(--teal);
   }
 
   &.bg-negative {
-    background: linear-gradient(135deg, #c10015, #ff5252) !important;
+    border-left-color: #c10015;
   }
 
   &.bg-info {
-    background: linear-gradient(135deg, var(--color-primary), #1976d2) !important;
+    border-left-color: var(--purple);
   }
+
+  &.success-notification::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    background-image:
+      radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px);
+    background-size: 15px 15px;
+  }
+
+  &.error-notification {
+    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  }
+
+  &.validation-error {
+    opacity: 0.9;
+  }
+}
+
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-3px); }
+  40%, 60% { transform: translateX(3px); }
 }
 
 // Ajustes para dispositivos móviles
 @media (max-width: 600px) {
-  .map-container {
-    height: 250px;
-  }
-
-  .calibrate-btn {
-    width: 100%;
-  }
-
   .encuesta-card {
     margin: 0 -12px;
     border-radius: 0 !important;
+  }
+
+  .header-section {
+    padding: 20px !important;
   }
 
   .seccion-container {
@@ -1114,7 +1663,30 @@ onMounted(() => {
   }
 
   .pregunta-container {
-    padding: 12px;
+    padding: 16px;
+    margin-bottom: 20px !important;
+  }
+
+  .action-buttons {
+    flex-direction: column-reverse;
+    gap: 12px;
+
+    .clear-btn, .submit-btn {
+      width: 100%;
+      margin: 0;
+    }
+  }
+
+  .calibrate-btn {
+    width: 100%;
+  }
+
+  .map-container {
+    height: 250px !important;
+  }
+
+  .success-container {
+    padding: 30px 20px;
   }
 }
 </style>

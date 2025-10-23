@@ -65,6 +65,8 @@ export default [
     languageOptions: {
       globals: {
         ...globals.serviceworker,
+        ...globals.workbox,
+        particlesJS: 'readonly',
       },
     },
   },

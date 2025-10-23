@@ -3,8 +3,8 @@
     <!-- Diálogo de nuevo proyecto -->
     <ProyectoForm v-model="showProjectDialog" @save="handleProjectSubmit" @cancel="showProjectDialog = false" />
 
-    <!-- Header mejorado - estilo más simple como en la imagen -->
-    <div class="page-header">
+    <!-- Header mejorado con nuevo estilo -->
+    <div class="page-header" data-aos="fade-down" data-aos-duration="800">
       <div class="header-content">
         <div>
           <h1 class="page-title">Panel de Investigación</h1>
@@ -15,7 +15,7 @@
 
     <!-- Contenido principal -->
     <div class="page-content">
-      <div class="section-header">
+      <div class="section-header" data-aos="fade-up" data-aos-delay="100">
         <div>
           <h2 class="section-title">Gestión de Proyectos</h2>
           <p class="section-subtitle">Organiza y administra tus estudios de investigación</p>
@@ -31,17 +31,23 @@
       </div>
 
       <!-- Estado vacío -->
-      <div v-else-if="!loading && (!proyectos || proyectos.length === 0)" class="empty-state">
-        <q-icon name="folder_open" size="80px" color="grey-5" />
-        <h5 class="q-mt-md text-grey-8">No hay proyectos</h5>
-        <p class="text-grey-7">Crea tu primer proyecto para comenzar</p>
-        <q-btn label="Nuevo Proyecto" icon="add" color="primary" unelevated class="q-mt-sm"
+      <div v-else-if="!loading && (!proyectos || proyectos.length === 0)" class="empty-state" data-aos="zoom-in" data-aos-delay="200">
+        <q-icon name="folder_open" size="80px" color="primary" />
+        <h5 class="q-mt-md text-primary">No hay proyectos</h5>
+        <p class="text-secondary">Crea tu primer proyecto para comenzar</p>
+        <q-btn label="Nuevo Proyecto" icon="add" color="primary" unelevated class="q-mt-sm btn-empty-state"
           @click="showProjectDialog = true" />
       </div>
 
-      <!-- Lista de Proyectos - estilo similar a la imagen -->
+      <!-- Lista de Proyectos con nuevo diseño -->
       <div v-else class="projects-list">
-        <q-card v-for="proyecto in proyectos" :key="proyecto.id" class="project-card" flat bordered>
+        <q-card v-for="(proyecto, index) in proyectos"
+                :key="proyecto.id"
+                class="project-card"
+                flat
+                bordered
+                data-aos="fade-up"
+                :data-aos-delay="100 + (index * 50)">
           <q-card-section>
             <div class="project-header">
               <div class="project-title-section">
@@ -49,8 +55,8 @@
                 <q-badge :color="getEstadoColor(proyecto.estado, proyecto)"
                   :label="getEstadoLabel(proyecto.estado, proyecto)" class="status-badge" />
               </div>
-              <q-btn label="VER DETALLES" flat color="primary" icon-right="visibility"
-                @click="verDetalles(proyecto.id)" />
+              <q-btn label="VER DETALLES" flat color="accent" icon-right="visibility"
+                @click="verDetalles(proyecto.id)" class="btn-ver-detalles" />
             </div>
 
             <p class="project-description">{{ proyecto.descripcion || 'Sin descripción' }}</p>
@@ -58,13 +64,13 @@
             <!-- Fechas y responsable -->
             <div class="project-info">
               <div class="info-item">
-                <q-icon name="event" size="18px" color="grey-7" />
+                <q-icon name="event" size="18px" color="primary" />
                 <span class="info-label">Fecha de inicio:</span>
                 <span class="info-value">{{ formatFecha(proyecto.fecha_inicio) }}</span>
               </div>
 
               <div class="info-item" v-if="proyecto.fecha_fin">
-                <q-icon name="event_available" size="18px" color="grey-7" />
+                <q-icon name="event_available" size="18px" color="primary" />
                 <span class="info-label">Fecha de fin:</span>
                 <span class="info-value">{{ formatFecha(proyecto.fecha_fin) }}</span>
               </div>
@@ -72,7 +78,7 @@
 
             <div class="project-info">
               <div class="info-item" v-if="proyecto.responsable_id">
-                <q-icon name="person" size="18px" color="grey-7" />
+                <q-icon name="person" size="18px" color="primary" />
                 <span class="info-label">Responsable:</span>
                 <span class="info-value">
                   {{ obtenerNombreResponsable(proyecto.responsable_id) }}
@@ -80,28 +86,13 @@
               </div>
 
               <div class="info-item" v-if="proyecto.ubicacion">
-                <q-icon name="place" size="18px" color="grey-7" />
+                <q-icon name="place" size="18px" color="primary" />
                 <span class="info-label">Ubicación:</span>
                 <span class="info-value">{{ proyecto.ubicacion }}</span>
               </div>
             </div>
 
-            <!-- Estadísticas simples como en la imagen -->
-            <div class="project-stats-row">
-              <div class="q-gutter-x-md">
-                <span class="stat-item">
-                  <q-icon name="description" size="20px" color="blue" />
-                  <span class="stat-value">{{ proyecto.encuestas_count || 0 }}</span>
-                  <span class="stat-label">encuestas</span>
-                </span>
-
-                <span class="stat-item">
-                  <q-icon name="people" size="20px" color="blue" />
-                  <span class="stat-value">{{ proyecto.respuestas_count || 0 }}</span>
-                  <span class="stat-label">respuestas</span>
-                </span>
-              </div>
-            </div>
+            <!-- Eliminamos la sección de estadísticas que mostraba "0 encuestas" y "0 respuestas" -->
           </q-card-section>
         </q-card>
       </div>
@@ -116,6 +107,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import { useAuthStore } from 'src/stores/auth.store'
 import ProyectoForm from 'components/proyectos/ProyectoForm.vue'
+import AOS from 'aos'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -365,15 +357,15 @@ function isProyectoFinalizado(proyecto) {
 function getEstadoColor(estado, proyecto) {
   // Si la fecha fin ya pasó, mostrar como "Finalizado" sin importar el estado actual
   if (proyecto && isProyectoFinalizado(proyecto)) {
-    return 'purple'
+    return 'secondary'
   }
 
   const colors = {
-    'inicio': 'blue',
-    'en curso': 'green',
-    'concluido': 'purple',
+    'inicio': 'primary',
+    'en curso': 'accent',
+    'concluido': 'secondary',
     'pausado': 'orange',
-    'finalizado': 'purple'
+    'finalizado': 'secondary'
   }
   return colors[estado] || 'grey'
 }
@@ -418,8 +410,18 @@ function verDetalles(proyectoId) {
     params: { id: proyectoId }
   })
 }
+
 // Cargar proyectos y usuarios al montar el componente
 onMounted(async () => {
+  // Inicializar AOS si está disponible
+  if (typeof AOS !== 'undefined') {
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: true
+    })
+  }
+
   // Cargar datos en paralelo
   Promise.all([
     loadProyectos(),
@@ -430,107 +432,209 @@ onMounted(async () => {
 })
 </script>
 
-
 <style lang="scss" scoped>
+// Variables de colores personalizados
+$purple: #663399;
+$teal: #009999;
+$light-teal: #00AAAA;
+$white: #FFFFFF;
+
+// Configuración de colores para Quasar (accesible via variables CSS)
+:root {
+  --q-primary: #{$purple};
+  --q-secondary: #{$purple};
+  --q-accent: #{$teal};
+}
+
 .panel-investigacion {
-  background-color: #f7f8fc;
+  background-color: $white;
   min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba($purple, 0.03) 0%, rgba($teal, 0.03) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
 }
 
 .page-header {
-  background: #1976d2;
-  padding: 24px 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 24px;
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  padding: 32px 32px;
+  box-shadow: 0 4px 20px rgba($purple, 0.2);
+  margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    border-radius: 50%;
+  }
 }
 
 .header-content {
   max-width: 1400px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
 }
 
 .page-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: white;
+  font-size: 32px;
+  font-weight: 700;
+  color: $white;
   margin: 0 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .welcome-text {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 18px;
+  color: rgba($white, 0.9);
   margin: 0;
   font-weight: 400;
+  letter-spacing: 0.02em;
 }
 
 .page-content {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 32px 32px 32px;
+  padding: 0 32px 50px 32px;
+  position: relative;
+  z-index: 1;
 }
 
 .section-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 
 .section-title {
-  font-size: 24px;
-  font-weight: 600;
-  color: #1f2937;
-  margin: 0 0 4px 0;
+  font-size: 26px;
+  font-weight: 700;
+  color: $purple;
+  margin: 0 0 8px 0;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: $teal;
+    border-radius: 10px;
+  }
 }
 
 .section-subtitle {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0;
+  font-size: 16px;
+  color: rgba($purple, 0.7);
+  margin: 10px 0 0 0;
+  font-weight: 400;
 }
 
 .btn-nuevo-proyecto {
-  background: #1976d2;
-  color: white;
-  font-weight: 500;
-  padding: 10px 24px;
-  border-radius: 8px;
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  color: $white;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 10px;
   text-transform: none;
-  font-size: 14px;
-  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.25);
-  transition: all 0.2s ease;
+  font-size: 15px;
+  box-shadow: 0 4px 12px rgba($purple, 0.25);
+  transition: all 0.3s ease;
 
   &:hover {
-    background: #1565c0;
-    box-shadow: 0 4px 12px rgba(25, 118, 210, 0.4);
-    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba($purple, 0.4);
+    transform: translateY(-3px);
+  }
+
+  &:active {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba($purple, 0.3);
   }
 }
 
 .projects-list {
   display: grid;
-  gap: 24px;
+  gap: 28px;
 }
 
 .empty-state {
   text-align: center;
-  padding: 80px 0;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  padding: 100px 0;
+  background: $white;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba($purple, 0.08);
+  border: 1px dashed rgba($teal, 0.2);
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 8px 30px rgba($purple, 0.12);
+    border-color: rgba($teal, 0.3);
+  }
+}
+
+.btn-empty-state {
+  padding: 12px 30px;
+  border-radius: 30px;
+  font-weight: 600;
+  background: linear-gradient(135deg, $purple 0%, $teal 100%);
+  transition: all 0.3s ease;
+  margin-top: 20px;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba($purple, 0.3);
+  }
 }
 
 .project-card {
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background: white;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  border-radius: 16px;
+  border: 1px solid rgba($purple, 0.1);
+  background: $white;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 16px rgba($purple, 0.05);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(to bottom, $purple, $teal);
+    border-radius: 6px 0 0 6px;
+  }
 
   &:hover {
-    box-shadow: 0 8px 24px rgba(25, 118, 210, 0.1);
-    border-color: #1976d2;
-    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba($purple, 0.12);
+    border-color: rgba($teal, 0.2);
+    transform: translateY(-6px);
   }
 }
 
@@ -538,7 +642,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .project-title-section {
@@ -548,23 +652,45 @@ onMounted(async () => {
 }
 
 .project-title {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 600;
-  color: #1f2937;
+  color: $purple;
   margin: 0;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: $teal;
+  }
 }
 
 .status-badge {
-  padding: 4px 12px;
+  padding: 6px 14px;
   border-radius: 30px;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.btn-ver-detalles {
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: rgba($teal, 0.1);
+    transform: translateX(2px);
+  }
 }
 
 .project-description {
-  font-size: 14px;
-  color: #6b7280;
-  margin: 0 0 16px 0;
+  font-size: 15px;
+  color: rgba($purple, 0.7);
+  margin: 0 0 20px 0;
+  line-height: 1.6;
 }
 
 .project-info {
@@ -578,40 +704,22 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
 }
 
 .info-label {
-  color: #6b7280;
+  color: rgba($purple, 0.7);
   font-weight: 500;
 }
 
 .info-value {
-  color: #1f2937;
-  font-weight: 500;
-}
-
-.project-stats-row {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
-}
-
-.stat-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.stat-value {
-  font-size: 16px;
+  color: $purple;
   font-weight: 600;
-  color: #1f2937;
-}
-
-.stat-label {
-  font-size: 13px;
-  color: #6b7280;
 }
 
 @media (max-width: 768px) {
@@ -624,6 +732,38 @@ onMounted(async () => {
   .section-header {
     flex-direction: column;
     gap: 16px;
+  }
+
+  .page-header {
+    padding: 24px 20px;
+  }
+
+  .page-content {
+    padding: 0 20px 40px;
+  }
+
+  .page-title {
+    font-size: 26px;
+  }
+
+  .welcome-text {
+    font-size: 16px;
+  }
+
+  .section-title {
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1200px) {
+  .projects-list {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+}
+
+@media (min-width: 1200px) {
+  .projects-list {
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
   }
 }
 </style>
