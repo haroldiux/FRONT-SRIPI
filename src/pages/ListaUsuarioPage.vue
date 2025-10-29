@@ -322,7 +322,8 @@ export default {
     // Opciones de select - Sin mostrar Administrador
     const roleOptions = [
       { label: 'Responsable', value: 2 },
-      { label: 'Encuestador', value: 3 }
+      { label: 'Encuestador', value: 3 },
+      { label: 'Académico', value: 4 }
     ]
 
     const statusOptions = [
@@ -400,8 +401,9 @@ export default {
     const getRoleColor = (roleId) => {
       const colors = {
         1: 'purple',
-        2: 'teal',
-        3: 'light-teal'
+        2: 'blue',
+        3: 'cyan',
+        4: 'deep-purple'
       }
       return colors[roleId] || 'grey'
     }
@@ -410,7 +412,8 @@ export default {
       const icons = {
         1: 'admin_panel_settings',
         2: 'school',
-        3: 'science'
+        3: 'science',
+        4: 'assignment'
       }
       return icons[roleId] || 'person'
     }
@@ -419,7 +422,8 @@ export default {
       const labels = {
         1: 'Administrador',
         2: 'Responsable',
-        3: 'Encuestador'
+        3: 'Encuestador',
+        4: 'Académico'
       }
       return labels[roleId] || 'Desconocido'
     }
@@ -844,7 +848,9 @@ export default {
 .empty-state {
   animation: fadeInUp 0.8s ease;
 }
-
+.deep-purple {
+  background-color: #673AB7 !important;
+}
 // Estilos para el modal
 .dialog-card {
   border-radius: 12px;

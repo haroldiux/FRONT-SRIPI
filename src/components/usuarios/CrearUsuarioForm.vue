@@ -24,6 +24,7 @@
         indicator-color="teal" align="justify" data-aos="fade-down" data-aos-duration="500" data-aos-delay="100">
         <q-tab name="responsable" icon="school" label="Responsable (Docente)" class="tab-item" />
         <q-tab name="estudiante" icon="science" label="Estudiante" class="tab-item" />
+        <q-tab name="academico" icon="assignment" label="Académico" class="tab-item" />
       </q-tabs>
 
       <q-separator />
@@ -89,6 +90,7 @@
                     <q-icon name="lock" class="q-mr-sm" />
                     Acceso al Sistema
                   </div>
+
                 </q-card-section>
                 <q-separator />
                 <q-card-section class="q-pa-lg">
@@ -136,7 +138,126 @@
               </q-card>
             </q-form>
           </q-tab-panel>
+          <!-- Panel Académico -->
+          <q-tab-panel name="academico" class="q-pa-lg">
+            <!-- Copia todo el contenido del panel "estudiante" aquí -->
+            <q-form @submit.prevent="onSubmit" class="q-gutter-md">
+              <!-- Card de Información Personal - Igual que estudiante -->
+              <q-card flat bordered class="card-container" data-aos="fade-up" data-aos-duration="600">
+                <q-card-section class="bg-purple-light">
+                  <div class="text-h6 text-weight-medium text-white">
+                    <q-icon name="person" class="q-mr-sm" />
+                    Información Personal
+                  </div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section class="q-pa-lg">
+                  <div class="row q-col-gutter-md">
+                    <div class="col-12 col-md-6" data-aos="fade-right" data-aos-duration="500" data-aos-delay="100">
+                      <q-input v-model="form.usuario" label="Carnet de Estudiante *" outlined class="input-custom"
+                        :rules="[
+                          val => !!val || 'El carnet es requerido',
+                          val => /^\d+$/.test(val) || 'Solo números'
+                        ]" hint="Ejemplo: 20180123" maxlength="15">
+                        <template v-slot:prepend>
+                          <q-icon name="badge" color="teal" />
+                        </template>
+                      </q-input>
+                    </div>
 
+                    <div class="col-12 col-md-6" data-aos="fade-right" data-aos-duration="500" data-aos-delay="150">
+                      <q-input v-model="form.nombres" label="Nombres *" outlined class="input-custom" :rules="[
+                        val => !!val || 'Los nombres son requeridos',
+                        val => !(/[0-9@#$%^&*()_+\-=\[\]{};':\\|,.<>\/?]/).test(val) || 'No se permiten números ni caracteres especiales'
+                        ]" @update:model-value="convertToUpperCase('nombres')">
+                        <template v-slot:prepend>
+                          <q-icon name="person_outline" color="teal" />
+                        </template>
+                      </q-input>
+                    </div>
+
+                    <div class="col-12 col-md-6" data-aos="fade-right" data-aos-duration="500" data-aos-delay="200">
+                      <q-input v-model="form.apellidos" label="Apellidos *" outlined class="input-custom"
+                        :rules="[
+                          val => !!val || 'Los apellidos son requeridos',
+                          val => !(/[0-9@#$%^&*()_+\-=\[\]{};':\\|,.<>\/?]/).test(val) || 'No se permiten números ni caracteres especiales'
+                        ]"
+                        @update:model-value="convertToUpperCase('apellidos')">
+                        <template v-slot:prepend>
+                          <q-icon name="person_outline" color="teal" />
+                        </template>
+                      </q-input>
+                    </div>
+                  </div>
+                </q-card-section>
+              </q-card>
+
+              <!-- Card de Documento SUS - Igual que estudiante -->
+              <q-card flat bordered class="card-container" data-aos="fade-up" data-aos-duration="600"
+                data-aos-delay="100">
+                <!-- Mismo contenido que en estudiante -->
+              </q-card>
+
+              <!-- Card de Acceso al Sistema - Cambia solo el texto descriptivo -->
+              <q-card flat bordered class="card-container" data-aos="fade-up" data-aos-duration="600"
+                data-aos-delay="200">
+                <q-card-section class="bg-teal-light">
+                  <div class="text-h6 text-weight-medium text-white">
+                    <q-icon name="lock" class="q-mr-sm" />
+                    Acceso al Sistema
+                  </div>
+                  <div class="text-caption text-white q-mt-xs">
+                    El usuario Académico puede crear y gestionar proyectos y encuestas
+                  </div>
+                </q-card-section>
+                <q-separator />
+                <q-card-section class="q-pa-lg">
+                  <div class="row q-col-gutter-md">
+                    <div class="col-12 col-md-6" data-aos="fade-right" data-aos-duration="500" data-aos-delay="250">
+                      <q-input v-if="!isEditMode" v-model="form.password" label="Contraseña *"
+                        :type="showPassword ? 'text' : 'password'" outlined autocomplete="new-password"
+                        class="input-custom" :rules="[
+                          val => !isEditMode && !!val || 'La contraseña es requerida',
+                          val => !val || val.length >= 6 || 'Mínimo 6 caracteres'
+                        ]" hint="Por defecto se usa el carnet como contraseña inicial" readonly>
+                        <template v-slot:prepend>
+                          <q-icon name="vpn_key" color="teal" />
+                        </template>
+                        <template v-slot:append>
+                          <q-icon :name="showPassword ? 'visibility_off' : 'visibility'" class="cursor-pointer eye-icon"
+                            @click="showPassword = !showPassword" />
+                        </template>
+                      </q-input>
+                      <div v-else class="info-box bg-purple-light text-white rounded-borders q-pa-md">
+                        <q-icon name="info" color="white" size="20px" class="q-mr-sm" />
+                        La contraseña no se puede editar desde aquí
+                      </div>
+                    </div>
+
+                    <div class="col-12 col-md-6" data-aos="fade-right" data-aos-duration="500" data-aos-delay="300">
+                      <q-select v-model="form.rol_id" :options="rolOptions" label="Rol *" outlined emit-value
+                        map-options class="input-custom" :rules="[val => !!val || 'El rol es requerido']">
+                        <template v-slot:prepend>
+                          <q-icon name="admin_panel_settings" color="teal" />
+                        </template>
+                      </q-select>
+                    </div>
+
+                    <div class="col-12 col-md-6" data-aos="fade-right" data-aos-duration="500" data-aos-delay="350">
+                      <div class="toggle-box rounded-borders q-pa-md">
+                        <q-toggle v-model="form.estado" label="Usuario Activo" color="teal" left-label size="lg"
+                          class="toggle-custom" />
+                        <div class="text-caption text-grey-7 q-mt-xs">
+                          {{ form.estado ? 'El usuario puede acceder al sistema' : 'El usuario no puede acceder al sistema' }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </q-card-section>
+              </q-card>
+            </q-form>
+          </q-tab-panel>
           <!-- Panel Estudiante -->
           <q-tab-panel name="estudiante" class="q-pa-lg">
             <q-form @submit.prevent="onSubmit" class="q-gutter-md">
@@ -424,7 +545,13 @@ export default {
       }
 
       // Determinar la pestaña activa según el rol
-      activeTab.value = user.rol_id === 2 ? 'responsable' : 'estudiante'
+      if (user.rol_id === 2) {
+        activeTab.value = 'responsable';
+      } else if (user.rol_id === 4) {
+        activeTab.value = 'academico';
+      } else {
+        activeTab.value = 'estudiante';
+      }
 
       // Refrescar AOS después de cargar los datos
       refreshAOS();
@@ -443,6 +570,8 @@ export default {
         form.value.rol_id = 2 // Responsable/Docente
       } else if (newVal === 'estudiante') {
         form.value.rol_id = 3 // Encuestador
+      } else if (newVal === 'academico') {
+        form.value.rol_id = 4 // Académico
       }
 
       // Refrescar AOS cuando cambia el tab
@@ -452,7 +581,8 @@ export default {
     // Opciones
     const rolOptions = [
       { label: 'Responsable', value: 2 },
-      { label: 'Encuestador', value: 3 }
+      { label: 'Encuestador', value: 3 },
+        { label: 'Académico', value: 4 }
     ]
 
     // Watch para sincronizar el dialog
@@ -584,7 +714,7 @@ export default {
         susFile: null,
         susFileUrl: null,
         estado: true,
-        rol_id: activeTab.value === 'responsable' ? 2 : 3,
+        rol_id: activeTab.value === 'responsable' ? 2 : 3 ,
         created_at: null,
         updated_at: null
       }
