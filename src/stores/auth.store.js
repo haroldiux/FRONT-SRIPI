@@ -30,7 +30,8 @@ export const useAuthStore = defineStore('auth', () => {
     const roles = {
       1: 'admin',
       2: 'supervisor',
-      3: 'encuestador'
+      3: 'encuestador',
+      4: 'academico'
     }
 
     // Obtener el nombre del rol del usuario actual

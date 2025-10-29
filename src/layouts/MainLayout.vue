@@ -91,7 +91,7 @@
           </q-item>
 
           <!-- GESTIÓN DE PROYECTOS - solo para admin y supervisor -->
-          <template v-if="userIsAdmin() || userIsSupervisor()">
+          <template v-if="userIsAdmin() || userIsSupervisor() || userIsAcademico()">
             <q-item-label header class="menu-header">
               GESTIÓN DE PROYECTOS
             </q-item-label>
@@ -131,7 +131,7 @@
           </template>
 
           <!-- MIS ENCUESTAS - solo visible para encuestadores -->
-          <template v-if="userIsEncuestador()">
+          <template v-if="userIsEncuestador() || userIsAcademico()">
             <q-item-label header class="menu-header">
               MIS ENCUESTAS
             </q-item-label>
@@ -249,7 +249,8 @@ function getRoleName() {
   const roles = {
     1: 'Administrador',
     2: 'Supervisor',
-    3: 'Encuestador'
+    3: 'Encuestador',
+    4: 'Académico'
   };
 
   return roles[auth.user.rol_id] || 'Usuario';
@@ -268,6 +269,11 @@ function userIsSupervisor() {
 // Verificar si el usuario es encuestador
 function userIsEncuestador() {
   return auth.user && auth.user.rol_id === 3;
+}
+
+// Verificar si el usuario es académico
+function userIsAcademico() {
+  return auth.user && auth.user.rol_id === 4;
 }
 
 // Cerrar sesión

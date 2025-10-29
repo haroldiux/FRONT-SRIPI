@@ -112,6 +112,32 @@
             data-aos-duration="800"
           >
             <q-card flat bordered class="panel-card">
+              <!-- Botón de autoasignación para académicos -->
+              <q-card-section v-if="userIsAcademico" class="self-assign-section">
+                <q-banner rounded class="bg-deep-purple text-white self-assign-banner">
+                  <template v-slot:avatar>
+                    <q-icon name="person_add" />
+                  </template>
+                  <div class="text-subtitle1 text-weight-medium">Autoasignación</div>
+                  <div class="text-caption q-mt-xs">Como académico, puedes autoasignarte a esta encuesta</div>
+
+                  <template v-slot:action>
+                    <q-btn
+                      v-if="!isUserAssigned"
+                      unelevated
+                      color="white"
+                      text-color="deep-purple"
+                      label="Autoasignarme"
+                      @click="promptSelfAssign"
+                      class="self-assign-btn"
+                    />
+                    <div v-else class="already-assigned">
+                      <q-icon name="check_circle" color="white" class="q-mr-sm" />
+                      Ya estás asignado
+                    </div>
+                  </template>
+                </q-banner>
+              </q-card-section>
               <q-card-section class="panel-header bg-teal">
                 <div class="text-subtitle1 text-white text-weight-bold flex items-center">
                   <q-icon name="assignment_ind" class="q-mr-sm" />
@@ -223,7 +249,18 @@ import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
 import AOS from 'aos'
+import { useAuthStore } from 'src/stores/auth.store'
+const auth = useAuthStore()
 
+const userIsAcademico = computed(() => {
+  return auth.user && auth.user.rol_id === 4
+})
+
+// Verificar si el usuario actual ya está asignado
+const isUserAssigned = computed(() => {
+  if (!auth.user) return false
+  return asignaciones.value.some(a => a.usuario_id === auth.user.id)
+})
 const $q = useQuasar()
 
 // Props
@@ -278,7 +315,7 @@ const refreshAOS = () => {
 };
 
 // Roles permitidos (2 = Responsable, 3 = Investigador)
-const rolesPermitidos = [2, 3]
+const rolesPermitidos = [2, 3,4]
 
 // Computed
 const filteredUsers = computed(() => {
@@ -329,7 +366,8 @@ const getRolName = (rolId) => {
   const roles = {
     1: 'Admin',
     2: 'Responsable',
-    3: 'Investigador'
+    3: 'Investigador',
+    4: 'Académico'
   }
   return roles[rolId] || 'Usuario'
 }
@@ -339,7 +377,8 @@ const getRolColor = (rolId) => {
   const colors = {
     1: 'purple',
     2: 'teal',
-    3: 'light-teal'
+    3: 'light-teal',
+    4: 'deep-purple'
   }
   return colors[rolId] || 'grey'
 }
@@ -437,6 +476,75 @@ const editarObjetivo = (asignacion) => {
       $q.notify({
         type: 'negative',
         message: error.response?.data?.message || 'Error al actualizar el objetivo',
+        position: 'top',
+        classes: 'notification-custom'
+      })
+    }
+  })
+}
+
+// Manejar autoasignación para académicos
+const promptSelfAssign = () => {
+  if (!auth.user) return
+
+  objetivo.value = 1 // Reset a valor por defecto
+
+  $q.dialog({
+    title: 'Autoasignación',
+    message: '¿Cuántas encuestas te gustaría realizar para esta investigación?',
+    prompt: {
+      model: objetivo.value,
+      type: 'number',
+      min: 1,
+    },
+    persistent: true,
+    style: 'min-width: 450px; max-width: 95vw;',
+    class: 'objetivo-dialog-custom',
+    html: true,
+    dark: false,
+    ok: {
+      color: 'deep-purple',
+      label: 'Confirmar',
+      unelevated: true,
+      class: 'confirm-btn'
+    },
+    cancel: {
+      flat: true,
+      color: 'grey-7',
+      class: 'cancel-btn'
+    }
+  }).onOk(async (objetivoValue) => {
+    try {
+      $q.loading.show({
+        message: 'Procesando autoasignación...',
+        spinnerColor: 'deep-purple'
+      })
+
+      const response = await api.post('/asignaciones', {
+        encuesta_id: props.encuestaId,
+        usuario_id: auth.user.id,
+        objetivo: parseInt(objetivoValue) || 1
+      })
+
+      if (response.data) {
+        // Refrescar lista de asignaciones
+        await loadAsignaciones()
+
+        $q.notify({
+          type: 'positive',
+          message: 'Te has asignado correctamente a esta encuesta',
+          position: 'top',
+          classes: 'notification-custom'
+        })
+      }
+
+      $q.loading.hide()
+    } catch (error) {
+      $q.loading.hide()
+      console.error('Error en autoasignación:', error)
+      $q.notify({
+        type: 'negative',
+        message: error.response?.data?.message || 'Error al realizar la autoasignación',
         position: 'top',
         classes: 'notification-custom'
       })
@@ -1110,4 +1218,40 @@ onMounted(async () => {
     }
   }
 }
+
+.self-assign-section {
+  margin-bottom: 16px;
+}
+
+.self-assign-banner {
+  border-left: 4px solid var(--purple);
+  animation: fadeIn 0.8s;
+}
+
+.self-assign-btn {
+  transition: all 0.3s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.already-assigned {
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.bg-deep-purple {
+  background-color: #673AB7 !important;
+}
+
+.text-deep-purple {
+  color: #673AB7 !important;
+}
+
 </style>

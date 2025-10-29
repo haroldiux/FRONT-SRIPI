@@ -328,6 +328,8 @@ export default defineComponent({
     const isAdmin = computed(() => auth.user?.rol_id === 1);
     const isSupervisor = computed(() => auth.user?.rol_id === 2);
     const isEncuestador = computed(() => auth.user?.rol_id === 3);
+    const isAcademico = computed(() => auth.user?.rol_id === 4);
+
 
     // Verificar si hay filtros activos
     const hayFiltrosActivos = computed(() => {
@@ -338,12 +340,14 @@ export default defineComponent({
     const getTitleByRole = computed(() => {
       if (isAdmin.value) return '📊 Historial de Envíos';
       if (isSupervisor.value) return '📋 Envíos de mis Proyectos';
+      if (isAcademico.value) return '📝 Mis Envíos Realizados';
       return '📝 Mis Envíos Realizados';
     });
 
     const getSubtitleByRole = computed(() => {
       if (isAdmin.value) return 'Gestiona y visualiza todos los envíos del sistema';
       if (isSupervisor.value) return 'Revisa los envíos de los proyectos que supervisas';
+      if (isAcademico.value) return 'Historial completo de tus encuestas completadas';
       return 'Historial completo de tus encuestas completadas';
     });
 
@@ -353,7 +357,7 @@ export default defineComponent({
         return 'No se encontraron envíos con los filtros seleccionados. Intenta con otros criterios.';
       }
 
-      if (isEncuestador.value) {
+      if (isEncuestador.value || isAcademico.value) {
         return 'Aún no has enviado ninguna encuesta. Comienza realizando alguna encuesta asignada.';
       }
       if (isSupervisor.value) {
@@ -376,7 +380,7 @@ export default defineComponent({
       let resultado = [...envios.value];
 
       // Filtro según el rol del usuario
-      if (isEncuestador.value) {
+      if (isEncuestador.value  || isAcademico.value) {
         // Encuestadores solo ven sus propios envíos
         resultado = resultado.filter(e => e.aplicador_id === auth.user.id);
       } else if (isSupervisor.value && !filtroProyecto.value) {
@@ -469,7 +473,7 @@ export default defineComponent({
         };
 
         // Parámetros específicos según el rol
-        if (isEncuestador.value) {
+        if (isEncuestador.value || isAcademico.value) {
           // Encuestadores solo ven sus propios envíos
           params.aplicador_id = auth.user.id;
         } else if (isSupervisor.value && proyectos.value.length > 0) {
@@ -831,6 +835,7 @@ export default defineComponent({
       isAdmin,
       isSupervisor,
       isEncuestador,
+      isAcademico,
       getTitleByRole,
       getSubtitleByRole,
       getNoResultsMessage,
