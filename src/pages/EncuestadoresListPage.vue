@@ -715,10 +715,12 @@ export default defineComponent({
     // Cargar envíos de una asignación específica
     const cargarEnvios = async (asignacion) => {
       try {
+        const currentUserId = getUserId();
+
         const response = await api.get('/envios', {
           params: {
             encuesta_id: asignacion.encuesta_id,
-            usuario_id: getUserId()
+            aplicador_id: currentUserId // Asegurar que filtramos por el usuario actual
           }
         });
 
@@ -727,7 +729,7 @@ export default defineComponent({
         console.error(`Error al cargar envíos para la asignación ${asignacion.id}:`, error);
         enviosPorAsignacion.value[asignacion.id] = [];
       }
-    };
+    }
 
     // Animación de contadores
     const animateCounters = () => {
@@ -771,8 +773,16 @@ export default defineComponent({
 
     // Obtener el ID del usuario actual desde localStorage
     const getUserId = () => {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      return user.id;
+      try {
+        const userStr = localStorage.getItem('user');
+        if (!userStr) return null;
+
+        const user = JSON.parse(userStr);
+        return user.id;
+      } catch (error) {
+        console.error('Error al obtener ID de usuario:', error);
+        return null;
+      }
     };
 
     // Calcular el progreso de una asignación
@@ -821,22 +831,36 @@ export default defineComponent({
     // Obtener cantidad de envíos realizados
     const getEnviosCount = (asignacion) => {
       const envios = enviosPorAsignacion.value[asignacion.id] || [];
-      return envios.length;
-    };
+      const currentUserId = getUserId();
+
+      // Filtrar solo los envíos del usuario actual
+      return envios.filter(envio => envio.aplicador_id === currentUserId).length;
+    }
 
     // Obtener los últimos envíos (para mostrar en el historial)
     const getUltimosEnvios = (asignacion) => {
       const envios = enviosPorAsignacion.value[asignacion.id] || [];
-      return envios.slice(0, 5); // Mostrar los últimos 5 envíos
+      const currentUserId = getUserId();
+
+      // Filtrar solo los envíos del usuario actual y obtener los 5 más recientes
+      return envios
+        .filter(envio => envio.aplicador_id === currentUserId)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 5);
     };
 
-    // Obtener fecha del último envío
+    // Obtener fecha del último envío del usuario actual
     const getUltimoEnvio = (asignacion) => {
       const envios = enviosPorAsignacion.value[asignacion.id] || [];
-      if (envios.length === 0) return 'Sin actividad';
+      const currentUserId = getUserId();
+
+      // Filtrar solo los envíos del usuario actual
+      const enviosUsuario = envios.filter(envio => envio.aplicador_id === currentUserId);
+
+      if (enviosUsuario.length === 0) return 'Sin actividad';
 
       // Ordenar por fecha y obtener el último
-      const ultimoEnvio = [...envios].sort((a, b) => {
+      const ultimoEnvio = [...enviosUsuario].sort((a, b) => {
         return new Date(b.created_at) - new Date(a.created_at);
       })[0];
 

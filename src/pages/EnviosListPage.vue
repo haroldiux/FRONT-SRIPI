@@ -323,6 +323,7 @@ export default defineComponent({
     const opcionesUsuarios = ref([]);
     const mapDialog = ref(false);
     const envioSeleccionado = ref(null);
+    const asignacionesUsuario = ref([]);
 
     // Detección del rol del usuario actual
     const isAdmin = computed(() => auth.user?.rol_id === 1);
@@ -462,6 +463,27 @@ export default defineComponent({
       cargarEnvios();
     }
 
+    // Cargar asignaciones del usuario actual
+    async function cargarAsignacionesUsuario() {
+      try {
+        const userId = auth.user?.id;
+        if (!userId) return;
+
+        const response = await api.get('/asignaciones', {
+          params: {
+            usuario_id: userId,
+            per_page: 100
+          }
+        });
+
+        asignacionesUsuario.value = response.data.data || [];
+        console.log('Asignaciones cargadas:', asignacionesUsuario.value);
+      } catch (error) {
+        console.error('Error al cargar asignaciones del usuario:', error);
+        asignacionesUsuario.value = [];
+      }
+    }
+
     // Cargar envíos según el rol del usuario
     async function cargarEnvios() {
       cargando.value = true;
@@ -546,20 +568,51 @@ export default defineComponent({
     // Cargar opciones de encuestas para el filtro
     async function cargarOpcionesEncuestas() {
       try {
-        // Obtener lista única de encuestas basada en los envíos
-        const encuestasUnicas = {};
-        envios.value.forEach(envio => {
-          if (envio.encuesta && !encuestasUnicas[envio.encuesta.id]) {
-            encuestasUnicas[envio.encuesta.id] = envio.encuesta.titulo;
-          }
-        });
+        // Para encuestadores y académicos, mostrar solo las encuestas asignadas
+        if (isEncuestador.value || isAcademico.value) {
+          // Obtener IDs de encuestas asignadas
+          const encuestasAsignadasIds = asignacionesUsuario.value.map(a => a.encuesta_id);
 
-        // Convertir a formato de opciones para q-select
-        opcionesEncuestas.value = Object.entries(encuestasUnicas).map(([id, titulo]) => ({
-          label: titulo,
-          value: parseInt(id),
-          icon: 'description'
-        }));
+          // Filtrar las encuestas en los envíos
+          const encuestasUnicas = {};
+          envios.value.forEach(envio => {
+            if (envio.encuesta &&
+                !encuestasUnicas[envio.encuesta.id] &&
+                encuestasAsignadasIds.includes(envio.encuesta_id)) {
+              encuestasUnicas[envio.encuesta.id] = envio.encuesta.titulo;
+            }
+          });
+
+          // Si no hay coincidencias en los envíos, añadir directamente desde las asignaciones
+          if (Object.keys(encuestasUnicas).length === 0) {
+            for (const asignacion of asignacionesUsuario.value) {
+              if (asignacion.encuesta && !encuestasUnicas[asignacion.encuesta.id]) {
+                encuestasUnicas[asignacion.encuesta.id] = asignacion.encuesta.titulo;
+              }
+            }
+          }
+
+          opcionesEncuestas.value = Object.entries(encuestasUnicas).map(([id, titulo]) => ({
+            label: titulo,
+            value: parseInt(id),
+            icon: 'description'
+          }));
+
+        } else {
+          // Para administradores y supervisores, mostrar todas las encuestas
+          const encuestasUnicas = {};
+          envios.value.forEach(envio => {
+            if (envio.encuesta && !encuestasUnicas[envio.encuesta.id]) {
+              encuestasUnicas[envio.encuesta.id] = envio.encuesta.titulo;
+            }
+          });
+
+          opcionesEncuestas.value = Object.entries(encuestasUnicas).map(([id, titulo]) => ({
+            label: titulo,
+            value: parseInt(id),
+            icon: 'description'
+          }));
+        }
       } catch (error) {
         console.error('Error al cargar opciones de encuestas:', error);
       }
@@ -798,21 +851,26 @@ export default defineComponent({
     }
 
     // Ciclo de vida del componente
-    onMounted(() => {
-      if (auth.isAuth && auth.user) {
-        cargarEnvios();
-      } else {
-        $q.notify({
-          type: 'warning',
-          message: 'Debe iniciar sesión para ver los envíos',
-          position: 'top',
-          timeout: 3000,
-          progress: true
-        });
-        // Redirigir al login
-        router.push('/login');
+    onMounted(async () => {
+    if (auth.isAuth && auth.user) {
+      // Cargar asignaciones primero (para encuestadores y académicos)
+      if (isEncuestador.value || isAcademico.value) {
+        await cargarAsignacionesUsuario();
       }
-    });
+      // Luego cargar envíos
+      cargarEnvios();
+    } else {
+      $q.notify({
+        type: 'warning',
+        message: 'Debe iniciar sesión para ver los envíos',
+        position: 'top',
+        timeout: 3000,
+        progress: true
+      });
+      // Redirigir al login
+      router.push('/login');
+    }
+});
 
     return {
       envios,

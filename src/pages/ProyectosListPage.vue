@@ -17,8 +17,8 @@
     <div class="page-content">
       <div class="section-header" data-aos="fade-up" data-aos-delay="100">
         <div>
-          <h2 class="section-title">Gestión de Proyectos</h2>
-          <p class="section-subtitle">Organiza y administra tus estudios de investigación</p>
+          <h2 class="section-title">{{ getSectionTitle }}</h2>
+          <p class="section-subtitle">{{ getSectionSubtitle }}</p>
         </div>
         <q-btn label="Nuevo Proyecto" icon="add" color="primary" unelevated class="btn-nuevo-proyecto"
           @click="showProjectDialog = true" />
@@ -33,8 +33,8 @@
       <!-- Estado vacío -->
       <div v-else-if="!loading && (!proyectos || proyectos.length === 0)" class="empty-state" data-aos="zoom-in" data-aos-delay="200">
         <q-icon name="folder_open" size="80px" color="primary" />
-        <h5 class="q-mt-md text-primary">No hay proyectos</h5>
-        <p class="text-secondary">Crea tu primer proyecto para comenzar</p>
+        <h5 class="q-mt-md text-primary">{{ getEmptyStateTitle }}</h5>
+        <p class="text-secondary">{{ getEmptyStateSubtitle }}</p>
         <q-btn label="Nuevo Proyecto" icon="add" color="primary" unelevated class="q-mt-sm btn-empty-state"
           @click="showProjectDialog = true" />
       </div>
@@ -113,6 +113,11 @@ const router = useRouter()
 const $q = useQuasar()
 const auth = useAuthStore()
 
+// Detectar el rol del usuario actual
+
+const isResponsable = computed(() => auth.user?.rol_id === 2);
+const isAcademico = computed(() => auth.user?.rol_id === 4);
+
 // Estado del componente
 const showProjectDialog = ref(false)
 const loading = ref(true)
@@ -127,6 +132,25 @@ const userName = computed(() => {
   }
   return 'Usuario'
 })
+
+// Textos personalizados para el estado vacío según el rol
+const getEmptyStateTitle = computed(() => {
+  if (isResponsable.value) {
+    return 'No tienes proyectos creados';
+  } else if (isAcademico.value) {
+    return 'No tienes proyectos académicos';
+  } else {
+    return 'No hay proyectos en el sistema';
+  }
+});
+
+const getEmptyStateSubtitle = computed(() => {
+  if (isResponsable.value || isAcademico.value) {
+    return 'Crea tu primer proyecto para comenzar';
+  } else {
+    return 'Aún no se han creado proyectos en el sistema';
+  }
+});
 
 // Función para obtener el nombre del responsable según ID
 function obtenerNombreResponsable(responsableId) {
@@ -154,12 +178,18 @@ async function loadProyectos() {
 
   try {
     // Usar la ruta correcta de la API según tu controlador
-    const response = await api.get('/proyectos', {
-      params: {
-        // Agregar parámetros opcionales si es necesario
-        per_page: 20 // Número de proyectos por página
-      }
-    })
+    // Parámetros para la petición API
+    const params = {
+      per_page: 20 // Número de proyectos por página
+    };
+
+    // Filtrar por responsable si el usuario es Responsable o Académico
+    if (isResponsable.value || isAcademico.value) {
+      params.responsable_id = auth.user.id;
+    }
+
+    // Usar la ruta correcta de la API según tu controlador
+    const response = await api.get('/proyectos', { params });
 
     // Extraer datos según la estructura de respuesta
     // El controlador devuelve data dentro de la respuesta si es paginada
@@ -411,6 +441,27 @@ function verDetalles(proyectoId) {
   })
 }
 
+// Textos personalizados para el encabezado según el rol
+const getSectionTitle = computed(() => {
+  if (isResponsable.value) {
+    return 'Mis Proyectos de Investigación';
+  } else if (isAcademico.value) {
+    return 'Mis Proyectos Académicos';
+  } else {
+    return 'Gestión de Proyectos';
+  }
+});
+
+const getSectionSubtitle = computed(() => {
+  if (isResponsable.value) {
+    return 'Administra tus estudios e investigaciones';
+  } else if (isAcademico.value) {
+    return 'Gestiona tus trabajos académicos';
+  } else {
+    return 'Organiza y administra todos los proyectos del sistema';
+  }
+});
+
 // Cargar proyectos y usuarios al montar el componente
 onMounted(async () => {
   // Inicializar AOS si está disponible
@@ -430,6 +481,7 @@ onMounted(async () => {
     console.error('Error al cargar datos:', error)
   })
 })
+
 </script>
 
 <style lang="scss" scoped>
