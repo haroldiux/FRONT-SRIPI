@@ -51,7 +51,12 @@ const routes = [
         path: 'encuestadores/envio/:id',
         name: 'encuestadores.envio.detalle',
         component: () => import('pages/EnvioDetailPage.vue'),
-      }
+      },
+      {
+        path: 'estadisticas',
+        name: 'estadisticas',
+        component: () => import('pages/EstadisticasEncuestaPage.vue'),
+      },
     ],
   },
 

@@ -162,6 +162,19 @@
               </q-item-section>
               <q-item-section>Historial de Envíos</q-item-section>
             </q-item>
+
+            <q-item
+              clickable
+              v-ripple
+              :to="{ name: 'estadisticas' }"
+              :active="route.name === 'estadisticas'"
+              active-class="active-menu-item"
+            >
+              <q-item-section avatar>
+                <q-icon name="insert_chart" />
+              </q-item-section>
+              <q-item-section>Estadísticas</q-item-section>
+            </q-item>
           </template>
 
           <q-separator class="q-my-md" />
