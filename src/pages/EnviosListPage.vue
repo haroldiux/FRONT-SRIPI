@@ -72,26 +72,75 @@
             </q-select>
           </div>
 
-          <!-- Filtro de usuario (solo para admins) -->
-          <div v-if="isAdmin" class="col-12 col-sm-6 col-md">
-            <q-select
-              v-model="filtroUsuario"
-              :options="opcionesUsuarios"
+          <!-- Filtro de aplicador mejorado (para admins y supervisores) -->
+          <div v-if="isAdmin || isSupervisor" class="col-12 col-sm-6 col-md">
+            <q-input
+              v-model="busquedaAplicador"
               outlined
               dense
-              label="Aplicador"
-              emit-value
-              map-options
               clearable
-              class="filter-select"
+              label="Aplicador"
+              placeholder="Nombre o código de estudiante"
+              class="filter-select aplicador-input"
+              @update:model-value="filtrarAplicadores"
+              @clear="limpiarFiltroAplicador"
             >
               <template v-slot:prepend>
-                <q-icon name="person" color="secondary" />
+                <q-icon name="person_search" color="secondary" />
               </template>
-              <template v-slot:no-option>
-                <div class="text-center q-pa-sm">No hay usuarios disponibles</div>
+              <template v-slot:append>
+                <q-icon
+                  v-if="busquedaAplicador"
+                  name="close"
+                  class="cursor-pointer"
+                  @click="limpiarFiltroAplicador"
+                />
+                <q-icon
+                  v-else
+                  name="arrow_drop_down"
+                  class="cursor-pointer"
+                  @click="toggleListaAplicadores"
+                />
               </template>
-            </q-select>
+            </q-input>
+
+            <q-menu
+              v-model="mostrarListaAplicadores"
+              anchor="bottom left"
+              self="top left"
+              :offset="[0, 8]"
+              class="aplicadores-dropdown"
+            >
+              <q-list style="min-width: 280px; max-height: 300px" class="scroll">
+                <q-item
+                  v-for="aplicador in opcionesAplicadoresFiltrados"
+                  :key="aplicador.value"
+                  clickable
+                  v-ripple
+                  @click="seleccionarAplicador(aplicador)"
+                  :active="filtroUsuario === aplicador.value"
+                  active-class="bg-primary text-white"
+                >
+                  <q-item-section avatar>
+                    <q-avatar :color="filtroUsuario === aplicador.value ? 'white' : 'secondary'" :text-color="filtroUsuario === aplicador.value ? 'primary' : 'white'">
+                      {{ getInitials(aplicador) }}
+                    </q-avatar>
+                  </q-item-section>
+                  <q-item-section>
+                    <q-item-label>{{ aplicador.nombreCompleto }}</q-item-label>
+                    <q-item-label caption :class="{ 'text-white': filtroUsuario === aplicador.value }">
+                      Código: {{ aplicador.codigo }}
+                    </q-item-label>
+                  </q-item-section>
+                </q-item>
+
+                <q-item v-if="opcionesAplicadoresFiltrados.length === 0">
+                  <q-item-section class="text-center text-grey">
+                    <q-item-label>No se encontraron aplicadores</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
           </div>
 
           <!-- Filtro de fecha -->
@@ -331,7 +380,120 @@ export default defineComponent({
     const isEncuestador = computed(() => auth.user?.rol_id === 3);
     const isAcademico = computed(() => auth.user?.rol_id === 4);
 
+    // Variables para el filtro de aplicador
+    const busquedaAplicador = ref('');
+    const mostrarListaAplicadores = ref(false);
+    const opcionesAplicadores = ref([]);
 
+    // Computed para filtrar aplicadores por texto
+    const opcionesAplicadoresFiltrados = computed(() => {
+      if (!busquedaAplicador.value) {
+        return opcionesAplicadores.value;
+      }
+
+      const termino = busquedaAplicador.value.toLowerCase();
+      return opcionesAplicadores.value.filter(aplicador =>
+        aplicador.nombreCompleto.toLowerCase().includes(termino) ||
+        aplicador.codigo.toLowerCase().includes(termino)
+      );
+    });
+
+    // Función para obtener iniciales de un aplicador
+    function getInitials(aplicador) {
+      if (!aplicador || !aplicador.nombreCompleto) return '?';
+
+      const nombres = aplicador.nombreCompleto.split(' ');
+      if (nombres.length === 0) return '?';
+
+      if (nombres.length === 1) {
+        return nombres[0].charAt(0).toUpperCase();
+      }
+
+      return (nombres[0].charAt(0) + nombres[nombres.length > 1 ? 1 : 0].charAt(0)).toUpperCase();
+    }
+    // Función para filtrar aplicadores al escribir
+    function filtrarAplicadores() {
+      // Mostrar la lista dropdown cuando se escribe
+      mostrarListaAplicadores.value = !!busquedaAplicador.value;
+    }
+
+    // Alternar la visibilidad de la lista de aplicadores
+    function toggleListaAplicadores() {
+      mostrarListaAplicadores.value = !mostrarListaAplicadores.value;
+    }
+
+    // Función para seleccionar un aplicador de la lista
+    function seleccionarAplicador(aplicador) {
+      filtroUsuario.value = aplicador.value;
+      busquedaAplicador.value = aplicador.nombreCompleto;
+      mostrarListaAplicadores.value = false;
+      cargarEnvios();
+    }
+    // Limpiar el filtro de aplicador
+    function limpiarFiltroAplicador() {
+      filtroUsuario.value = null;
+      busquedaAplicador.value = '';
+      mostrarListaAplicadores.value = false;
+      cargarEnvios();
+    }
+
+    // Cargar opciones de aplicadores según los filtros
+    async function cargarOpcionesAplicadores() {
+      try {
+        const params = {};
+
+        // Si hay un filtro de proyecto específico
+        if (filtroProyecto.value) {
+          params.proyecto_id = filtroProyecto.value;
+        }
+        // Si hay un filtro de encuesta específico
+        if (filtroEncuesta.value) {
+          params.encuesta_id = filtroEncuesta.value;
+        }
+
+        // Para supervisores sin filtro, obtener proyectos supervisados
+        if (isSupervisor.value && !filtroProyecto.value) {
+          const proyectosIds = proyectos.value
+            .filter(p => p.responsable_id === auth.user.id)
+            .map(p => p.id);
+
+          if (proyectosIds.length > 0) {
+            params.proyectos_ids = proyectosIds.join(',');
+          }
+        }
+
+        // Cargar aplicadores con los filtros
+        const response = await api.get('/aplicadores', { params });
+        const aplicadoresData = response.data.data || [];
+
+        // Formatear datos para el filtro
+        opcionesAplicadores.value = aplicadoresData.map(u => ({
+          value: u.id,
+          codigo: u.usuario || 'Sin código',
+          nombreCompleto: `${u.nombres || ''} ${u.apellidos || ''}`.trim() || 'Usuario',
+          label: `${u.nombres || ''} ${u.apellidos || ''} (${u.usuario || 'Sin código'})`.trim()
+        }));
+
+      } catch (error) {
+        console.error('Error al cargar opciones de aplicadores:', error);
+
+        // Si falla, intentar obtener aplicadores de los envíos actuales
+        const aplicadoresUnicos = {};
+
+        envios.value.forEach(envio => {
+          if (envio.aplicador && envio.aplicador_id && !aplicadoresUnicos[envio.aplicador_id]) {
+            aplicadoresUnicos[envio.aplicador_id] = {
+              value: envio.aplicador_id,
+              codigo: envio.aplicador.usuario || 'Sin código',
+              nombreCompleto: `${envio.aplicador.nombres || ''} ${envio.aplicador.apellidos || ''}`.trim() || 'Usuario',
+              label: `${envio.aplicador.nombres || ''} ${envio.aplicador.apellidos || ''} (${envio.aplicador.usuario || 'Sin código'})`.trim()
+            };
+          }
+        });
+
+        opcionesAplicadores.value = Object.values(aplicadoresUnicos);
+      }
+    }
     // Verificar si hay filtros activos
     const hayFiltrosActivos = computed(() => {
       return filter.value || filtroEncuesta.value || (filtroFecha.value && filtroFecha.value !== 'todos') || filtroProyecto.value || filtroUsuario.value;
@@ -446,10 +608,19 @@ export default defineComponent({
       return resultado;
     });
 
-    // Observar cambios en los filtros para recargar automáticamente
-    watch([filtroEncuesta, filtroProyecto, filtroUsuario, filtroFecha], () => {
-      currentPage.value = 1; // Resetear página al cambiar filtros
-      cargarEnvios();
+    // Observar cambios en el filtro de proyecto para recargar las opciones de encuestas
+    watch([filtroProyecto, filtroEncuesta], async () => {
+      if (isAdmin.value || isSupervisor.value) {
+        // Limpiar filtro de aplicador cuando cambian los filtros principales
+        limpiarFiltroAplicador();
+
+        // Recargar opciones de aplicadores
+        if (isAdmin.value) {
+          await cargarOpcionesUsuarios();
+        } else if (isSupervisor.value) {
+          await cargarOpcionesAplicadores();
+        }
+      }
     });
 
     // Limpiar todos los filtros
@@ -494,25 +665,26 @@ export default defineComponent({
           per_page: 10
         };
 
-        // Parámetros específicos según el rol
-        if (isEncuestador.value || isAcademico.value) {
-          // Encuestadores solo ven sus propios envíos
+        // Si hay filtro de proyecto específico
+        if (filtroProyecto.value) {
+          params.proyecto_id = filtroProyecto.value;
+        }
+        // Si no hay filtro de proyecto, aplicar lógica según rol
+        else if (isEncuestador.value || isAcademico.value) {
+          // Encuestadores y académicos solo ven sus propios envíos
           params.aplicador_id = auth.user.id;
-        } else if (isSupervisor.value && proyectos.value.length > 0) {
-          // Para supervisores, filtramos por los IDs de los proyectos que supervisa
-          if (filtroProyecto.value) {
-            // Si hay un filtro específico de proyecto
-            params.proyecto_id = filtroProyecto.value;
-          } else {
-            // Cargar todos los proyectos del supervisor
-            const proyectosIds = proyectos.value
-                                  .filter(p => p.responsable_id === auth.user.id)
-                                  .map(p => p.id);
-            if (proyectosIds.length > 0) {
-              params.proyectos_ids = proyectosIds.join(',');
-            }
+        }
+        else if (isSupervisor.value) {
+          // Para supervisores sin filtro, buscar proyectos que supervisa
+          const proyectosIds = proyectos.value
+            .filter(p => p.responsable_id === auth.user.id)
+            .map(p => p.id);
+
+          if (proyectosIds.length > 0) {
+            params.proyectos_ids = proyectosIds.join(',');
           }
         }
+        // Admins ven todo por defecto
 
         // Filtros adicionales si se seleccionaron
         if (filtroEncuesta.value) params.encuesta_id = filtroEncuesta.value;
@@ -531,14 +703,20 @@ export default defineComponent({
 
         // Cargar opciones para filtros
         await cargarOpcionesEncuestas();
+
         if (isAdmin.value || isSupervisor.value) {
           await cargarOpcionesProyectos();
         }
+
         if (isAdmin.value) {
           await cargarOpcionesUsuarios();
         }
+        // Añadir esto si no está presente:
+        else if (isSupervisor.value) {
+          await cargarOpcionesAplicadores();
+        }
 
-        // Notificación de éxito con estilo personalizado
+        // Notificación si no hay resultados con filtros
         if (!envios.value.length && hayFiltrosActivos.value) {
           $q.notify({
             type: 'warning',
@@ -568,13 +746,29 @@ export default defineComponent({
     // Cargar opciones de encuestas para el filtro
     async function cargarOpcionesEncuestas() {
       try {
-        // Para encuestadores y académicos, mostrar solo las encuestas asignadas
-        if (isEncuestador.value || isAcademico.value) {
-          // Obtener IDs de encuestas asignadas
+        // Crear un objeto para las encuestas únicas
+        const encuestasUnicas = {};
+
+        // Determinar qué encuestas mostrar según el rol y el filtro de proyecto
+        if (filtroProyecto.value) {
+          // Si hay un filtro de proyecto, mostrar solo las encuestas de ese proyecto
+          envios.value.forEach(envio => {
+            if (envio.encuesta &&
+                envio.encuesta.proyecto_id === filtroProyecto.value &&
+                !encuestasUnicas[envio.encuesta.id]) {
+              encuestasUnicas[envio.encuesta.id] = envio.encuesta.titulo;
+            }
+          });
+        } else if (isEncuestador.value || isAcademico.value) {
+          // Para encuestadores y académicos, mostrar solo sus encuestas asignadas
+          // Primero, obtenemos IDs de encuestas asignadas si no lo hemos hecho
+          if (!asignacionesUsuario.value.length) {
+            await cargarAsignacionesUsuario();
+          }
+
           const encuestasAsignadasIds = asignacionesUsuario.value.map(a => a.encuesta_id);
 
-          // Filtrar las encuestas en los envíos
-          const encuestasUnicas = {};
+          // Filtrar las encuestas en los envíos por las asignadas
           envios.value.forEach(envio => {
             if (envio.encuesta &&
                 !encuestasUnicas[envio.encuesta.id] &&
@@ -583,7 +777,7 @@ export default defineComponent({
             }
           });
 
-          // Si no hay coincidencias en los envíos, añadir directamente desde las asignaciones
+          // Si no hay coincidencias, añadir directamente desde las asignaciones
           if (Object.keys(encuestasUnicas).length === 0) {
             for (const asignacion of asignacionesUsuario.value) {
               if (asignacion.encuesta && !encuestasUnicas[asignacion.encuesta.id]) {
@@ -591,28 +785,37 @@ export default defineComponent({
               }
             }
           }
+        } else if (isSupervisor.value) {
+          // Para supervisores sin filtro de proyecto, mostrar encuestas de sus proyectos
+          const proyectosDelResponsable = proyectos.value
+            .filter(p => p.responsable_id === auth.user.id)
+            .map(p => p.id);
 
-          opcionesEncuestas.value = Object.entries(encuestasUnicas).map(([id, titulo]) => ({
-            label: titulo,
-            value: parseInt(id),
-            icon: 'description'
-          }));
-
+          envios.value.forEach(envio => {
+            if (envio.encuesta &&
+                envio.encuesta.proyecto &&
+                proyectosDelResponsable.includes(envio.encuesta.proyecto_id) &&
+                !encuestasUnicas[envio.encuesta.id]) {
+              encuestasUnicas[envio.encuesta.id] = envio.encuesta.titulo;
+            }
+          });
         } else {
-          // Para administradores y supervisores, mostrar todas las encuestas
-          const encuestasUnicas = {};
+          // Para administradores sin filtro, mostrar todas las encuestas
           envios.value.forEach(envio => {
             if (envio.encuesta && !encuestasUnicas[envio.encuesta.id]) {
               encuestasUnicas[envio.encuesta.id] = envio.encuesta.titulo;
             }
           });
-
-          opcionesEncuestas.value = Object.entries(encuestasUnicas).map(([id, titulo]) => ({
-            label: titulo,
-            value: parseInt(id),
-            icon: 'description'
-          }));
         }
+
+        // Convertir a formato de opciones para q-select
+        opcionesEncuestas.value = Object.entries(encuestasUnicas).map(([id, titulo]) => ({
+          label: titulo,
+          value: parseInt(id),
+          icon: 'description'
+        }));
+
+        console.log('Opciones de encuestas generadas:', opcionesEncuestas.value);
       } catch (error) {
         console.error('Error al cargar opciones de encuestas:', error);
       }
@@ -646,22 +849,55 @@ export default defineComponent({
     }
 
     // Cargar opciones de usuarios para el filtro (solo admin)
+    // Cargar opciones de usuarios para el filtro (para admin y supervisor)
     async function cargarOpcionesUsuarios() {
       try {
-        // Solo administradores pueden filtrar por usuario
-        if (!isAdmin.value) return;
+        // Solo administradores y supervisores pueden filtrar por usuario
+        if (!isAdmin.value && !isSupervisor.value) return;
 
-        const response = await api.get('/usuarios');
-        usuarios.value = response.data.data || response.data || [];
+        const params = {};
 
-        // Actualizar opciones de usuarios para el filtro
+        // Aplicar filtros de proyecto o encuesta si existen
+        if (filtroProyecto.value) {
+          params.proyecto_id = filtroProyecto.value;
+        }
+        if (filtroEncuesta.value) {
+          params.encuesta_id = filtroEncuesta.value;
+        }
+
+        // Para supervisores, limitar a sus proyectos
+        if (isSupervisor.value && !filtroProyecto.value) {
+          const proyectosIds = proyectos.value
+            .filter(p => p.responsable_id === auth.user.id)
+            .map(p => p.id);
+
+          if (proyectosIds.length > 0) {
+            params.proyectos_ids = proyectosIds.join(',');
+          }
+        }
+
+        const response = await api.get('/usuarios', { params });
+        usuarios.value = response.data.data || [];
+
+        // Actualizar ambas opciones
         opcionesUsuarios.value = usuarios.value.map(u => ({
-          label: `${u.nombres} ${u.apellidos} (${u.usuario})`,
+          label: `${u.nombres || ''} ${u.apellidos || ''} (${u.usuario || 'Sin código'})`.trim(),
           value: u.id,
           icon: 'person'
         }));
+
+        // Actualizar también opcionesAplicadores
+        opcionesAplicadores.value = usuarios.value.map(u => ({
+          value: u.id,
+          codigo: u.usuario || 'Sin código',
+          nombreCompleto: `${u.nombres || ''} ${u.apellidos || ''}`.trim() || 'Usuario',
+          label: `${u.nombres || ''} ${u.apellidos || ''} (${u.usuario || 'Sin código'})`.trim()
+        }));
+
       } catch (error) {
         console.error('Error al cargar opciones de usuarios:', error);
+        opcionesUsuarios.value = [];
+        opcionesAplicadores.value = [];
       }
     }
 
@@ -701,12 +937,29 @@ export default defineComponent({
 
     // Obtener nombre del aplicador
     function getNombreAplicador(envio) {
+      // Si es el usuario actual
       if (envio.aplicador_id && auth.user && envio.aplicador_id === auth.user.id) {
         return 'Tú';
       }
 
+      // Si tiene aplicador con datos completos
+      if (envio.aplicador && envio.aplicador.nombres && envio.aplicador.apellidos) {
+        return `${envio.aplicador.nombres} ${envio.aplicador.apellidos} (${envio.aplicador.usuario || ''})`;
+      }
+
+      // Si solo tiene el nombre o el apellido
+      if (envio.aplicador && (envio.aplicador.nombres || envio.aplicador.apellidos)) {
+        return `${envio.aplicador.nombres || ''} ${envio.aplicador.apellidos || ''} (${envio.aplicador.usuario || ''})`.trim();
+      }
+
+      // Si solo tiene el nombre de usuario
+      if (envio.aplicador && envio.aplicador.usuario) {
+        return envio.aplicador.usuario;
+      }
+
+      // Si tiene el aplicador pero sin datos
       if (envio.aplicador) {
-        return `${envio.aplicador.nombres || ''} ${envio.aplicador.apellidos || ''}`.trim() || 'Usuario';
+        return 'Usuario #' + envio.aplicador_id;
       }
 
       return 'No especificado';
@@ -894,11 +1147,24 @@ export default defineComponent({
       isSupervisor,
       isEncuestador,
       isAcademico,
+       asignacionesUsuario,
       getTitleByRole,
       getSubtitleByRole,
       getNoResultsMessage,
-
+      // Nuevas propiedades para el filtro de aplicador
+      busquedaAplicador,
+      mostrarListaAplicadores,
+      opcionesAplicadores,
+      opcionesAplicadoresFiltrados,
+      filtrarAplicadores,
+      toggleListaAplicadores,
+      // Nuevos métodos
+      getInitials,
+      seleccionarAplicador,
+      limpiarFiltroAplicador,
+      cargarOpcionesAplicadores,
       cargarEnvios,
+      cargarAsignacionesUsuario,
       getNombreAplicador,
       formatDateTime,
       formatLatLng,
@@ -1288,5 +1554,35 @@ export default defineComponent({
   .q-card-section {
     padding: 16px !important;
   }
+}
+/* Estilos para el filtro de aplicador */
+.aplicador-input {
+  position: relative;
+}
+
+.aplicadores-dropdown {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+  background: white;
+
+  .q-item {
+    border-radius: 4px;
+    margin: 4px;
+    transition: all 0.3s ease;
+  }
+
+  .q-avatar {
+    transition: transform 0.3s ease;
+  }
+
+  .q-item:hover .q-avatar {
+    transform: scale(1.1);
+  }
+}
+
+/* Avatar de usuario en el selector */
+.q-avatar {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  border: 2px solid white;
 }
 </style>

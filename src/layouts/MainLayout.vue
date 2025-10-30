@@ -131,12 +131,13 @@
           </template>
 
           <!-- MIS ENCUESTAS - solo visible para encuestadores -->
-          <template v-if="userIsEncuestador() || userIsAcademico()">
+          <template v-if="userIsEncuestador() || userIsAcademico() || userIsSupervisor() || userIsAdmin()">
             <q-item-label header class="menu-header">
               MIS ENCUESTAS
             </q-item-label>
 
             <q-item
+              v-if="userIsEncuestador() || userIsAcademico()"
               clickable
               v-ripple
               :to="{ name: 'encuestadores.list' }"
