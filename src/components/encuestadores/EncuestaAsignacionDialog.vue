@@ -570,8 +570,19 @@ const loadEncuesta = async () => {
 const loadUsuarios = async () => {
   loadingUsers.value = true
   try {
-    const response = await api.get('/usuarios')
-    usuarios.value = response.data.data || response.data || []
+    // Cargar cada tipo de rol y combinar resultados
+    const usuariosResponsables = await api.get('/usuarios', { params: { role: 2 } });
+    const usuariosInvestigadores = await api.get('/usuarios', { params: { role: 3 } });
+    const usuariosAcademicos = await api.get('/usuarios', { params: { role: 4 } });
+
+    const responsables = usuariosResponsables.data.data || usuariosResponsables.data || [];
+    const investigadores = usuariosInvestigadores.data.data || usuariosInvestigadores.data || [];
+    const academicos = usuariosAcademicos.data.data || usuariosAcademicos.data || [];
+    usuarios.value = [...responsables, ...investigadores, ...academicos];
+
+    // Para depuración
+    console.log("Usuarios cargados:", usuarios.value);
+    console.log("Académicos:", usuarios.value.filter(u => u.rol_id === 4));
 
     // Refrescar AOS después de cargar los datos
     nextTick(() => refreshAOS())

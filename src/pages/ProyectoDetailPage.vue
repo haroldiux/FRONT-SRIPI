@@ -466,26 +466,42 @@ function formatFecha(dateString) {
 function obtenerNombreResponsable(responsableId) {
   if (!responsableId) return 'No asignado'
 
-  // Si el usuario actual es el responsable, destacarlo (usando currentUser)
+  // Si el usuario actual es el responsable
   if (currentUser.value && currentUser.value.id === responsableId) {
     return `${currentUser.value.nombres || ''} ${currentUser.value.apellidos || ''} (Tú)`.trim()
   }
 
-  // Buscar el usuario por ID en la lista de usuarios cargados
-  const usuario = usuarios.value.find(u => u.id === responsableId)
+  // Convertir a número por si viene como string
+  const responsableIdNum = parseInt(responsableId)
+
+  // Buscar en los usuarios ya cargados
+  const usuario = usuarios.value.find(u => u.id === responsableIdNum)
 
   if (usuario) {
     return `${usuario.nombres || ''} ${usuario.apellidos || ''}`.trim()
   }
 
-  // Valores por defecto temporales (mientras se cargan los datos)
+  // Si no lo encontramos localmente, cargar dinámicamente el usuario
+  // (esto podría moverse a una función reactiva para actualizar la vista)
+  if (responsableId) {
+    api.get(`/usuarios/${responsableId}`)
+      .then(response => {
+        // Si encontramos el usuario, actualizar la lista de usuarios
+        if (response.data && response.data.id) {
+          usuarios.value.push(response.data)
+        }
+      })
+      .catch(err => console.error('Error al cargar usuario responsable:', err))
+  }
+
+  // Valores por defecto (solo como respaldo)
   const responsablesDefault = {
     1: 'JUAN JOSE MAMANI VIA',
-    2: 'Maria Rodriguez',
+    2: 'TERESA PAOLA CANCHARI PEREYRA',
     3: 'Carlos Perez'
   }
 
-  return responsablesDefault[responsableId] || 'No asignado'
+  return responsablesDefault[responsableId] || 'Cargando información...'
 }
 
 // Función para verificar si un proyecto está finalizado basado en su fecha de fin

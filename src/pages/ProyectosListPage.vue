@@ -160,7 +160,16 @@ function obtenerNombreResponsable(responsableId) {
   if (usuario) {
     return `${usuario.nombres || ''} ${usuario.apellidos || ''}`.trim()
   }
-
+  if (responsableId) {
+    api.get(`/usuarios/${responsableId}`)
+      .then(response => {
+        // Si encontramos el usuario, actualizar la lista de usuarios
+        if (response.data && response.data.id) {
+          usuarios.value.push(response.data)
+        }
+      })
+      .catch(err => console.error('Error al cargar usuario responsable:', err))
+  }
   // Valores por defecto temporales (mientras se cargan los datos)
   const responsablesDefault = {
     1: 'JUAN JOSE MAMANI VIA',
