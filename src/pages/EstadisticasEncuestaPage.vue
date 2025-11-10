@@ -275,13 +275,13 @@ export default defineComponent({
     // Preguntas que pueden visualizarse con gráficos
     const preguntasConGraficos = computed(() => {
       return preguntas.value.filter(p =>
-        ['option', 'multiple', 'checkbox', 'scale', 'number', 'date'].includes(p.tipo)
+        ['text', 'number', 'single', 'multi', 'scale', 'date'].includes(p.tipo)
       );
     });
 
     // Verifica si una pregunta tiene opciones múltiples (para cambiar tipo de gráfico)
     function tieneOpcionesMultiples(pregunta) {
-      return ['option', 'multiple', 'checkbox'].includes(pregunta.tipo);
+      return ['single', 'multi'].includes(pregunta.tipo);
     }
 
     // Icono según el tipo de pregunta
@@ -524,27 +524,28 @@ export default defineComponent({
       let data = [];
 
       switch (pregunta.tipo) {
-        case 'option':
+        case 'single':
+        case 'multi':
         case 'multiple':
-        case 'checkbox': {
-          // Contar frecuencias de opciones seleccionadas
-          const opcionesCounts = {};
+          {
+            // Contar frecuencias de opciones seleccionadas
+            const opcionesCounts = {};
 
-          respuestasPregunta.forEach(respuesta => {
-            if (respuesta.opciones && respuesta.opciones.length > 0) {
-              respuesta.opciones.forEach(opcion => {
-                opcionesCounts[opcion.id] = (opcionesCounts[opcion.id] || 0) + 1;
-              });
-            }
-          });
+            respuestasPregunta.forEach(respuesta => {
+              if (respuesta.opciones && respuesta.opciones.length > 0) {
+                respuesta.opciones.forEach(opcion => {
+                  opcionesCounts[opcion.id] = (opcionesCounts[opcion.id] || 0) + 1;
+                });
+              }
+            });
 
-          // Preparar datos para D3
-          data = pregunta.opciones.map(o => ({
-            label: o.texto,
-            value: opcionesCounts[o.id] || 0
-          }));
-          break;
-        }
+            // Preparar datos para D3
+            data = pregunta.opciones.map(o => ({
+              label: o.texto,
+              value: opcionesCounts[o.id] || 0
+            }));
+            break;
+          }
 
         case 'scale': {
           // Agrupar por valor de escala
@@ -654,6 +655,15 @@ export default defineComponent({
           break;
         }
 
+        case 'text': {
+          // Para preguntas de texto, mostrar un mensaje apropiado
+          const noDataDiv = document.createElement('div');
+          noDataDiv.className = 'text-center q-py-md';
+          noDataDiv.innerHTML = '<p class="text-grey">Las respuestas de texto no se pueden graficar, pero están disponibles en la exportación a Excel.</p>';
+          container.appendChild(noDataDiv);
+          return;
+        }
+
         default: {
           // Para otros tipos de preguntas o si no hay un tipo reconocido
           const noDataDiv = document.createElement('div');
@@ -677,9 +687,9 @@ export default defineComponent({
       const tipoGrafico = tiposGrafico.value[pregunta.id] || 'bar';
 
       // Crear SVG
-      const margin = { top: 20, right: 20, bottom: 70, left: 40 };
+      const margin = { top: 20, right: 20, bottom: 120, left: 60 };
       const width = container.clientWidth - margin.left - margin.right;
-      const height = 280 - margin.top - margin.bottom;
+      const height = 300 - margin.top - margin.bottom;
 
       const svg = d3.select(container)
         .append('svg')
@@ -706,10 +716,13 @@ export default defineComponent({
           .attr('transform', `translate(0,${height})`)
           .call(d3.axisBottom(x))
           .selectAll('text')
-          .attr('transform', 'translate(-10,0)rotate(-45)')
+          .attr('transform', 'translate(-5,5)rotate(-35)')
           .style('text-anchor', 'end')
-          .style('font-size', '12px');
-
+          .style('font-size', '12px')
+          .text(d => {
+            // Truncar texto largo
+            return d.length > 20 ? d.substring(0, 20) + '...' : d;
+          });
         svg.append('g')
           .call(d3.axisLeft(y).ticks(5).tickFormat(d => d))
           .selectAll('text')
@@ -753,9 +766,10 @@ export default defineComponent({
           .append('text')
           .attr('class', 'label')
           .attr('x', d => x(d.label) + x.bandwidth() / 2)
-          .attr('y', d => y(d.value) - 5)
+          .attr('y', d => y(d.value) - 8)
           .attr('text-anchor', 'middle')
           .style('font-size', '12px')
+          .style('font-weight', 'bold') // Hacer las etiquetas más legibles
           .text(d => d.value);
 
       } else if (tipoGrafico === 'pie') {
@@ -815,7 +829,11 @@ export default defineComponent({
           });
 
         labels.append('tspan')
-          .text(d => d.data.label)
+          .text(d => {
+            // Truncar texto largo
+            const label = d.data.label;
+            return label.length > 15 ? label.substring(0, 15) + '...' : label;
+          })
           .attr('x', 0)
           .attr('dy', '0em')
           .style('font-size', '12px');
@@ -1398,5 +1416,25 @@ export default defineComponent({
   .grafico-card {
     margin-bottom: 24px;
   }
+}
+.grafico-container {
+  position: relative;
+  padding: 16px 8px 24px 8px; /* Aumentar padding inferior */
+  background-color: rgba(245, 247, 250, 0.5);
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  min-height: 350px; /* Altura mínima para asegurar espacio suficiente */
+  overflow: visible !important; /* Asegurar que las etiquetas no se corten */
+}
+/* Añade esto a tu sección de estilos */
+.axis-label {
+  font-size: 12px;
+  fill: var(--color-text);
+}
+
+.x-axis-rotated text {
+  text-anchor: end;
+  transform: rotate(-35deg);
+  transform-origin: 10% 60%;
 }
 </style>
