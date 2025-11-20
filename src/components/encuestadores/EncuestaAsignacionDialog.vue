@@ -1,8 +1,9 @@
 <template>
-  <q-dialog v-model="isOpen" persistent maximized class="asignacion-dialog" transition-show="fade" transition-hide="fade">
+  <q-dialog v-model="isOpen" persistent maximized class="asignacion-dialog" transition-show="fade"
+    transition-hide="fade">
     <q-card class="asignacion-card">
       <!-- Header mejorado con gradiente -->
-      <q-card-section class="header-section" data-aos="fade-down" data-aos-duration="600">
+      <q-card-section class="header-section">
         <div class="row items-center q-pb-md">
           <div class="col">
             <div class="text-h5 text-white text-weight-bold flex items-center">
@@ -13,27 +14,14 @@
               Administra los usuarios asignados a esta encuesta
             </div>
           </div>
-          <q-btn
-            icon="close"
-            flat
-            round
-            dense
-            v-close-popup
-            @click="onClose"
-            class="close-btn"
-            color="white"
-          />
+          <q-btn icon="close" flat round dense v-close-popup @click="onClose" class="close-btn" color="white" />
         </div>
       </q-card-section>
 
       <q-card-section class="q-pt-lg q-px-lg content-section">
         <div class="row q-col-gutter-lg">
           <!-- Panel de usuarios disponibles -->
-          <div
-            class="col-12 col-md-6"
-            data-aos="fade-right"
-            data-aos-duration="800"
-          >
+          <div class="col-12 col-md-6">
             <q-card flat bordered class="panel-card">
               <q-card-section class="panel-header bg-purple">
                 <div class="text-subtitle1 text-white text-weight-bold flex items-center">
@@ -43,16 +31,8 @@
                     {{ filteredUsers.length }}
                   </q-badge>
                 </div>
-                <q-input
-                  v-model="searchUser"
-                  dense
-                  outlined
-                  placeholder="Buscar usuario..."
-                  class="search-input"
-                  clearable
-                  dark
-                  bg-color="rgba(255,255,255,0.2)"
-                >
+                <q-input v-model="searchUser" dense outlined placeholder="Buscar usuario..." class="search-input"
+                  clearable dark bg-color="rgba(255,255,255,0.2)">
                   <template v-slot:append>
                     <q-icon name="search" />
                   </template>
@@ -70,17 +50,8 @@
                 </div>
                 <q-scroll-area v-else style="height: calc(100vh - 320px)" class="full-width users-scroll">
                   <q-list separator class="users-list">
-                    <q-item
-                      v-for="user in filteredUsers"
-                      :key="`user-${user.id}`"
-                      clickable
-                      v-ripple
-                      @click="promptObjetivo(user)"
-                      class="user-item"
-                      data-aos="fade-up"
-                      data-aos-duration="400"
-                      data-aos-delay="50"
-                    >
+                    <q-item v-for="user in filteredUsers" :key="`user-${user.id}`" clickable v-ripple
+                      @click="promptObjetivo(user)" class="user-item">
                       <q-item-section avatar>
                         <q-avatar color="purple" text-color="white" class="avatar-user">
                           {{ getUserInitials(user) }}
@@ -90,7 +61,8 @@
                         <q-item-label class="text-weight-medium">{{ user.nombres }} {{ user.apellidos }}</q-item-label>
                         <q-item-label caption class="user-info">
                           <span>{{ user.usuario }}</span>
-                          <q-badge :color="getRolColor(user.rol_id)" class="q-ml-sm">{{ getRolName(user.rol_id) }}</q-badge>
+                          <q-badge :color="getRolColor(user.rol_id)" class="q-ml-sm">{{ getRolName(user.rol_id)
+                          }}</q-badge>
                         </q-item-label>
                       </q-item-section>
                       <q-item-section side>
@@ -106,11 +78,7 @@
           </div>
 
           <!-- Panel de usuarios asignados -->
-          <div
-            class="col-12 col-md-6"
-            data-aos="fade-left"
-            data-aos-duration="800"
-          >
+          <div class="col-12 col-md-6">
             <q-card flat bordered class="panel-card">
               <!-- Botón de autoasignación para académicos -->
               <q-card-section v-if="userIsAcademico" class="self-assign-section">
@@ -122,15 +90,8 @@
                   <div class="text-caption q-mt-xs">Como académico, puedes autoasignarte a esta encuesta</div>
 
                   <template v-slot:action>
-                    <q-btn
-                      v-if="!isUserAssigned"
-                      unelevated
-                      color="white"
-                      text-color="deep-purple"
-                      label="Autoasignarme"
-                      @click="promptSelfAssign"
-                      class="self-assign-btn"
-                    />
+                    <q-btn v-if="!isUserAssigned" unelevated color="white" text-color="deep-purple"
+                      label="Autoasignarme" @click="promptSelfAssign" class="self-assign-btn" />
                     <div v-else class="already-assigned">
                       <q-icon name="check_circle" color="white" class="q-mr-sm" />
                       Ya estás asignado
@@ -146,16 +107,8 @@
                     {{ asignaciones.length }}
                   </q-badge>
                 </div>
-                <q-btn
-                  outline
-                  color="white"
-                  label="Actualizar"
-                  icon="refresh"
-                  dense
-                  class="refresh-btn"
-                  size="sm"
-                  @click="loadAsignaciones"
-                >
+                <q-btn outline color="white" label="Actualizar" icon="refresh" dense class="refresh-btn" size="sm"
+                  @click="loadAsignaciones">
                   <q-tooltip>Refrescar lista de asignaciones</q-tooltip>
                 </q-btn>
               </q-card-section>
@@ -171,22 +124,16 @@
                 </div>
                 <q-scroll-area v-else style="height: calc(100vh - 320px)" class="full-width users-scroll">
                   <q-list separator class="users-list">
-                    <q-item
-                      v-for="asignacion in asignaciones"
-                      :key="`asignacion-${asignacion.id}`"
-                      v-ripple
-                      class="asignacion-item"
-                      data-aos="fade-up"
-                      data-aos-duration="400"
-                      data-aos-delay="50"
-                    >
+                    <q-item v-for="asignacion in asignaciones" :key="`asignacion-${asignacion.id}`" v-ripple
+                      class="asignacion-item">
                       <q-item-section avatar>
                         <q-avatar color="teal" text-color="white" class="avatar-assigned">
                           {{ getUserInitials(asignacion.usuario) }}
                         </q-avatar>
                       </q-item-section>
                       <q-item-section>
-                        <q-item-label class="text-weight-medium">{{ asignacion.usuario.nombres || '' }} {{ asignacion.usuario.apellidos || '' }}</q-item-label>
+                        <q-item-label class="text-weight-medium">{{ asignacion.usuario.nombres || '' }} {{
+                          asignacion.usuario.apellidos || '' }}</q-item-label>
                         <q-item-label caption>{{ asignacion.usuario.usuario }}</q-item-label>
                         <q-item-label caption class="objetivo-label">
                           <q-icon name="target" size="16px" class="q-mr-xs" color="teal" />
@@ -195,26 +142,12 @@
                       </q-item-section>
                       <q-item-section side>
                         <div class="row q-gutter-xs action-buttons">
-                          <q-btn
-                            flat
-                            round
-                            color="purple"
-                            icon="edit"
-                            size="sm"
-                            @click="editarObjetivo(asignacion)"
-                            class="edit-btn"
-                          >
+                          <q-btn flat round color="purple" icon="edit" size="sm" @click="editarObjetivo(asignacion)"
+                            class="edit-btn">
                             <q-tooltip>Editar objetivo</q-tooltip>
                           </q-btn>
-                          <q-btn
-                            flat
-                            round
-                            color="negative"
-                            icon="delete"
-                            size="sm"
-                            @click="removeAsignacion(asignacion)"
-                            class="delete-btn"
-                          >
+                          <q-btn flat round color="negative" icon="delete" size="sm"
+                            @click="removeAsignacion(asignacion)" class="delete-btn">
                             <q-tooltip>Eliminar asignación</q-tooltip>
                           </q-btn>
                         </div>
@@ -231,24 +164,16 @@
       <q-separator />
 
       <q-card-actions align="right" class="q-pa-md footer-actions">
-        <q-btn
-          flat
-          label="Cerrar"
-          color="purple"
-          v-close-popup
-          @click="onClose"
-          class="close-action-btn"
-        />
+        <q-btn flat label="Cerrar" color="purple" v-close-popup @click="onClose" class="close-action-btn" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/boot/axios'
-import AOS from 'aos'
 import { useAuthStore } from 'src/stores/auth.store'
 const auth = useAuthStore()
 
@@ -292,30 +217,10 @@ const loadingUsers = ref(false)
 const loadingAsignaciones = ref(false)
 const objetivo = ref(1) // Valor predeterminado para el objetivo
 
-// Inicializar AOS
-const initAOS = () => {
-  if (typeof AOS !== 'undefined') {
-    AOS.init({
-      duration: 800,
-      once: false,
-      mirror: true
-    });
-  } else {
-    console.warn('AOS no está disponible');
-  }
-};
 
-// Refrescar AOS cuando cambia el contenido
-const refreshAOS = () => {
-  if (typeof AOS !== 'undefined') {
-    setTimeout(() => {
-      AOS.refresh();
-    }, 100);
-  }
-};
 
 // Roles permitidos (2 = Responsable, 3 = Investigador)
-const rolesPermitidos = [2, 3,4]
+const rolesPermitidos = [2, 3, 4]
 
 // Computed
 const filteredUsers = computed(() => {
@@ -331,12 +236,11 @@ const filteredUsers = computed(() => {
   const term = searchUser.value.toLowerCase()
   const filtered = getUnassignedUsers(usersWithValidRoles).filter(user => {
     return user.nombres?.toLowerCase().includes(term) ||
-           user.apellidos?.toLowerCase().includes(term) ||
-           user.usuario?.toLowerCase().includes(term)
+      user.apellidos?.toLowerCase().includes(term) ||
+      user.usuario?.toLowerCase().includes(term)
   })
 
-  // Refrescar AOS cuando cambian los resultados
-  nextTick(() => refreshAOS())
+
 
   return filtered
 })
@@ -571,21 +475,21 @@ const loadUsuarios = async () => {
   loadingUsers.value = true
   try {
     // Cargar cada tipo de rol y combinar resultados
-    const usuariosResponsables = await api.get('/usuarios', { params: { role: 2 } });
-    const usuariosInvestigadores = await api.get('/usuarios', { params: { role: 3 } });
-    const usuariosAcademicos = await api.get('/usuarios', { params: { role: 4 } });
+    // Solicitamos un número grande por página para asegurar que traemos todos
+    const params = { perPage: 1000, status: 1 }
+
+    const [usuariosResponsables, usuariosInvestigadores, usuariosAcademicos] = await Promise.all([
+      api.get('/usuarios', { params: { ...params, role: 2 } }),
+      api.get('/usuarios', { params: { ...params, role: 3 } }),
+      api.get('/usuarios', { params: { ...params, role: 4 } })
+    ])
 
     const responsables = usuariosResponsables.data.data || usuariosResponsables.data || [];
     const investigadores = usuariosInvestigadores.data.data || usuariosInvestigadores.data || [];
     const academicos = usuariosAcademicos.data.data || usuariosAcademicos.data || [];
+
     usuarios.value = [...responsables, ...investigadores, ...academicos];
 
-    // Para depuración
-    console.log("Usuarios cargados:", usuarios.value);
-    console.log("Académicos:", usuarios.value.filter(u => u.rol_id === 4));
-
-    // Refrescar AOS después de cargar los datos
-    nextTick(() => refreshAOS())
   } catch (error) {
     console.error('Error al cargar usuarios:', error)
     $q.notify({
@@ -611,8 +515,7 @@ const loadAsignaciones = async () => {
     })
     asignaciones.value = response.data.data || response.data || []
 
-    // Refrescar AOS después de cargar los datos
-    nextTick(() => refreshAOS())
+
   } catch (error) {
     console.error('Error al cargar asignaciones:', error)
     $q.notify({
@@ -703,8 +606,7 @@ const removeAsignacion = async (asignacion) => {
 
       $q.loading.hide()
 
-      // Refrescar AOS después de eliminar
-      refreshAOS()
+
     } catch (error) {
       $q.loading.hide()
       console.error('Error al eliminar asignación:', error)
@@ -737,17 +639,14 @@ watch(() => props.encuestaId, async (newVal) => {
 watch(() => isOpen.value, (val) => {
   if (val) {
     // Inicializar AOS cuando se abre el diálogo
-    nextTick(() => {
-      initAOS();
-      refreshAOS();
-    })
+
   }
 })
 
 // Ciclo de vida
 onMounted(async () => {
   // Inicializar AOS
-  initAOS()
+
 
   if (props.encuestaId) {
     await Promise.all([
@@ -822,7 +721,7 @@ onMounted(async () => {
       right: 0;
       width: 100px;
       height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
       animation: shine 3s infinite;
     }
 
@@ -924,7 +823,8 @@ onMounted(async () => {
   .users-list {
     padding: 8px 0;
 
-    .user-item, .asignacion-item {
+    .user-item,
+    .asignacion-item {
       transition: all 0.3s;
       border-left: 3px solid transparent;
 
@@ -940,7 +840,8 @@ onMounted(async () => {
       }
     }
 
-    .avatar-user, .avatar-assigned {
+    .avatar-user,
+    .avatar-assigned {
       transition: all 0.3s;
 
       &:hover {
@@ -969,7 +870,9 @@ onMounted(async () => {
     }
 
     .action-buttons {
-      .edit-btn, .delete-btn {
+
+      .edit-btn,
+      .delete-btn {
         transition: all 0.3s;
         opacity: 0.8;
 
@@ -997,7 +900,8 @@ onMounted(async () => {
 }
 
 // Estilos para diálogos personalizados
-.objective-dialog, .confirm-dialog {
+.objective-dialog,
+.confirm-dialog {
   .q-dialog__inner {
     backdrop-filter: blur(3px);
   }
@@ -1090,6 +994,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(-20px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1109,12 +1014,15 @@ onMounted(async () => {
     left: -100px;
     opacity: 0;
   }
+
   20% {
     opacity: 0.5;
   }
+
   60% {
     opacity: 0.3;
   }
+
   100% {
     left: 100%;
     opacity: 0;
@@ -1126,6 +1034,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1137,6 +1046,7 @@ onMounted(async () => {
     transform: translateX(30px);
     opacity: 0;
   }
+
   to {
     transform: translateX(0);
     opacity: 1;
@@ -1169,6 +1079,7 @@ onMounted(async () => {
   from {
     opacity: 1;
   }
+
   to {
     opacity: 0;
   }
@@ -1179,6 +1090,7 @@ onMounted(async () => {
     opacity: 0;
     transform: translateX(40px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -1190,6 +1102,7 @@ onMounted(async () => {
     opacity: 1;
     transform: translateX(0);
   }
+
   to {
     opacity: 0;
     transform: translateX(40px);
@@ -1199,9 +1112,18 @@ onMounted(async () => {
 // Estilos responsivos
 @media (max-width: 768px) {
   .asignacion-card {
+    .header-section {
+      padding: 16px;
+
+      .text-h5 {
+        font-size: 1.1rem;
+      }
+    }
+
     .panel-header {
       flex-direction: column;
       align-items: stretch;
+      gap: 10px;
 
       .search-input {
         width: 100%;
@@ -1216,15 +1138,20 @@ onMounted(async () => {
 
     .users-list-container {
       .users-scroll {
-        height: calc(100vh - 400px) !important;
+        height: 300px !important;
       }
     }
 
+    .content-section {
+      overflow-y: auto;
+      padding: 10px !important;
+    }
+
     .action-buttons {
-      flex-direction: column;
+      flex-direction: row;
 
       .q-btn {
-        margin-bottom: 4px;
+        margin-bottom: 0;
       }
     }
   }
@@ -1264,5 +1191,4 @@ onMounted(async () => {
 .text-deep-purple {
   color: #673AB7 !important;
 }
-
 </style>
