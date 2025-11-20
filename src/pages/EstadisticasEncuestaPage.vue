@@ -171,8 +171,8 @@ import { api } from 'boot/axios';
 import { useQuasar, date } from 'quasar';
 import { useAuthStore } from 'src/stores/auth.store';
 import { useRouter } from 'vue-router';
-import * as XLSX from 'xlsx';
 import * as d3 from 'd3';
+import { useExcelExport } from 'src/composables/useExcelExport';
 
 export default defineComponent({
   name: 'EstadisticasEncuestaPage',
@@ -181,7 +181,7 @@ export default defineComponent({
     const $q = useQuasar();
     const auth = useAuthStore();
     const router = useRouter();
-
+    const { exportarEncuestaToExcel } = useExcelExport();
     // Referencias a los gráficos
     const graficos = ref({});
     const tiposGrafico = ref({});
@@ -903,145 +903,74 @@ export default defineComponent({
     }
 
     // Exportar datos a Excel
+    // Modifica esta parte de tu código
     async function exportarDatos() {
       if (!encuestaSeleccionada.value || !datosDisponibles.value) return;
 
       exportando.value = true;
 
       try {
-        // Preparar estructura del Excel
-        const workbook = XLSX.utils.book_new();
-
-        // Obtener los envíos únicos
+        // 1. Procesamos los datos que ya tenemos cargados en memoria
         const enviosIds = [...new Set(respuestas.value.map(r => r.envio_id))];
 
         // Filtrar por aplicador seleccionado si existe
-        let enviosData = [];
+        let filteredEnviosIds = enviosIds;
         if (aplicadorSeleccionado.value) {
-          const enviosIdsAplicador = [...new Set(
+          filteredEnviosIds = [...new Set(
             respuestas.value
               .filter(r => r.envio && r.envio.aplicador_id === aplicadorSeleccionado.value)
               .map(r => r.envio_id)
           )];
-
-          enviosData = enviosIdsAplicador;
-        } else {
-          enviosData = enviosIds;
         }
 
-        // Obtener datos de todos los envíos
-        const enviosResponse = await api.get('/envios/detalles', {
-          params: {
-            encuesta_id: encuestaSeleccionada.value,
-            aplicador_id: aplicadorSeleccionado.value || undefined,
-            envios_ids: enviosData.join(',')
-          }
-        });
+        // 2. Preparar los datos para la API
+        const enviosIdsStr = filteredEnviosIds.join(',');
+        let envios = [];
 
-        const envios = enviosResponse.data.data || [];
-
-        // Construir encabezados (todas las preguntas)
-        const headers = [
-          'ID Envío',
-          'Fecha de Envío',
-          'Aplicador',
-          'Código Aplicador',
-          'Latitud',
-          'Longitud'
-        ];
-
-        // Agregar encabezados de preguntas
-        preguntas.value.forEach(p => {
-          headers.push(p.enunciado);
-        });
-
-        // Preparar filas
-        const rows = envios.map(envio => {
-          const row = [
-            envio.id,
-            formatDateTime(envio.created_at),
-            envio.aplicador ? `${envio.aplicador.nombres || ''} ${envio.aplicador.apellidos || ''}`.trim() : 'No especificado',
-            envio.aplicador ? envio.aplicador.usuario : '',
-            envio.lat || '',
-            envio.lng || ''
-          ];
-
-          // Agregar respuestas
-          preguntas.value.forEach(pregunta => {
-            const respuesta = envio.respuestas.find(r => r.pregunta_id === pregunta.id);
-
-            if (respuesta) {
-              switch (pregunta.tipo) {
-                case 'text':
-                case 'textarea':
-                case 'date':
-                  row.push(respuesta.valor_texto || '');
-                  break;
-                case 'number':
-                  row.push(respuesta.valor_num || '');
-                  break;
-                case 'scale':
-                  row.push(respuesta.valor_escala || '');
-                  break;
-                case 'option':
-                case 'multiple':
-                case 'checkbox':
-                  if (respuesta.opciones && respuesta.opciones.length) {
-                    row.push(respuesta.opciones.map(o => o.texto).join(', '));
-                  } else {
-                    row.push('');
-                  }
-                  break;
-                default:
-                  row.push('');
-              }
-            } else {
-              row.push(''); // Sin respuesta
+        try {
+          // Intentar con el endpoint detallado primero
+          const enviosResponse = await api.get('/envios/detalles', {
+            params: {
+              encuesta_id: encuestaSeleccionada.value,
+              aplicador_id: aplicadorSeleccionado.value || undefined,
+              envios_ids: enviosIdsStr
             }
           });
+          envios = enviosResponse.data.data || [];
+        } catch (error) {
+          console.warn('Error con el endpoint detalles, intentando obtener cada envío:', error);
 
-          return row;
-        });
+          // Si falla, intentamos obtener los envíos uno por uno
+          const envioPromises = filteredEnviosIds.map(id => api.get(`/envios/${id}`));
+          const envioResponses = await Promise.all(envioPromises);
+          envios = envioResponses.map(response => response.data);
+        }
 
-        // Crear la hoja de cálculo
-        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-
-        // Ajustar anchos de columna
-        const colWidths = headers.map((h, i) => {
-          // Calcular ancho basado en contenido
-          let maxWidth = h.length;
-
-          rows.forEach(row => {
-            if (row[i] && String(row[i]).length > maxWidth) {
-              maxWidth = String(row[i]).length;
-            }
+        // 3. Si no hay datos, mostrar mensaje y salir
+        if (envios.length === 0) {
+          $q.notify({
+            type: 'warning',
+            message: 'No hay datos disponibles para exportar',
+            position: 'top'
           });
+          exportando.value = false;
+          return;
+        }
 
-          // Limitar ancho máximo y mínimo
-          return Math.max(8, Math.min(50, maxWidth + 2));
-        });
-
-        worksheet['!cols'] = colWidths.map(width => ({ wch: width }));
-
-        // Agregar la hoja al libro
-        const sheetName = infoEncuesta.value.titulo.substring(0, 30).replace(/[\\/[\]*?:]/g, ''); XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
-
-        // Generar el archivo
-        const filename = `Encuesta_${infoEncuesta.value.id}_${Date.now()}.xlsx`;
-        XLSX.writeFile(workbook, filename);
-
-        $q.notify({
-          type: 'positive',
-          message: 'Datos exportados correctamente',
-          position: 'top',
-          timeout: 3000
+        // 4. Usar nuestro composable para exportar
+        await exportarEncuestaToExcel({
+          infoEncuesta: infoEncuesta.value,
+          preguntas: preguntas.value,
+          envios: envios,
+          respuestas: respuestas.value,
+          notify: $q.notify
         });
 
       } catch (error) {
-        console.error('Error al exportar datos:', error);
+        console.error('Error al obtener datos para exportación:', error);
         $q.notify({
           type: 'negative',
-          message: 'Error al exportar datos',
+          message: 'Error al exportar datos: ' + (error.message || 'Error desconocido'),
           position: 'top'
         });
       } finally {
@@ -1417,15 +1346,20 @@ export default defineComponent({
     margin-bottom: 24px;
   }
 }
+
 .grafico-container {
   position: relative;
-  padding: 16px 8px 24px 8px; /* Aumentar padding inferior */
+  padding: 16px 8px 24px 8px;
+  /* Aumentar padding inferior */
   background-color: rgba(245, 247, 250, 0.5);
   border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  min-height: 350px; /* Altura mínima para asegurar espacio suficiente */
-  overflow: visible !important; /* Asegurar que las etiquetas no se corten */
+  min-height: 350px;
+  /* Altura mínima para asegurar espacio suficiente */
+  overflow: visible !important;
+  /* Asegurar que las etiquetas no se corten */
 }
+
 /* Añade esto a tu sección de estilos */
 .axis-label {
   font-size: 12px;
