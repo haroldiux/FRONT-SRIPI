@@ -7,20 +7,12 @@
         <div class="row items-center">
           <div class="col-12 col-md-8">
             <h1 class="page-title text-h4 q-mb-sm">Mis encuestas asignadas</h1>
-            <p class="text-subtitle1 q-mb-none subtitle-text">Aquí encontrarás todas las encuestas que debes completar</p>
+            <p class="text-subtitle1 q-mb-none subtitle-text">Aquí encontrarás todas las encuestas que debes completar
+            </p>
           </div>
           <div class="col-12 col-md-4 q-pt-sm q-pt-md-none">
-            <q-input
-              v-model="filter"
-              outlined
-              dense
-              clearable
-              placeholder="Buscar encuestas"
-              class="search-input"
-              @focus="searchFocus = true"
-              @blur="searchFocus = false"
-              :class="{'search-focused': searchFocus}"
-            >
+            <q-input v-model="filter" outlined dense clearable placeholder="Buscar encuestas" class="search-input"
+              @focus="searchFocus = true" @blur="searchFocus = false" :class="{ 'search-focused': searchFocus }">
               <template v-slot:prepend>
                 <q-icon name="search" color="primary" class="pulse-icon" />
               </template>
@@ -96,19 +88,8 @@
           <div class="row items-center q-col-gutter-md">
             <!-- Filtro de estado -->
             <div class="col-12 col-sm-6 col-md">
-              <q-select
-                v-model="filtroEstado"
-                :options="opcionesEstado"
-                outlined
-                dense
-                label="Estado"
-                emit-value
-                map-options
-                clearable
-                class="filter-select"
-                transition-show="jump-up"
-                transition-hide="jump-down"
-              >
+              <q-select v-model="filtroEstado" :options="opcionesEstado" outlined dense label="Estado" emit-value
+                map-options clearable class="filter-select" transition-show="jump-up" transition-hide="jump-down">
                 <template v-slot:prepend>
                   <q-icon name="filter_list" color="secondary" class="pulse-icon" />
                 </template>
@@ -120,18 +101,8 @@
 
             <!-- Ordenar por -->
             <div class="col-12 col-sm-6 col-md">
-              <q-select
-                v-model="ordenarPor"
-                :options="opcionesOrden"
-                outlined
-                dense
-                label="Ordenar por"
-                emit-value
-                map-options
-                class="filter-select"
-                transition-show="jump-up"
-                transition-hide="jump-down"
-              >
+              <q-select v-model="ordenarPor" :options="opcionesOrden" outlined dense label="Ordenar por" emit-value
+                map-options class="filter-select" transition-show="jump-up" transition-hide="jump-down">
                 <template v-slot:prepend>
                   <q-icon name="sort" color="secondary" class="pulse-icon" />
                 </template>
@@ -143,14 +114,8 @@
 
             <!-- Botón de actualizar -->
             <div class="col-12 col-sm-12 col-md-auto text-center text-md-right">
-              <q-btn
-                color="primary"
-                icon="refresh"
-                label="Actualizar"
-                @click="cargarAsignaciones"
-                :loading="cargando"
-                class="update-btn"
-              >
+              <q-btn color="primary" icon="refresh" label="Actualizar" @click="cargarAsignaciones" :loading="cargando"
+                class="update-btn">
                 <q-tooltip>Actualizar lista de encuestas</q-tooltip>
               </q-btn>
             </div>
@@ -159,11 +124,7 @@
       </q-card>
 
       <!-- Estado de carga -->
-      <transition
-        enter-active-class="animated fadeIn"
-        leave-active-class="animated fadeOut"
-        mode="out-in"
-      >
+      <transition enter-active-class="animated fadeIn" leave-active-class="animated fadeOut" mode="out-in">
         <div v-if="cargando" class="loader-container q-pa-xl" data-aos="fade-in">
           <div class="column items-center">
             <q-spinner color="primary" size="60px" :thickness="5" class="custom-spinner" />
@@ -174,14 +135,8 @@
         <!-- Sin resultados -->
         <div v-else-if="!asignaciones.length" class="empty-state q-pa-xl" data-aos="fade-in">
           <div class="column items-center">
-            <lottie-player
-              src="https://assets5.lottiefiles.com/packages/lf20_ydo1amjm.json"
-              background="transparent"
-              speed="1"
-              style="width: 200px; height: 200px;"
-              loop
-              autoplay
-            ></lottie-player>
+            <lottie-player src="https://assets5.lottiefiles.com/packages/lf20_ydo1amjm.json" background="transparent"
+              speed="1" style="width: 200px; height: 200px;" loop autoplay></lottie-player>
             <div class="text-h6 q-mt-md empty-title">No tienes encuestas asignadas</div>
             <div class="empty-subtitle q-mt-sm">
               Cuando te asignen encuestas aparecerán aquí.
@@ -191,26 +146,14 @@
 
         <!-- Lista de encuestas -->
         <div v-else class="encuestas-container">
-          <transition-group
-            name="list"
-            tag="div"
-            class="row q-col-gutter-md"
-          >
-            <div
-              v-for="(asignacion, index) in asignacionesFiltradas"
-              :key="asignacion.id"
-              class="col-12"
-              :data-aos="index % 2 === 0 ? 'fade-right' : 'fade-left'"
-              :data-aos-delay="100 * (index % 5)"
-              :data-aos-offset="50"
-            >
-              <q-card
-                class="encuesta-card"
-                :class="{
-                  'completed-border': getProgreso(asignacion) >= 1,
-                  'inactive-border': !asignacion.estado
-                }"
-              >
+          <transition-group name="list" tag="div" class="row q-col-gutter-md">
+            <div v-for="(asignacion, index) in asignacionesFiltradas" :key="asignacion.id" class="col-12"
+              :data-aos="index % 2 === 0 ? 'fade-right' : 'fade-left'" :data-aos-delay="100 * (index % 5)"
+              :data-aos-offset="50">
+              <q-card class="encuesta-card" :class="{
+                'completed-border': getProgreso(asignacion) >= 1,
+                'inactive-border': !asignacion.estado
+              }">
                 <div class="status-indicator" :class="getEstadoClass(asignacion)"></div>
                 <q-card-section>
                   <div class="row items-start q-col-gutter-md">
@@ -221,8 +164,8 @@
                         {{ asignacion.encuesta.titulo }}
                       </div>
                       <div class="text-subtitle2" v-if="asignacion.encuesta.proyecto">
-                        <q-chip dense outline color="secondary" text-color="secondary"
-                          icon="folder" class="project-chip">
+                        <q-chip dense outline color="secondary" text-color="secondary" icon="folder"
+                          class="project-chip">
                           {{ asignacion.encuesta.proyecto.titulo }}
                         </q-chip>
                       </div>
@@ -232,27 +175,15 @@
                     <div class="col-12 col-md-4">
                       <div class="progress-container">
                         <div class="row items-center">
-                          <div class="col-8">
+                          <div class="col-12 col-sm-8">
                             <div class="text-subtitle2 q-mb-xs progress-label">Progreso:</div>
-                            <q-linear-progress
-                              :value="getProgreso(asignacion)"
-                              :color="getProgresoColor(asignacion)"
-                              size="md"
-                              rounded
-                              class="custom-progress"
-                              :ref="`progressBar_${asignacion.id}`"
-                            />
+                            <q-linear-progress :value="getProgreso(asignacion)" :color="getProgresoColor(asignacion)"
+                              size="md" rounded class="custom-progress" :ref="`progressBar_${asignacion.id}`" />
                           </div>
-                          <div class="col-4 text-center">
-                            <q-circular-progress
-                              :value="getProgreso(asignacion) * 100"
-                              size="60px"
-                              :color="getProgresoColor(asignacion)"
-                              class="q-ma-md custom-circular-progress"
-                              show-value
-                              font-size="12px"
-                              track-color="grey-3"
-                              :ref="`circularProgress_${asignacion.id}`">
+                          <div class="col-12 col-sm-4 text-center q-mt-sm q-mt-sm-none">
+                            <q-circular-progress :value="getProgreso(asignacion) * 100" size="60px"
+                              :color="getProgresoColor(asignacion)" class="custom-circular-progress" show-value
+                              font-size="12px" track-color="grey-3" :ref="`circularProgress_${asignacion.id}`">
                               {{ Math.round(getProgreso(asignacion) * 100) }}%
                             </q-circular-progress>
                           </div>
@@ -267,37 +198,24 @@
                     <!-- Acciones -->
                     <div class="col-12 col-md-4">
                       <div class="actions-container">
-                        <div class="row items-center justify-end">
-                          <div class="col-12 col-md-auto">
-                            <q-badge
-                              :color="getEstadoColor(asignacion)"
-                              class="q-py-xs q-px-sm status-badge"
-                              rounded
-                            >
+                        <div class="row items-center justify-end q-gutter-y-sm">
+                          <div class="col-12 col-md-auto text-right">
+                            <q-badge :color="getEstadoColor(asignacion)" class="q-py-xs q-px-sm status-badge" rounded>
                               {{ getEstadoTexto(asignacion) }}
                             </q-badge>
                           </div>
-                          <div class="col-12 col-md-auto q-mt-sm q-mt-md-none q-ml-md">
-                            <q-btn
-                              color="primary"
-                              icon="add_task"
-                              label="Realizar encuesta"
-                              :to="`/encuestadores/encuestar/${asignacion.encuesta.id}`"
-                              :disable="!asignacion.estado"
-                              class="action-btn"
-                            >
-                              <q-tooltip>Realizar nueva encuesta</q-tooltip>
-                            </q-btn>
-                            <q-btn
-                              color="secondary"
-                              icon="history"
-                              label="Ver mis envíos"
-                              to="/encuestadores/envios"
-                              flat
-                              class="history-btn"
-                            >
-                              <q-tooltip>Historial de mis envíos</q-tooltip>
-                            </q-btn>
+                          <div class="col-12 col-md-auto q-ml-md-md text-right">
+                            <div class="row q-gutter-x-sm justify-end">
+                              <q-btn color="primary" icon="add_task" label="Realizar encuesta"
+                                :to="`/encuestadores/encuestar/${asignacion.encuesta.id}`" :disable="!asignacion.estado"
+                                class="action-btn col-12 col-sm-auto">
+                                <q-tooltip>Realizar nueva encuesta</q-tooltip>
+                              </q-btn>
+                              <q-btn color="secondary" icon="history" label="Ver mis envíos" to="/encuestadores/envios"
+                                flat class="history-btn col-12 col-sm-auto">
+                                <q-tooltip>Historial de mis envíos</q-tooltip>
+                              </q-btn>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -307,16 +225,9 @@
 
                 <!-- Detalles adicionales (expandible) -->
                 <q-separator />
-                <q-expansion-item
-                  icon="info"
-                  label="Ver detalles"
-                  caption="Más información sobre esta encuesta"
-                  header-class="details-header"
-                  expand-icon-class="text-primary"
-                  expand-icon-toggle
-                  :default-opened="false"
-                  @show="onItemShow(asignacion.id)"
-                >
+                <q-expansion-item icon="info" label="Ver detalles" caption="Más información sobre esta encuesta"
+                  header-class="details-header" expand-icon-class="text-primary" expand-icon-toggle
+                  :default-opened="false" @show="onItemShow(asignacion.id)">
                   <q-card class="details-card">
                     <q-card-section>
                       <div class="row q-col-gutter-md">
@@ -355,14 +266,9 @@
                         <q-icon name="history" size="xs" class="q-mr-xs" /> Historial de envíos:
                       </div>
                       <q-list bordered separator class="history-list">
-                        <q-item
-                          v-for="(envio, index) in getUltimosEnvios(asignacion)"
-                          :key="index"
-                          clickable
-                          class="history-item"
-                          :class="{'slide-in-right': itemExpanded[asignacion.id]}"
-                          :style="{'animation-delay': `${index * 0.1}s`}"
-                        >
+                        <q-item v-for="(envio, index) in getUltimosEnvios(asignacion)" :key="index" clickable
+                          class="history-item" :class="{ 'slide-in-right': itemExpanded[asignacion.id] }"
+                          :style="{ 'animation-delay': `${index * 0.1}s` }">
                           <q-item-section avatar>
                             <q-icon name="check_circle" color="secondary" />
                           </q-item-section>
@@ -371,7 +277,8 @@
                             <q-item-label caption>{{ formatDateTime(envio.created_at) }}</q-item-label>
                           </q-item-section>
                           <q-item-section side>
-                            <q-btn flat round icon="visibility" color="primary" :to="`/encuestadores/envio/${envio.id}`" class="view-btn">
+                            <q-btn flat round icon="visibility" color="primary" :to="`/encuestadores/envio/${envio.id}`"
+                              class="view-btn">
                               <q-tooltip>Ver detalles del envío</q-tooltip>
                             </q-btn>
                           </q-item-section>
@@ -380,14 +287,9 @@
                     </q-card-section>
 
                     <q-card-section v-else class="text-center text-grey no-history">
-                      <lottie-player
-                        src="https://assets3.lottiefiles.com/private_files/lf30_LOw4AL.json"
-                        background="transparent"
-                        speed="1"
-                        style="width: 120px; height: 120px; margin: 0 auto;"
-                        loop
-                        autoplay
-                      ></lottie-player>
+                      <lottie-player src="https://assets3.lottiefiles.com/private_files/lf30_LOw4AL.json"
+                        background="transparent" speed="1" style="width: 120px; height: 120px; margin: 0 auto;" loop
+                        autoplay></lottie-player>
                       <div class="q-mt-sm">Aún no hay envíos registrados para esta encuesta</div>
                     </q-card-section>
                   </q-card>
@@ -398,18 +300,9 @@
 
           <!-- Paginación mejorada -->
           <div class="row justify-center q-mt-xl" v-if="totalPages > 1" data-aos="zoom-in" data-aos-offset="0">
-            <q-pagination
-              v-model="currentPage"
-              :max="totalPages"
-              :max-pages="6"
-              direction-links
-              boundary-links
-              color="primary"
-              active-color="primary"
-              active-text-color="white"
-              class="pagination-custom"
-              @update:model-value="cargarAsignaciones"
-            >
+            <q-pagination v-model="currentPage" :max="totalPages" :max-pages="6" direction-links boundary-links
+              color="primary" active-color="primary" active-text-color="white" class="pagination-custom"
+              @update:model-value="cargarAsignaciones">
               <template v-slot:prev="slotProps">
                 <q-btn v-bind="slotProps" icon="chevron_left" flat round dense color="primary" />
               </template>
@@ -424,14 +317,8 @@
 
     <!-- Botón flotante para ir arriba -->
     <q-page-sticky position="bottom-right" :offset="[20, 20]">
-      <q-btn
-        v-show="showScrollTop"
-        fab
-        icon="keyboard_arrow_up"
-        color="secondary"
-        @click="scrollToTop"
-        class="scroll-to-top-btn"
-      >
+      <q-btn v-show="showScrollTop" fab icon="keyboard_arrow_up" color="secondary" @click="scrollToTop"
+        class="scroll-to-top-btn">
         <q-tooltip>Volver arriba</q-tooltip>
       </q-btn>
     </q-page-sticky>
@@ -720,7 +607,8 @@ export default defineComponent({
         const response = await api.get('/envios', {
           params: {
             encuesta_id: asignacion.encuesta_id,
-            aplicador_id: currentUserId // Asegurar que filtramos por el usuario actual
+            aplicador_id: currentUserId, // Asegurar que filtramos por el usuario actual
+            per_page: 1000 // Traer todos los envíos para el conteo correcto
           }
         });
 
@@ -1352,14 +1240,30 @@ export default defineComponent({
 }
 
 @keyframes dots {
-  0%, 20% { content: '.'; }
-  40% { content: '..'; }
-  60%, 100% { content: '...'; }
+
+  0%,
+  20% {
+    content: '.';
+  }
+
+  40% {
+    content: '..';
+  }
+
+  60%,
+  100% {
+    content: '...';
+  }
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Estado vacío */
@@ -1462,9 +1366,17 @@ export default defineComponent({
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-5px); }
-  100% { transform: translateY(0px); }
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 /* Título de encuesta */
@@ -1555,9 +1467,9 @@ export default defineComponent({
         width: 100%;
         height: 100%;
         background: linear-gradient(90deg,
-          rgba(255, 255, 255, 0) 0%,
-          rgba(255, 255, 255, 0.3) 50%,
-          rgba(255, 255, 255, 0) 100%);
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            rgba(255, 255, 255, 0) 100%);
         animation: shimmer 2s infinite;
       }
     }
@@ -1579,11 +1491,9 @@ export default defineComponent({
       width: 120%;
       height: 120%;
       border-radius: 50%;
-      background: radial-gradient(
-        circle at 30% 30%,
-        rgba(255, 255, 255, 0.8) 0%,
-        rgba(255, 255, 255, 0) 70%
-      );
+      background: radial-gradient(circle at 30% 30%,
+          rgba(255, 255, 255, 0.8) 0%,
+          rgba(255, 255, 255, 0) 70%);
       opacity: 0;
       transition: opacity 0.5s ease;
       pointer-events: none;
@@ -1596,8 +1506,13 @@ export default defineComponent({
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 /* Contenedor de acciones */
@@ -1754,7 +1669,8 @@ export default defineComponent({
     }
   }
 
-  .date-info, .activity-info {
+  .date-info,
+  .activity-info {
     margin-bottom: 8px;
     display: flex;
     align-items: center;
@@ -1806,6 +1722,7 @@ export default defineComponent({
         opacity: 0;
         transform: translateX(30px);
       }
+
       to {
         opacity: 1;
         transform: translateX(0);
@@ -1916,20 +1833,40 @@ export default defineComponent({
 }
 
 @keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
 }
 
 /* Animaciones para las tarjetas */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInUp {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Animación para lista de elementos */
@@ -1937,6 +1874,7 @@ export default defineComponent({
 .list-leave-active {
   transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
 }
+
 .list-enter-from,
 .list-leave-to {
   opacity: 0;
@@ -1971,7 +1909,8 @@ export default defineComponent({
       margin-bottom: 12px;
     }
 
-    .action-btn, .history-btn {
+    .action-btn,
+    .history-btn {
       width: 100%;
       margin: 5px 0;
     }
@@ -2015,6 +1954,7 @@ export default defineComponent({
     opacity: 0;
     transform: scale(0.9);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -2022,18 +1962,33 @@ export default defineComponent({
 }
 
 @keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-  40% {transform: translateY(-15px);}
-  60% {transform: translateY(-7px);}
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-15px);
+  }
+
+  60% {
+    transform: translateY(-7px);
+  }
 }
 
 @keyframes gradientShift {
   0% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
+
   100% {
     background-position: 0% 50%;
   }
@@ -2103,10 +2058,9 @@ export default defineComponent({
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg,
-      rgba(102, 51, 153, 0.2) 25%,
-      rgba(102, 51, 153, 0.4) 50%,
-      rgba(102, 51, 153, 0.2) 75%
-    );
+        rgba(102, 51, 153, 0.2) 25%,
+        rgba(102, 51, 153, 0.4) 50%,
+        rgba(102, 51, 153, 0.2) 75%);
     background-size: 200% 100%;
     animation: shimmerGradient 2s infinite linear;
     z-index: 0;
@@ -2114,7 +2068,12 @@ export default defineComponent({
 }
 
 @keyframes shimmerGradient {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
 }
 </style>
