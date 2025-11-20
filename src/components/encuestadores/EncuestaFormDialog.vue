@@ -1,9 +1,9 @@
 <template>
   <q-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" persistent
     transition-show="fade" transition-hide="fade" maximized>
-    <q-card class="bg-white encuesta-dialog" data-aos="zoom-in" data-aos-duration="400">
+    <q-card class="bg-white encuesta-dialog column full-height">
       <!-- Header -->
-      <q-card-section class="dialog-header-section" :class="previewMode ? 'bg-teal' : 'bg-purple'"
+      <q-card-section class="dialog-header-section col-auto" :class="previewMode ? 'bg-teal' : 'bg-purple'"
         style="color: white;">
         <div class="text-h6 row items-center">
           <q-icon :name="previewMode ? 'visibility' : 'assignment'" class="q-mr-sm" />
@@ -30,11 +30,11 @@
       <q-separator />
 
       <!-- BODY con scroll -->
-      <q-card-section class="dialog-body-section q-pa-md" style="max-height: 80vh; overflow: auto;">
+      <q-card-section class="dialog-body-section col scroll q-pa-md">
         <!-- MODO EDICIÓN -->
         <q-form ref="formRef" @submit="onSubmit" class="q-gutter-lg" v-if="!previewMode">
           <!-- INFORMACIÓN GENERAL -->
-          <q-card flat bordered class="form-card" data-aos="fade-up" data-aos-delay="100">
+          <q-card flat bordered class="form-card">
             <q-card-section>
               <div class="row items-center">
                 <q-icon name="description" color="purple" size="24px" class="q-mr-sm" />
@@ -89,7 +89,7 @@
           </q-card>
 
           <!-- SECCIONES -->
-          <q-card flat bordered class="form-card" data-aos="fade-up" data-aos-delay="200">
+          <q-card flat bordered class="form-card">
             <q-card-section>
               <div class="row items-center">
                 <q-icon name="view_list" color="purple" size="24px" class="q-mr-sm" />
@@ -101,14 +101,12 @@
 
               <!-- KEY para forzar re-render tras eliminar/mover -->
               <div class="q-mt-md" :key="sectionsKey">
-                <q-banner v-if="!formData.secciones.length" class="bg-grey-2 text-grey-8 rounded-12 q-pa-md"
-                  data-aos="fade-up">
+                <q-banner v-if="!formData.secciones.length" class="bg-grey-2 text-grey-8 rounded-12 q-pa-md">
                   <q-icon name="info" color="teal" size="24px" class="q-mr-sm vertical-middle" />
                   Agrega tu primera sección (por ejemplo: <em>Datos personales</em>).
                 </q-banner>
 
-                <div v-for="(sec, si) in formData.secciones" :key="sec.id" class="q-mb-md" data-aos="fade-up"
-                  :data-aos-delay="150 + (si * 50)">
+                <div v-for="(sec, si) in formData.secciones" :key="sec.id" class="q-mb-md">
                   <q-expansion-item dense expand-separator :label="sec.titulo || `Sección ${si + 1}`"
                     :caption="`${sec.preguntas.length} pregunta(s)`" icon="folder"
                     header-class="text-purple expansion-header" default-opened class="section-expansion-item">
@@ -136,8 +134,7 @@
 
                         <!-- Preguntas de la sección -->
                         <div class="q-mt-md">
-                          <div v-for="(preg, qi) in sec.preguntas" :key="preg.id" class="q-mb-md question-box"
-                            data-aos="fade-right" :data-aos-delay="100 + (qi * 50)">
+                          <div v-for="(preg, qi) in sec.preguntas" :key="preg.id" class="q-mb-md question-box">
                             <q-separator spaced />
                             <div class="row items-center justify-between q-mb-sm q-px-md q-pt-md">
                               <div class="text-body1 text-weight-medium flex items-center">
@@ -177,7 +174,7 @@
                               <!-- Opciones (radio/checkbox) -->
                               <div v-if="['single', 'multi'].includes(preg.tipo)" class="q-mt-sm q-pl-md">
                                 <div class="row items-center q-col-gutter-sm q-mb-xs" v-for="(opt, oi) in preg.opciones"
-                                  :key="oi" data-aos="fade-right" :data-aos-delay="100 + (oi * 30)">
+                                  :key="oi">
                                   <q-input dense outlined class="col custom-input" v-model="opt.texto"
                                     placeholder="Texto de la opción" />
                                   <q-btn dense flat round icon="remove" color="negative"
@@ -247,7 +244,7 @@
         </q-form>
 
         <!-- MODO VISTA PREVIA -->
-        <div v-else class="preview-container" data-aos="fade-up">
+        <div v-else class="preview-container">
           <q-card class="preview-card" bordered>
             <!-- Reemplaza la sección de información/título con esto: -->
             <q-card-section class="preview-header bg-gradient" style="color: white !important;">
@@ -265,8 +262,7 @@
 
             <q-separator />
 
-            <q-card-section v-for="(seccion, i) in formData.secciones" :key="seccion.id" class="preview-section"
-              data-aos="fade-up" :data-aos-delay="100 * i">
+            <q-card-section v-for="(seccion, i) in formData.secciones" :key="seccion.id" class="preview-section">
               <div class="text-h6 q-mb-md section-title">
                 <q-icon name="bookmark" color="teal" size="xs" class="q-mr-xs" />
                 {{ i + 1 }}. {{ seccion.titulo }}
@@ -274,7 +270,7 @@
               <p v-if="seccion.descripcion" class="q-mb-lg text-grey-8">{{ seccion.descripcion }}</p>
 
               <div v-for="(pregunta, pregIndex) in seccion.preguntas" :key="pregunta.id"
-                class="preview-question q-mb-lg" data-aos="fade-up" :data-aos-delay="50 * pregIndex">
+                class="preview-question q-mb-lg">
                 <div class="row items-center q-mb-sm">
                   <div class="text-subtitle1 question-text">
                     <span class="question-number">{{ i + 1 }}.{{ pregIndex + 1 }}.</span>
@@ -353,7 +349,7 @@
 
       <!-- Actions -->
       <q-separator />
-      <q-card-actions align="right" class="q-pa-md bg-grey-1">
+      <q-card-actions align="right" class="q-pa-md bg-grey-1 col-auto">
         <q-btn flat color="grey-7" label="Cancelar" @click="confirmClose" />
         <q-btn v-if="!previewMode" unelevated color="teal" label="Guardar Encuesta" @click="onSubmit"
           :loading="submitting" icon-right="save" />
@@ -367,7 +363,6 @@ import { ref, computed } from 'vue'
 import { useQuasar, uid } from 'quasar'
 import { api } from 'src/boot/axios'
 import { useAuthStore } from 'src/stores/auth.store'
-import { onMounted } from 'vue'
 
 // Props y emisiones
 const props = defineProps({
@@ -399,15 +394,7 @@ const totalQuestions = computed(() => {
 })
 
 // Inicialización de AOS
-onMounted(() => {
-  if (window.AOS) {
-    window.AOS.init({
-      duration: 800,
-      easing: 'ease-out-cubic',
-      once: false
-    })
-  }
-})
+// Inicialización de AOS eliminada
 
 // Toggle entre modo edición y vista previa
 function togglePreviewMode() {
@@ -470,9 +457,7 @@ function togglePreviewMode() {
 
   // Cambiar al modo opuesto con una transición suave
   // Animar el cambio de modo con AOS
-  if (window.AOS) {
-    window.AOS.refresh()
-  }
+
   previewMode.value = !previewMode.value
 }
 
@@ -531,11 +516,7 @@ function addSection() {
   })
 
   // Actualizar animaciones después de agregar sección
-  if (window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+
 }
 
 function removeSection(sectionIndex) {
@@ -561,11 +542,7 @@ function removeSection(sectionIndex) {
     sectionsKey.value++ // Forzar re-render de la lista
 
     // Actualizar animaciones después de eliminar sección
-    if (window.AOS) {
-      setTimeout(() => {
-        window.AOS.refresh()
-      }, 200)
-    }
+
   })
 }
 
@@ -579,11 +556,7 @@ function moveSection(sectionIndex, direction) {
   arr.splice(newIndex, 0, item)
 
   // Actualizar animaciones después de mover sección
-  if (window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+
 }
 
 // FUNCIONES PARA PREGUNTAS
@@ -599,11 +572,7 @@ function addQuestion(sectionIndex) {
   })
 
   // Actualizar animaciones después de agregar pregunta
-  if (window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+
 }
 
 function removeQuestion(sectionIndex, questionIndex) {
@@ -621,11 +590,7 @@ function removeQuestion(sectionIndex, questionIndex) {
   formData.value.secciones[sectionIndex].preguntas.splice(questionIndex, 1)
 
   // Actualizar animaciones después de eliminar pregunta
-  if (window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+
 }
 
 function moveQuestion(sectionIndex, questionIndex, direction) {
@@ -638,11 +603,7 @@ function moveQuestion(sectionIndex, questionIndex, direction) {
   arr.splice(newIndex, 0, item)
 
   // Actualizar animaciones después de mover pregunta
-  if (window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+
 }
 
 // FUNCIONES PARA TIPOS DE PREGUNTAS
@@ -684,11 +645,7 @@ function typeChanged(sectionIndex, questionIndex, value) {
   }
 
   // Actualizar animaciones después de cambiar tipo
-  if (window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+
 }
 
 // FUNCIONES PARA OPCIONES
@@ -703,11 +660,7 @@ function addOpcion(sectionIndex, questionIndex) {
   formData.value.secciones[sectionIndex].preguntas[questionIndex].opciones = opciones
 
   // Actualizar animaciones después de agregar opción
-  if (window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+
 }
 
 function removeOpcion(sectionIndex, questionIndex, optionIndex) {
@@ -976,11 +929,7 @@ function resetForm() {
   }
 
   // Refrescar animaciones después de resetear
-  if (window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+
 }
 </script>
 
@@ -1106,10 +1055,11 @@ function resetForm() {
   color: white !important;
   opacity: 1 !important;
   font-weight: bold !important;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
 }
 
-.preview-header div, .preview-header p {
+.preview-header div,
+.preview-header p {
   color: white !important;
   opacity: 1 !important;
 }
@@ -1246,27 +1196,7 @@ function resetForm() {
 }
 
 /* Animaciones AOS personalizadas */
-[data-aos="zoom-in-subtle"] {
-  transform: scale(0.95);
-  opacity: 0;
-  transition-property: transform, opacity;
-}
 
-[data-aos="zoom-in-subtle"].aos-animate {
-  transform: scale(1);
-  opacity: 1;
-}
-
-[data-aos="slide-up-subtle"] {
-  transform: translateY(20px);
-  opacity: 0;
-  transition-property: transform, opacity;
-}
-
-[data-aos="slide-up-subtle"].aos-animate {
-  transform: translateY(0);
-  opacity: 1;
-}
 
 /* Efectos adicionales para campos */
 .custom-input {
