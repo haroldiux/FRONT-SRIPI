@@ -608,11 +608,12 @@ export default defineComponent({
           params: {
             encuesta_id: asignacion.encuesta_id,
             aplicador_id: currentUserId, // Asegurar que filtramos por el usuario actual
-            per_page: 1000 // Traer todos los envíos para el conteo correcto
+            per_page: 10000, // Traer TODOS los envíos sin límite
+            _t: Date.now() // Cache busting para evitar respuestas cacheadas
           }
         });
 
-        enviosPorAsignacion.value[asignacion.id] = response.data.data;
+        enviosPorAsignacion.value[asignacion.id] = response.data.data || response.data;
       } catch (error) {
         console.error(`Error al cargar envíos para la asignación ${asignacion.id}:`, error);
         enviosPorAsignacion.value[asignacion.id] = [];
