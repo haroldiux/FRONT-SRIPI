@@ -3,15 +3,7 @@
     <!-- Header mejorado con degradado -->
     <q-header elevated class="modern-header">
       <q-toolbar>
-        <q-btn
-          flat
-          dense
-          round
-          icon="menu"
-          aria-label="Menú"
-          @click="drawer = !drawer"
-          class="menu-btn"
-        />
+        <q-btn flat dense round icon="menu" aria-label="Menú" @click="drawer = !drawer" class="menu-btn" />
 
         <q-toolbar-title class="toolbar-title">
           <span class="title-text">Sistema de Encuestas</span>
@@ -52,13 +44,7 @@
     </q-header>
 
     <!-- Drawer lateral mejorado -->
-    <q-drawer
-      v-model="drawer"
-      show-if-above
-      :width="250"
-      v-if="auth.isAuth"
-      class="modern-drawer"
-    >
+    <q-drawer v-model="drawer" show-if-above :width="250" v-if="auth.isAuth" class="modern-drawer">
       <!-- Información del usuario mejorada -->
       <div class="user-header">
         <q-avatar size="64px" class="q-mb-sm">
@@ -77,13 +63,8 @@
       <q-scroll-area class="drawer-scroll-area">
         <q-list padding>
           <!-- Dashboard para todos -->
-          <q-item
-            clickable
-            v-ripple
-            :to="{ name: 'dashboard' }"
-            :active="route.name === 'dashboard'"
-            active-class="active-menu-item"
-          >
+          <q-item clickable v-ripple :to="{ name: 'dashboard' }" :active="route.name === 'dashboard'"
+            active-class="active-menu-item">
             <q-item-section avatar>
               <q-icon name="dashboard" />
             </q-item-section>
@@ -96,17 +77,27 @@
               GESTIÓN DE PROYECTOS
             </q-item-label>
 
-            <q-item
-              clickable
-              v-ripple
-              :to="{ name: 'proyectos.list' }"
-              :active="route.name?.includes('proyectos')"
-              active-class="active-menu-item"
-            >
+            <q-item clickable v-ripple :to="{ name: 'proyectos.list' }" :active="route.name?.includes('proyectos')"
+              active-class="active-menu-item">
               <q-item-section avatar>
                 <q-icon name="folder" />
               </q-item-section>
               <q-item-section>Proyectos</q-item-section>
+            </q-item>
+          </template>
+
+          <!-- SUPERADMIN - solo visible para superadmin -->
+          <template v-if="userIsSuperadmin()">
+            <q-item-label header class="menu-header">
+              SUPERADMIN
+            </q-item-label>
+
+            <q-item clickable v-ripple :to="{ name: 'superadmin.users' }" :active="route.name === 'superadmin.users'"
+              active-class="active-menu-item">
+              <q-item-section avatar>
+                <q-icon name="admin_panel_settings" />
+              </q-item-section>
+              <q-item-section>Gestión de Usuarios</q-item-section>
             </q-item>
           </template>
 
@@ -116,13 +107,8 @@
               ADMINISTRACIÓN
             </q-item-label>
 
-            <q-item
-              clickable
-              v-ripple
-              :to="{ name: 'usuarios.list' }"
-              :active="route.name?.includes('usuarios')"
-              active-class="active-menu-item"
-            >
+            <q-item clickable v-ripple :to="{ name: 'usuarios.list' }" :active="route.name?.includes('usuarios')"
+              active-class="active-menu-item">
               <q-item-section avatar>
                 <q-icon name="people" />
               </q-item-section>
@@ -136,40 +122,25 @@
               MIS ENCUESTAS
             </q-item-label>
 
-            <q-item
-              v-if="userIsEncuestador() || userIsAcademico()"
-              clickable
-              v-ripple
-              :to="{ name: 'encuestadores.list' }"
-              :active="route.name === 'encuestadores.list'"
-              active-class="active-menu-item"
-            >
+            <q-item v-if="userIsEncuestador() || userIsAcademico()" clickable v-ripple
+              :to="{ name: 'encuestadores.list' }" :active="route.name === 'encuestadores.list'"
+              active-class="active-menu-item">
               <q-item-section avatar>
                 <q-icon name="assignment" />
               </q-item-section>
               <q-item-section>Encuestas Asignadas</q-item-section>
             </q-item>
 
-            <q-item
-              clickable
-              v-ripple
-              :to="{ name: 'encuestadores.envios' }"
-              :active="route.name === 'encuestadores.envios'"
-              active-class="active-menu-item"
-            >
+            <q-item clickable v-ripple :to="{ name: 'encuestadores.envios' }"
+              :active="route.name === 'encuestadores.envios'" active-class="active-menu-item">
               <q-item-section avatar>
                 <q-icon name="history" />
               </q-item-section>
               <q-item-section>Historial de Envíos</q-item-section>
             </q-item>
 
-            <q-item
-              clickable
-              v-ripple
-              :to="{ name: 'estadisticas' }"
-              :active="route.name === 'estadisticas'"
-              active-class="active-menu-item"
-            >
+            <q-item clickable v-ripple :to="{ name: 'estadisticas' }" :active="route.name === 'estadisticas'"
+              active-class="active-menu-item">
               <q-item-section avatar>
                 <q-icon name="insert_chart" />
               </q-item-section>
@@ -264,7 +235,8 @@ function getRoleName() {
     1: 'Administrador',
     2: 'Supervisor',
     3: 'Encuestador',
-    4: 'Académico'
+    4: 'Académico',
+    5: 'Superadmin'
   };
 
   return roles[auth.user.rol_id] || 'Usuario';
@@ -288,6 +260,11 @@ function userIsEncuestador() {
 // Verificar si el usuario es académico
 function userIsAcademico() {
   return auth.user && auth.user.rol_id === 4;
+}
+
+// Verificar si el usuario es superadmin
+function userIsSuperadmin() {
+  return auth.user && auth.user.rol_id === 5;
 }
 
 // Cerrar sesión
@@ -368,7 +345,7 @@ onMounted(() => {
       font-weight: 600;
       letter-spacing: 0.5px;
       text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-      background: linear-gradient(to right, #fff, rgba(255,255,255,0.85));
+      background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.85));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -596,8 +573,15 @@ onMounted(() => {
 
 /* Animaciones */
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Ajustes responsivos */

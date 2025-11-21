@@ -57,6 +57,12 @@ const routes = [
         name: 'estadisticas',
         component: () => import('pages/EstadisticasEncuestaPage.vue'),
       },
+      {
+        path: 'superadmin/users',
+        name: 'superadmin.users',
+        component: () => import('pages/SuperadminUsersPage.vue'),
+        meta: { requiresSuperadmin: true }
+      },
     ],
   },
 

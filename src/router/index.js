@@ -33,5 +33,25 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE),
   })
 
+  // Navigation guard para rutas de Superadmin
+  Router.beforeEach((to, from, next) => {
+    if (to.meta.requiresSuperadmin) {
+      // Obtener el usuario del localStorage
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        if (user.rol_id === 5) {
+          next()
+        } else {
+          next({ name: 'dashboard' })
+        }
+      } else {
+        next({ name: 'login-page' })
+      }
+    } else {
+      next()
+    }
+  })
+
   return Router
 })
