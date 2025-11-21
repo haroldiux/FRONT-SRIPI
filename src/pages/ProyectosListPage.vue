@@ -1,7 +1,6 @@
 <template>
   <q-page class="panel-investigacion">
-    <!-- Diálogo de nuevo proyecto -->
-    <ProyectoForm v-model="showProjectDialog" @save="handleProjectSubmit" @cancel="showProjectDialog = false" />
+    <!-- Diálogo de nuevo proyecto eliminado (se usa el del final) -->
 
     <!-- Header mejorado con nuevo estilo -->
     <div class="page-header" data-aos="fade-down" data-aos-duration="800">
@@ -21,7 +20,7 @@
           <p class="section-subtitle">{{ getSectionSubtitle }}</p>
         </div>
         <q-btn label="Nuevo Proyecto" icon="add" color="primary" unelevated class="btn-nuevo-proyecto"
-          @click="showProjectDialog = true" />
+          @click="abrirDialogoNuevoProyecto" />
       </div>
 
       <!-- Estado de carga -->
@@ -36,7 +35,7 @@
         <h5 class="q-mt-md text-primary">{{ getEmptyStateTitle }}</h5>
         <p class="text-secondary">{{ getEmptyStateSubtitle }}</p>
         <q-btn label="Nuevo Proyecto" icon="add" color="primary" unelevated class="q-mt-sm btn-empty-state"
-          @click="showProjectDialog = true" />
+          @click="abrirDialogoNuevoProyecto" />
       </div>
 
       <!-- Lista de Proyectos con nuevo diseño -->
@@ -57,8 +56,12 @@
                   :label="getEstadoLabel(proyecto.estado, proyecto)"
                   class="status-badge-inline" />
 
-                <q-btn label="VER DETALLES" flat color="accent" icon-right="visibility"
-                  @click="verDetalles(proyecto.id)" class="btn-ver-detalles" />
+                <div class="row q-gutter-sm">
+                  <q-btn label="EDITAR" flat color="primary" icon="edit"
+                    @click="editarProyecto(proyecto)" class="btn-ver-detalles" size="sm" />
+                  <q-btn label="VER DETALLES" flat color="accent" icon-right="visibility"
+                    @click="verDetalles(proyecto.id)" class="btn-ver-detalles" size="sm" />
+                </div>
               </div>
             </div>
           </q-card-section>
@@ -102,6 +105,14 @@
         </q-card>
       </div>
     </div>
+
+    <!-- Botón flotante para crear proyecto (visible solo en móvil) -->
+    <q-page-sticky position="bottom-right" :offset="[18, 18]" class="mobile-fab">
+      <q-btn fab icon="add" color="accent" @click="abrirDialogoNuevoProyecto" />
+    </q-page-sticky>
+
+    <!-- Diálogo para crear/editar proyecto -->
+    <ProyectoForm v-model="showDialog" :proyecto="selectedProyecto" @save="onProyectoSaved" />
   </q-page>
 </template>
 
@@ -124,11 +135,13 @@ const isResponsable = computed(() => auth.user?.rol_id === 2);
 const isAcademico = computed(() => auth.user?.rol_id === 4);
 
 // Estado del componente
-const showProjectDialog = ref(false)
+// Estado del componente
+const showDialog = ref(false)
 const loading = ref(true)
 const error = ref(null)
 const proyectos = ref([])
 const usuarios = ref([])
+const selectedProyecto = ref(null)
 
 // Información del usuario desde el store
 const userName = computed(() => {
@@ -431,20 +444,21 @@ function getEstadoLabel(estado, proyecto) {
   return labels[estado] || estado
 }
 
-// Manejar creación de proyecto
-function handleProjectSubmit() {
-  // Notificar éxito
-  $q.notify({
-    type: 'positive',
-    message: 'Proyecto creado exitosamente',
-    position: 'top'
-  })
+// Funciones para editar y crear proyectos
+function abrirDialogoNuevoProyecto() {
+  selectedProyecto.value = null
+  showDialog.value = true
+}
 
-  // Recargar proyectos
+function editarProyecto(proyecto) {
+  selectedProyecto.value = { ...proyecto }
+  showDialog.value = true
+}
+
+function onProyectoSaved() {
   loadProyectos()
-
-  // Cerrar diálogo
-  showProjectDialog.value = false
+  showDialog.value = false
+  selectedProyecto.value = null
 }
 
 // Ver detalles del proyecto

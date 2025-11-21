@@ -359,7 +359,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useQuasar, uid } from 'quasar'
 import { api } from 'src/boot/axios'
 import { useAuthStore } from 'src/stores/auth.store'
@@ -371,6 +371,10 @@ const props = defineProps({
     required: true
   },
   proyectoId: {
+    type: Number,
+    default: null
+  },
+  encuestaId: {
     type: Number,
     default: null
   }
@@ -385,6 +389,7 @@ const formRef = ref(null)
 const submitting = ref(false)
 const sectionsKey = ref(0) // Key para forzar re-render de secciones
 const previewMode = ref(false) // Estado para modo vista previa
+const loadingData = ref(false)
 
 // Calcular el total de preguntas en toda la encuesta
 const totalQuestions = computed(() => {
@@ -392,6 +397,128 @@ const totalQuestions = computed(() => {
     return total + seccion.preguntas.length
   }, 0)
 })
+
+// Cargar datos si hay encuestaId
+onMounted(() => {
+  if (props.modelValue && props.encuestaId) {
+    loadEncuestaData(props.encuestaId)
+  }
+})
+
+watch(() => props.modelValue, (newVal) => {
+  if (newVal) {
+    if (props.encuestaId) {
+      loadEncuestaData(props.encuestaId)
+    } else {
+      resetForm()
+    }
+  }
+})
+
+async function loadEncuestaData(id) {
+  loadingData.value = true
+  try {
+    console.log('Cargando encuesta para edición:', id)
+    const response = await api.get(`/encuestas/${id}`)
+    const data = response.data.data || response.data
+
+    // Mapear datos al formato del formulario
+    formData.value = {
+      titulo: data.titulo || '',
+      descripcion: data.descripcion || '',
+      fechaInicio: data.fecha_inicio ? formatFechaInput(data.fecha_inicio) : '',
+      fechaFinal: data.fecha_fin ? formatFechaInput(data.fecha_fin) : '',
+      activa: data.activa !== undefined ? !!data.activa : true,
+      secciones: mapSecciones(data.secciones || [])
+    }
+
+    // Forzar re-render
+    sectionsKey.value++
+  } catch (error) {
+    console.error('Error al cargar encuesta:', error)
+    $q.notify({
+      type: 'negative',
+      message: 'Error al cargar los datos de la encuesta'
+    })
+    emit('update:modelValue', false)
+  } finally {
+    loadingData.value = false
+  }
+}
+
+function formatFechaInput(isoDate) {
+  if (!isoDate) return ''
+  try {
+    // Asumiendo formato YYYY-MM-DD o ISO
+    const datePart = isoDate.split('T')[0]
+    const [year, month, day] = datePart.split('-')
+    return `${day}/${month}/${year}`
+  } catch {
+    return ''
+  }
+}
+
+function mapSecciones(seccionesApi) {
+  if (!seccionesApi || seccionesApi.length === 0) {
+    return [{
+      id: uid(),
+      titulo: 'Sección 1',
+      descripcion: '',
+      preguntas: [{ id: uid(), enunciado: '', tipo: 'text', obligatoria: true, previewValue: '', min: 0, max: 10 }]
+    }]
+  }
+
+  return seccionesApi.map(sec => ({
+    id: sec.id || uid(),
+    titulo: sec.titulo || '',
+    descripcion: sec.descripcion || '',
+    preguntas: mapPreguntas(sec.preguntas || [])
+  }))
+}
+
+function mapPreguntas(preguntasApi) {
+  if (!preguntasApi || preguntasApi.length === 0) {
+    return [{ id: uid(), enunciado: '', tipo: 'text', obligatoria: true, previewValue: '', min: 0, max: 10 }]
+  }
+
+  return preguntasApi.map(preg => {
+    const tipo = preg.tipo || 'text'
+    let opciones = []
+    let min = 0
+    let max = 10
+
+    // Parsear opciones si es necesario
+    if (['single', 'multi'].includes(tipo) && preg.opciones) {
+      opciones = preg.opciones.map(opt => ({
+        id: opt.id || uid(),
+        texto: opt.texto || '',
+        valor: opt.valor
+      }))
+    }
+
+    // Parsear escala
+    if (tipo === 'scale' && preg.configuracion) {
+      try {
+        const config = typeof preg.configuracion === 'string' ? JSON.parse(preg.configuracion) : preg.configuracion
+        min = config.min || 0
+        max = config.max || 10
+      } catch (e) {
+        console.error('Error parsing scale config', e)
+      }
+    }
+
+    return {
+      id: preg.id || uid(),
+      enunciado: preg.enunciado || '',
+      tipo: tipo,
+      obligatoria: !!preg.obligatoria,
+      previewValue: '',
+      opciones: opciones,
+      min: min,
+      max: max
+    }
+  })
+}
 
 // Inicialización de AOS
 // Inicialización de AOS eliminada

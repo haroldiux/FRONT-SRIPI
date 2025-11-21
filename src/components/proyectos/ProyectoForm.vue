@@ -8,13 +8,31 @@
   >
     <q-card class="proyecto-dialog" data-aos="zoom-in" data-aos-duration="400">
       <div class="dialog-header">
-        <div class="text-h6">Crear Nuevo Proyecto</div>
+        <div class="text-h6">{{ proyecto ? 'Editar Proyecto' : 'Crear Nuevo Proyecto' }}</div>
         <q-btn icon="close" flat round dense v-close-popup @click="$emit('cancel')" class="close-button" />
       </div>
 
       <q-separator />
 
       <q-form ref="formRef" @submit="onSubmit" class="form-container">
+<!-- ... (unchanged lines) ... -->
+        <!-- Botones de acción -->
+        <div class="form-actions" data-aos="fade-up" data-aos-delay="350">
+          <q-btn
+            flat
+            label="CANCELAR"
+            class="cancel-btn"
+            @click="$emit('cancel')"
+          />
+          <q-btn
+            unelevated
+            :label="proyecto ? 'GUARDAR CAMBIOS' : 'CREAR PROYECTO'"
+            type="submit"
+            color="primary"
+            :loading="submitting"
+            class="submit-btn"
+          />
+        </div>
         <!-- Título -->
         <div class="form-field" data-aos="fade-up" data-aos-delay="100">
           <label class="field-label">Título del Proyecto <span class="required">*</span></label>
@@ -161,10 +179,14 @@ import { api } from 'src/boot/axios'
 import { useAuthStore } from 'src/stores/auth.store'
 import AOS from 'aos'
 
-defineProps({
+const props = defineProps({
   modelValue: {
     type: Boolean,
     required: true
+  },
+  proyecto: {
+    type: Object,
+    default: null
   }
 })
 
@@ -183,6 +205,34 @@ const form = ref({
   fecha_fin: '',
   estado: 'inicio',
   responsable_id: null // Será configurado en onSubmit
+})
+
+// Observar cambios en la prop proyecto para llenar el formulario
+import { watch } from 'vue'
+
+watch(() => props.modelValue, (newVal) => {
+  if (newVal && props.proyecto) {
+    // Modo Edición: Llenar formulario
+    console.log('Cargando datos para edición:', props.proyecto)
+    form.value = {
+      titulo: props.proyecto.titulo || '',
+      descripcion: props.proyecto.descripcion || '',
+      fecha_inicio: props.proyecto.fecha_inicio ? props.proyecto.fecha_inicio.split('T')[0] : '',
+      fecha_fin: props.proyecto.fecha_fin ? props.proyecto.fecha_fin.split('T')[0] : '',
+      estado: props.proyecto.estado || 'inicio',
+      responsable_id: props.proyecto.responsable_id
+    }
+  } else if (newVal && !props.proyecto) {
+    // Modo Creación: Resetear (por si acaso)
+    form.value = {
+      titulo: '',
+      descripcion: '',
+      fecha_inicio: '',
+      fecha_fin: '',
+      estado: 'inicio',
+      responsable_id: null
+    }
+  }
 })
 
 // Función para limitar fechas a partir de hoy (zona horaria de Bolivia)
@@ -262,13 +312,23 @@ async function onSubmit() {
     console.log('Enviando proyecto con datos:', payload)
 
     // Enviar solicitud a la API
-    const response = await api.post('/proyectos', payload)
+    let response
+    if (props.proyecto) {
+      // Modo Edición: PUT
+      console.log('Actualizando proyecto:', props.proyecto.id, payload)
+      response = await api.put(`/proyectos/${props.proyecto.id}`, payload)
+    } else {
+      // Modo Creación: POST
+      console.log('Creando proyecto:', payload)
+      response = await api.post('/proyectos', payload)
+    }
+
     const data = response.data.data || response.data
 
     // Notificar éxito
     $q.notify({
       type: 'positive',
-      message: 'Proyecto creado exitosamente',
+      message: props.proyecto ? 'Proyecto actualizado exitosamente' : 'Proyecto creado exitosamente',
       position: 'top'
     })
 

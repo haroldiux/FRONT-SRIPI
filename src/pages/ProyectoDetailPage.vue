@@ -192,7 +192,7 @@
 
                           <!-- Botones de acción movidos debajo del título -->
                           <div class="encuesta-actions-row q-mt-sm">
-                            <q-btn flat dense color="grey-7" icon="edit" label="Editar" class="action-btn-inline q-mr-sm" size="sm">
+                            <q-btn flat dense color="grey-7" icon="edit" label="Editar" @click="editarEncuesta(enc.id)" class="action-btn-inline q-mr-sm" size="sm">
                               <q-tooltip>Editar encuesta</q-tooltip>
                             </q-btn>
                             <q-btn flat dense color="accent" icon="assignment_ind" label="Asignar" @click="asignarEncuesta(enc)" class="action-btn-inline q-mr-sm" size="sm">
@@ -269,7 +269,8 @@
     </div>
 
     <!-- Dialog crear encuesta -->
-    <EncuestaFormDialog v-model="openEncuesta" :proyecto-id="proyecto.id" @save="onEncuestaSave" />
+    <!-- Dialog crear encuesta -->
+    <EncuestaFormDialog v-model="openEncuesta" :proyecto-id="proyecto.id" :encuesta-id="selectedEncuestaId" @save="onEncuestaSave" />
 
     <!-- Dialog vista previa encuesta -->
     <EncuestaPreview v-model="showEncuestaPreview" :encuesta-id="selectedEncuestaId" />
@@ -303,7 +304,8 @@ function verEncuesta(encuesta) {
 
 function editarEncuesta(encuestaId) {
   console.log('Editando encuesta con ID:', encuestaId)
-  // Aquí implementa la lógica para editar la encuesta
+  selectedEncuestaId.value = encuestaId
+  openEncuesta.value = true
 }
 
 function asignarEncuesta(encuesta) {
