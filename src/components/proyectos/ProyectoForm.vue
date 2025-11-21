@@ -16,23 +16,7 @@
 
       <q-form ref="formRef" @submit="onSubmit" class="form-container">
 <!-- ... (unchanged lines) ... -->
-        <!-- Botones de acción -->
-        <div class="form-actions" data-aos="fade-up" data-aos-delay="350">
-          <q-btn
-            flat
-            label="CANCELAR"
-            class="cancel-btn"
-            @click="$emit('cancel')"
-          />
-          <q-btn
-            unelevated
-            :label="proyecto ? 'GUARDAR CAMBIOS' : 'CREAR PROYECTO'"
-            type="submit"
-            color="primary"
-            :loading="submitting"
-            class="submit-btn"
-          />
-        </div>
+
         <!-- Título -->
         <div class="form-field" data-aos="fade-up" data-aos-delay="100">
           <label class="field-label">Título del Proyecto <span class="required">*</span></label>
@@ -160,7 +144,7 @@
           />
           <q-btn
             unelevated
-            label="CREAR PROYECTO"
+            :label="proyecto ? 'GUARDAR CAMBIOS' : 'CREAR PROYECTO'"
             type="submit"
             color="primary"
             :loading="submitting"

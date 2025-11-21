@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="lHh Lpr lFf">
     <!-- Header mejorado con degradado -->
     <q-header elevated class="modern-header">
       <q-toolbar>
@@ -45,119 +45,121 @@
 
     <!-- Drawer lateral mejorado -->
     <q-drawer v-model="drawer" show-if-above :width="250" v-if="auth.isAuth" class="modern-drawer">
-      <!-- Información del usuario mejorada -->
-      <div class="user-header">
-        <q-avatar size="64px" class="q-mb-sm">
-          <img v-if="auth.user?.avatar" :src="auth.user.avatar" alt="Avatar">
-          <div v-else class="big-avatar">{{ getUserInitials(auth.user) }}</div>
-        </q-avatar>
-        <div class="user-header-info">
-          <div class="text-weight-bold">{{ getUserName() }}</div>
-          <div class="user-role">{{ getRoleName() }}</div>
+      <div class="column full-height no-wrap">
+        <!-- Información del usuario mejorada -->
+        <div class="user-header col-auto">
+          <q-avatar size="64px" class="q-mb-sm">
+            <img v-if="auth.user?.avatar" :src="auth.user.avatar" alt="Avatar">
+            <div v-else class="big-avatar">{{ getUserInitials(auth.user) }}</div>
+          </q-avatar>
+          <div class="user-header-info">
+            <div class="text-weight-bold">{{ getUserName() }}</div>
+            <div class="user-role">{{ getRoleName() }}</div>
+          </div>
+        </div>
+
+        <q-separator class="col-auto" />
+
+        <!-- Menú navegación mejorado -->
+        <q-scroll-area class="col drawer-scroll-area">
+          <q-list padding>
+            <!-- Dashboard para todos -->
+            <q-item clickable v-ripple :to="{ name: 'dashboard' }" :active="route.name === 'dashboard'"
+              active-class="active-menu-item">
+              <q-item-section avatar>
+                <q-icon name="dashboard" />
+              </q-item-section>
+              <q-item-section>Dashboard</q-item-section>
+            </q-item>
+
+            <!-- GESTIÓN DE PROYECTOS - solo para admin, supervisor y superadmin -->
+            <template v-if="userIsAdmin() || userIsSupervisor() || userIsAcademico() || userIsSuperadmin()">
+              <q-item-label header class="menu-header">
+                GESTIÓN DE PROYECTOS
+              </q-item-label>
+
+              <q-item clickable v-ripple :to="{ name: 'proyectos.list' }" :active="route.name?.includes('proyectos')"
+                active-class="active-menu-item">
+                <q-item-section avatar>
+                  <q-icon name="folder" />
+                </q-item-section>
+                <q-item-section>Proyectos</q-item-section>
+              </q-item>
+            </template>
+
+            <!-- SUPERADMIN - solo visible para superadmin -->
+            <template v-if="userIsSuperadmin()">
+              <q-item-label header class="menu-header">
+                SUPERADMIN
+              </q-item-label>
+
+              <q-item clickable v-ripple :to="{ name: 'superadmin.users' }" :active="route.name === 'superadmin.users'"
+                active-class="active-menu-item">
+                <q-item-section avatar>
+                  <q-icon name="admin_panel_settings" />
+                </q-item-section>
+                <q-item-section>Gestión de Usuarios</q-item-section>
+              </q-item>
+            </template>
+
+            <!-- ADMINISTRACIÓN - solo visible para administradores y superadmin -->
+            <template v-if="userIsAdmin() || userIsSupervisor() || userIsSuperadmin()">
+              <q-item-label header class="menu-header">
+                ADMINISTRACIÓN
+              </q-item-label>
+
+              <q-item clickable v-ripple :to="{ name: 'usuarios.list' }" :active="route.name?.includes('usuarios')"
+                active-class="active-menu-item">
+                <q-item-section avatar>
+                  <q-icon name="people" />
+                </q-item-section>
+                <q-item-section>Usuarios</q-item-section>
+              </q-item>
+            </template>
+
+            <!-- MIS ENCUESTAS - solo visible para encuestadores y superadmin -->
+            <template v-if="userIsEncuestador() || userIsAcademico() || userIsSupervisor() || userIsAdmin() || userIsSuperadmin()">
+              <q-item-label header class="menu-header">
+                MIS ENCUESTAS
+              </q-item-label>
+
+              <q-item v-if="userIsEncuestador() || userIsAcademico() || userIsSuperadmin()" clickable v-ripple
+                :to="{ name: 'encuestadores.list' }" :active="route.name === 'encuestadores.list'"
+                active-class="active-menu-item">
+                <q-item-section avatar>
+                  <q-icon name="assignment" />
+                </q-item-section>
+                <q-item-section>Encuestas Asignadas</q-item-section>
+              </q-item>
+
+              <q-item clickable v-ripple :to="{ name: 'encuestadores.envios' }"
+                :active="route.name === 'encuestadores.envios'" active-class="active-menu-item">
+                <q-item-section avatar>
+                  <q-icon name="history" />
+                </q-item-section>
+                <q-item-section>Historial de Envíos</q-item-section>
+              </q-item>
+
+              <q-item clickable v-ripple :to="{ name: 'estadisticas' }" :active="route.name === 'estadisticas'"
+                active-class="active-menu-item">
+                <q-item-section avatar>
+                  <q-icon name="insert_chart" />
+                </q-item-section>
+                <q-item-section>Estadísticas</q-item-section>
+              </q-item>
+            </template>
+
+            <q-separator class="q-my-md" />
+          </q-list>
+        </q-scroll-area>
+
+        <!-- Footer con versión de la aplicación -->
+        <div class="drawer-footer col-auto">
+          <span class="app-version">v1.0.0</span>
+          <q-icon name="copyright" size="16px" class="q-mr-xs" />
+          <span>2025 Sistema de Encuestas</span>
         </div>
       </div>
-
-      <q-separator />
-
-      <!-- Menú navegación mejorado -->
-      <q-scroll-area class="drawer-scroll-area">
-        <q-list padding>
-          <!-- Dashboard para todos -->
-          <q-item clickable v-ripple :to="{ name: 'dashboard' }" :active="route.name === 'dashboard'"
-            active-class="active-menu-item">
-            <q-item-section avatar>
-              <q-icon name="dashboard" />
-            </q-item-section>
-            <q-item-section>Dashboard</q-item-section>
-          </q-item>
-
-          <!-- GESTIÓN DE PROYECTOS - solo para admin y supervisor -->
-          <template v-if="userIsAdmin() || userIsSupervisor() || userIsAcademico()">
-            <q-item-label header class="menu-header">
-              GESTIÓN DE PROYECTOS
-            </q-item-label>
-
-            <q-item clickable v-ripple :to="{ name: 'proyectos.list' }" :active="route.name?.includes('proyectos')"
-              active-class="active-menu-item">
-              <q-item-section avatar>
-                <q-icon name="folder" />
-              </q-item-section>
-              <q-item-section>Proyectos</q-item-section>
-            </q-item>
-          </template>
-
-          <!-- SUPERADMIN - solo visible para superadmin -->
-          <template v-if="userIsSuperadmin()">
-            <q-item-label header class="menu-header">
-              SUPERADMIN
-            </q-item-label>
-
-            <q-item clickable v-ripple :to="{ name: 'superadmin.users' }" :active="route.name === 'superadmin.users'"
-              active-class="active-menu-item">
-              <q-item-section avatar>
-                <q-icon name="admin_panel_settings" />
-              </q-item-section>
-              <q-item-section>Gestión de Usuarios</q-item-section>
-            </q-item>
-          </template>
-
-          <!-- ADMINISTRACIÓN - solo visible para administradores -->
-          <template v-if="userIsAdmin() || userIsSupervisor()">
-            <q-item-label header class="menu-header">
-              ADMINISTRACIÓN
-            </q-item-label>
-
-            <q-item clickable v-ripple :to="{ name: 'usuarios.list' }" :active="route.name?.includes('usuarios')"
-              active-class="active-menu-item">
-              <q-item-section avatar>
-                <q-icon name="people" />
-              </q-item-section>
-              <q-item-section>Usuarios</q-item-section>
-            </q-item>
-          </template>
-
-          <!-- MIS ENCUESTAS - solo visible para encuestadores -->
-          <template v-if="userIsEncuestador() || userIsAcademico() || userIsSupervisor() || userIsAdmin()">
-            <q-item-label header class="menu-header">
-              MIS ENCUESTAS
-            </q-item-label>
-
-            <q-item v-if="userIsEncuestador() || userIsAcademico()" clickable v-ripple
-              :to="{ name: 'encuestadores.list' }" :active="route.name === 'encuestadores.list'"
-              active-class="active-menu-item">
-              <q-item-section avatar>
-                <q-icon name="assignment" />
-              </q-item-section>
-              <q-item-section>Encuestas Asignadas</q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple :to="{ name: 'encuestadores.envios' }"
-              :active="route.name === 'encuestadores.envios'" active-class="active-menu-item">
-              <q-item-section avatar>
-                <q-icon name="history" />
-              </q-item-section>
-              <q-item-section>Historial de Envíos</q-item-section>
-            </q-item>
-
-            <q-item clickable v-ripple :to="{ name: 'estadisticas' }" :active="route.name === 'estadisticas'"
-              active-class="active-menu-item">
-              <q-item-section avatar>
-                <q-icon name="insert_chart" />
-              </q-item-section>
-              <q-item-section>Estadísticas</q-item-section>
-            </q-item>
-          </template>
-
-          <q-separator class="q-my-md" />
-
-          <!-- Footer con versión de la aplicación -->
-          <div class="drawer-footer">
-            <span class="app-version">v1.0.0</span>
-            <q-icon name="copyright" size="16px" class="q-mr-xs" />
-            <span>2025 Sistema de Encuestas</span>
-          </div>
-        </q-list>
-      </q-scroll-area>
     </q-drawer>
 
     <!-- Contenido principal -->
@@ -451,7 +453,7 @@ onMounted(() => {
 
   /* Scroll area */
   .drawer-scroll-area {
-    height: calc(100% - 130px);
+    /* height: calc(100% - 130px); Eliminado para usar flex */
     margin-top: 0;
     border-right: none;
 
@@ -516,15 +518,16 @@ onMounted(() => {
 
   /* Footer del drawer */
   .drawer-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    /* position: absolute; Eliminado para usar flex */
+    /* bottom: 0; */
+    /* left: 0; */
+    /* right: 0; */
     padding: 16px;
     text-align: center;
     color: var(--color-text-light);
     font-size: 0.8rem;
     background-color: var(--color-light-bg);
+    border-top: 1px solid var(--color-border);
 
     .app-version {
       color: var(--color-accent);

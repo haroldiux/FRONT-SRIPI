@@ -29,7 +29,7 @@
       <q-card-section class="q-pa-md">
         <div class="row items-center q-col-gutter-md">
           <!-- Filtro de proyecto (solo para supervisores y admins) -->
-          <div v-if="isAdmin || isSupervisor" class="col-12 col-sm-6 col-md">
+          <div v-if="isAdmin || isSupervisor || isSuperadmin" class="col-12 col-sm-6 col-md">
             <q-select
               v-model="filtroProyecto"
               :options="opcionesProyectos"
@@ -73,7 +73,7 @@
           </div>
 
           <!-- Filtro de aplicador mejorado (para admins y supervisores) -->
-          <div v-if="isAdmin || isSupervisor" class="col-12 col-sm-6 col-md">
+          <div v-if="isAdmin || isSupervisor || isSuperadmin" class="col-12 col-sm-6 col-md">
             <q-input
               v-model="busquedaAplicador"
               outlined
@@ -379,6 +379,7 @@ export default defineComponent({
     const isSupervisor = computed(() => auth.user?.rol_id === 2);
     const isEncuestador = computed(() => auth.user?.rol_id === 3);
     const isAcademico = computed(() => auth.user?.rol_id === 4);
+    const isSuperadmin = computed(() => auth.user?.rol_id === 5);
 
     // Variables para el filtro de aplicador
     const busquedaAplicador = ref('');
@@ -501,14 +502,14 @@ export default defineComponent({
 
     // Títulos dinámicos según el rol
     const getTitleByRole = computed(() => {
-      if (isAdmin.value) return '📊 Historial de Envíos';
+      if (isAdmin.value || isSuperadmin.value) return '📊 Historial de Envíos';
       if (isSupervisor.value) return '📋 Envíos de mis Proyectos';
       if (isAcademico.value) return '📝 Mis Envíos Realizados';
       return '📝 Mis Envíos Realizados';
     });
 
     const getSubtitleByRole = computed(() => {
-      if (isAdmin.value) return 'Gestiona y visualiza todos los envíos del sistema';
+      if (isAdmin.value || isSuperadmin.value) return 'Gestiona y visualiza todos los envíos del sistema';
       if (isSupervisor.value) return 'Revisa los envíos de los proyectos que supervisas';
       if (isAcademico.value) return 'Historial completo de tus encuestas completadas';
       return 'Historial completo de tus encuestas completadas';
@@ -610,12 +611,12 @@ export default defineComponent({
 
     // Observar cambios en el filtro de proyecto para recargar las opciones de encuestas
     watch([filtroProyecto, filtroEncuesta], async () => {
-      if (isAdmin.value || isSupervisor.value) {
+      if (isAdmin.value || isSupervisor.value || isSuperadmin.value) {
         // Limpiar filtro de aplicador cuando cambian los filtros principales
         limpiarFiltroAplicador();
 
         // Recargar opciones de aplicadores
-        if (isAdmin.value) {
+        if (isAdmin.value || isSuperadmin.value) {
           await cargarOpcionesUsuarios();
         } else if (isSupervisor.value) {
           await cargarOpcionesAplicadores();
@@ -704,11 +705,11 @@ export default defineComponent({
         // Cargar opciones para filtros
         await cargarOpcionesEncuestas();
 
-        if (isAdmin.value || isSupervisor.value) {
+        if (isAdmin.value || isSupervisor.value || isSuperadmin.value) {
           await cargarOpcionesProyectos();
         }
 
-        if (isAdmin.value) {
+        if (isAdmin.value || isSuperadmin.value) {
           await cargarOpcionesUsuarios();
         }
         // Añadir esto si no está presente:

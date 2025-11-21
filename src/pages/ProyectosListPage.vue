@@ -856,4 +856,13 @@ $white: #FFFFFF;
     grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
   }
 }
+@media (min-width: 769px) {
+  .mobile-fab {
+    display: none;
+  }
+}
+
+.mobile-fab {
+  z-index: 2000;
+}
 </style>

@@ -237,6 +237,8 @@ import CrearUsuarioForm from 'components/usuarios/CrearUsuarioForm.vue'
 import { api } from 'boot/axios'
 import AOS from 'aos'
 
+import { useAuthStore } from 'src/stores/auth.store' // Importar store
+
 export default {
   name: 'ListaUsuarioPage',
   components: {
@@ -245,6 +247,7 @@ export default {
 
   setup() {
     const $q = useQuasar()
+    const auth = useAuthStore() // Usar store
 
     // Estados
     const loading = ref(false)
@@ -352,23 +355,22 @@ export default {
     };
 
     // Permisos
-    // Asumimos que es admin para pruebas
-    const currentUserRole = ref(1)
+    const currentUserRole = computed(() => auth.user?.rol_id)
 
     const canCreateUser = computed(() => {
-      return [1, 2].includes(currentUserRole.value)
+      return [1, 2, 5].includes(currentUserRole.value) // Admin, Supervisor, Superadmin
     })
 
     const canEditUser = () => {
-      return [1, 2].includes(currentUserRole.value)
+      return [1, 2, 5].includes(currentUserRole.value)
     }
 
     const canDeleteUser = () => {
-      return currentUserRole.value === 1
+      return [1, 5].includes(currentUserRole.value) // Admin, Superadmin
     }
 
     const canToggleUserStatus = computed(() => {
-      return [1, 2].includes(currentUserRole.value)
+      return [1, 2, 5].includes(currentUserRole.value)
     })
 
     // Funciones de utilidad para el estado
