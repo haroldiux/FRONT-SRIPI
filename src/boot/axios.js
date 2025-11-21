@@ -10,7 +10,7 @@ export const api = axios.create({
   //withCredentials: true // Importante para CORS y cookies
 })
 
-export default boot(({ app }) => {
+export default boot(({ app, router }) => {
   // Restaurar Authorization desde localStorage si existe
   const token = localStorage.getItem('token')
   if (token) {
@@ -47,9 +47,9 @@ export default boot(({ app }) => {
         localStorage.removeItem('user')
         localStorage.removeItem('lastActivity')
 
-        // Opcional: redirigir a login si no estamos ya en la página de login
-        if (!window.location.href.includes('/login')) {
-          window.location.href = '/#/login?session=expired'
+        // Redirigir a login usando el router si no estamos ya allí
+        if (router.currentRoute.value.name !== 'login-page') {
+          router.push({ name: 'login-page', query: { session: 'expired' } })
         }
       }
       return Promise.reject(error)

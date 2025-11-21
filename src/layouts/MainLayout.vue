@@ -118,7 +118,8 @@
             </template>
 
             <!-- MIS ENCUESTAS - solo visible para encuestadores y superadmin -->
-            <template v-if="userIsEncuestador() || userIsAcademico() || userIsSupervisor() || userIsAdmin() || userIsSuperadmin()">
+            <template
+              v-if="userIsEncuestador() || userIsAcademico() || userIsSupervisor() || userIsAdmin() || userIsSuperadmin()">
               <q-item-label header class="menu-header">
                 MIS ENCUESTAS
               </q-item-label>
@@ -289,10 +290,11 @@ function logout() {
   }).onOk(async () => {
     try {
       await auth.logout()
-      router.push('/login')
+      router.push({ name: 'login-page' })
     } catch (error) {
       console.error('Error al cerrar sesión:', error)
-      window.location.href = '/login'
+      // Fallback seguro
+      router.push({ name: 'login-page' })
     }
   })
 }
