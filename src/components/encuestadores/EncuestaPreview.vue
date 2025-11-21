@@ -6,7 +6,7 @@
     transition-hide="fade"
     @hide="handleClose"
   >
-    <q-card class="encuesta-preview-card" data-aos="zoom-in" data-aos-duration="400">
+    <q-card class="encuesta-preview-card">
       <!-- Header -->
       <q-card-section class="bg-purple text-white dialog-header-section">
         <div class="row items-center">
@@ -77,14 +77,12 @@
         <q-card-section class="scroll-area" style="height: calc(100vh - 250px); overflow: auto;">
           <div class="encuestador-view">
             <div class="preview-container">
-              <q-card class="preview-card" bordered data-aos="fade-up">
+              <q-card class="preview-card" bordered>
                 <!-- Secciones y Preguntas -->
                 <q-card-section
                   v-for="(seccion, i) in encuesta.secciones"
                   :key="seccion.id"
                   class="preview-section"
-                  data-aos="fade-up"
-                  :data-aos-delay="100 * i"
                 >
                   <div class="text-h6 q-mb-md section-title">
                     <q-icon name="bookmark" color="teal" size="xs" class="q-mr-xs" />
@@ -96,8 +94,6 @@
                     v-for="(pregunta, pregIndex) in seccion.preguntas"
                     :key="pregunta.id"
                     class="preview-question q-mb-lg"
-                    data-aos="fade-up"
-                    :data-aos-delay="50 * pregIndex"
                   >
                     <div class="row items-center q-mb-sm">
                       <div class="text-subtitle1 question-text">
@@ -250,7 +246,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { api } from 'src/boot/axios'
 import { useQuasar } from 'quasar'
 
@@ -286,16 +282,7 @@ const respuestas = ref({})
 // Objeto separado para manejar respuestas de tipo múltiple (array)
 const respuestasMulti = ref({})
 
-// Inicialización de AOS
-onMounted(() => {
-  if (window.AOS) {
-    window.AOS.init({
-      duration: 800,
-      easing: 'ease-out-cubic',
-      once: false
-    })
-  }
-})
+// AOS animations removed to fix loading issues
 
 // Sincronizar con v-model del padre
 watch(() => props.modelValue, (newVal) => {
@@ -304,12 +291,7 @@ watch(() => props.modelValue, (newVal) => {
     loadEncuestaData()
   }
 
-  // Refrescar animaciones cuando se abre el diálogo
-  if (newVal && window.AOS) {
-    setTimeout(() => {
-      window.AOS.refresh()
-    }, 200)
-  }
+  // Animation refresh removed
 }, { immediate: true })
 
 // Sincronizar cambios internos con el padre
@@ -381,13 +363,6 @@ async function loadEncuestaData() {
     })
   } finally {
     loading.value = false
-
-    // Refrescar animaciones después de cargar
-    if (window.AOS) {
-      setTimeout(() => {
-        window.AOS.refresh()
-      }, 200)
-    }
   }
 }
 
@@ -732,26 +707,5 @@ function compartirEncuesta() {
   }
 }
 
-/* Animaciones AOS personalizadas */
-[data-aos="zoom-in-subtle"] {
-  transform: scale(0.95);
-  opacity: 0;
-  transition-property: transform, opacity;
-}
-
-[data-aos="zoom-in-subtle"].aos-animate {
-  transform: scale(1);
-  opacity: 1;
-}
-
-[data-aos="slide-up-subtle"] {
-  transform: translateY(20px);
-  opacity: 0;
-  transition-property: transform, opacity;
-}
-
-[data-aos="slide-up-subtle"].aos-animate {
-  transform: translateY(0);
-  opacity: 1;
-}
+/* AOS animations removed */
 </style>

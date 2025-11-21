@@ -2,7 +2,7 @@
   <q-page padding class="encuesta-page">
     <!-- Estado de carga -->
     <div v-if="loading" class="flex flex-center q-pa-xl">
-      <div class="column items-center loading-container" data-aos="fade-up" data-aos-duration="800">
+      <div class="column items-center loading-container">
         <q-spinner-dots size="80px" color="purple" />
         <div class="text-h5 text-purple q-mt-md">Cargando encuesta...</div>
         <div class="loading-progress">
@@ -13,7 +13,7 @@
 
     <!-- Estado de error -->
     <div v-else-if="error" class="flex flex-center q-pa-xl">
-      <div class="column items-center error-container" data-aos="fade-up" data-aos-duration="800">
+      <div class="column items-center error-container">
         <q-icon name="error_outline" size="80px" color="negative" />
         <div class="text-h5 text-weight-bold text-purple q-mt-md">{{ error }}</div>
         <p class="text-center q-mt-md text-grey-8">Ocurrió un problema al intentar cargar la encuesta. Por favor intente nuevamente.</p>
@@ -31,7 +31,7 @@
     <div v-else-if="encuesta && encuesta.id">
       <div class="row q-col-gutter-lg">
         <div class="col-12 col-lg-8 offset-lg-2">
-          <q-card flat bordered class="encuesta-card" data-aos="fade-up" data-aos-duration="1000">
+          <q-card flat bordered class="encuesta-card">
             <!-- Cabecera -->
             <q-card-section class="header-section">
               <div class="text-h4 text-white text-weight-bold">{{ encuesta.titulo }}</div>
@@ -43,7 +43,7 @@
             </q-card-section>
 
             <!-- Información de progreso -->
-            <q-card-section class="progress-section" data-aos="fade-right" data-aos-duration="600" data-aos-delay="200">
+            <q-card-section class="progress-section">
               <div class="row items-center q-col-gutter-lg">
                 <div class="col-12 col-sm-8">
                   <div class="text-h6 text-purple">
@@ -88,9 +88,6 @@
                 <q-card-section
                   :class="seccionIndex % 2 === 0 ? 'seccion-par' : 'seccion-impar'"
                   class="seccion-container"
-                  data-aos="fade-up"
-                  :data-aos-delay="seccionIndex * 100"
-                  data-aos-duration="800"
                 >
                   <div class="seccion-header">
                     <div class="text-h5 text-weight-bold section-title">{{ seccionIndex + 1 }}. {{ seccion.titulo }}</div>
@@ -104,9 +101,6 @@
                     v-for="(pregunta, preguntaIndex) in seccion.preguntas"
                     :key="pregunta.id"
                     class="pregunta-container q-mb-xl"
-                    data-aos="fade-right"
-                    :data-aos-delay="preguntaIndex * 80 + 100"
-                    data-aos-duration="600"
                   >
                     <div class="row items-center q-mb-sm question-header">
                       <div class="text-subtitle1 question-text">
@@ -260,7 +254,7 @@
               </template>
 
               <!-- Sección de ubicación geográfica mejorada -->
-              <q-card-section class="location-section" data-aos="fade-up" data-aos-duration="800">
+              <q-card-section class="location-section">
                 <div class="location-header">
                   <div class="text-h5 text-weight-bold location-title">
                     <q-icon name="location_on" class="q-mr-sm" />
@@ -348,7 +342,7 @@
 
     <!-- Estado completado -->
     <div v-else-if="completado" class="flex flex-center q-pa-xl">
-      <div class="column items-center success-container" data-aos="zoom-in" data-aos-duration="800">
+      <div class="column items-center success-container">
         <div class="success-icon">
           <q-icon name="check_circle" size="80px" color="positive" />
           <div class="success-confetti"></div>
@@ -367,13 +361,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api } from 'src/boot/axios'
 import { useQuasar, date } from 'quasar'
 import { useAuthStore } from 'src/stores/auth.store'
 import 'leaflet/dist/leaflet.css'
-import AOS from 'aos'
 
 // Variables y constantes
 const $q = useQuasar()
@@ -400,26 +393,7 @@ const asignacion = ref(null)
 const totalEnvios = ref(0)
 const objetivo = ref(0)
 
-// Inicializar AOS (si está disponible)
-const initAOS = () => {
-  if (typeof AOS !== 'undefined') {
-    AOS.init({
-      duration: 800,
-      once: false,
-      mirror: true,
-      offset: 50
-    });
-  }
-};
-
-// Refrescar AOS
-const refreshAOS = () => {
-  if (typeof AOS !== 'undefined') {
-    setTimeout(() => {
-      AOS.refresh();
-    }, 200);
-  }
-};
+// AOS animations removed to fix loading issues
 
 // Cálculos derivados
 const progreso = computed(() => {
@@ -461,7 +435,6 @@ async function cargarEncuesta() {
     setTimeout(() => {
       inicializarMapa()
       // No llamamos a obtenerUbicacionActual() automáticamente
-      refreshAOS(); // Refrescar AOS después de cargar todo
     }, 500)
 
   } catch (err) {
@@ -804,11 +777,6 @@ function confirmarEnvio() {
       // Mostrar animación de completado antes de redireccionar
       completado.value = true
 
-      // Refrescar AOS para la animación de completado
-      nextTick(() => {
-        refreshAOS()
-      })
-
       // Redireccionar después de una breve espera para mostrar la animación
       setTimeout(() => {
         router.push('/encuestadores')
@@ -924,9 +892,6 @@ function getProgresoColor() {
 
 // Ciclo de vida del componente
 onMounted(() => {
-  // Inicializar AOS
-  initAOS()
-
   // Cargar encuesta
   cargarEncuesta()
 
