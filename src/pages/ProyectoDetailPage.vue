@@ -176,36 +176,35 @@
                           class="encuesta-item"
                           data-aos="fade-up"
                           :data-aos-delay="100 + (index * 50)">
-                    <q-item class="encuesta-header">
-                      <q-item-section avatar>
-                        <q-avatar :color="enc.activa ? 'green-1' : 'grey-3'" text-color="green" class="encuesta-icon">
+                    <div class="encuesta-header-custom q-pa-md">
+                      <div class="row items-start no-wrap">
+                        <q-avatar :color="enc.activa ? 'green-1' : 'grey-3'" text-color="green" class="encuesta-icon q-mr-md">
                           <q-icon name="description" />
                         </q-avatar>
-                      </q-item-section>
 
-                      <q-item-section>
-                        <q-item-label class="encuesta-title">{{ enc.titulo }}</q-item-label>
-                        <q-item-label caption>
-                          <q-badge :color="enc.activa ? 'accent' : 'grey'" outline>
-                            {{ enc.activa ? 'Activa' : 'Inactiva' }}
-                          </q-badge>
-                        </q-item-label>
-                      </q-item-section>
+                        <div class="col">
+                          <div class="encuesta-title q-mb-xs">{{ enc.titulo }}</div>
+                          <div class="q-mb-sm">
+                            <q-badge :color="enc.activa ? 'accent' : 'grey'" outline>
+                              {{ enc.activa ? 'Activa' : 'Inactiva' }}
+                            </q-badge>
+                          </div>
 
-                      <q-item-section side>
-                        <div class="encuesta-actions">
-                          <q-btn flat round dense color="grey-7" icon="edit" class="action-icon">
-                            <q-tooltip>Editar</q-tooltip>
-                          </q-btn>
-                          <q-btn flat round dense color="accent" icon="assignment_ind" @click="asignarEncuesta(enc)" class="action-icon">
-                            <q-tooltip>Asignar</q-tooltip>
-                          </q-btn>
-                          <q-btn flat round dense color="primary" icon="visibility" @click.stop="verEncuesta(enc)" class="action-icon">
-                            <q-tooltip>Vista Previa</q-tooltip>
-                          </q-btn>
+                          <!-- Botones de acción movidos debajo del título -->
+                          <div class="encuesta-actions-row q-mt-sm">
+                            <q-btn flat dense color="grey-7" icon="edit" label="Editar" class="action-btn-inline q-mr-sm" size="sm">
+                              <q-tooltip>Editar encuesta</q-tooltip>
+                            </q-btn>
+                            <q-btn flat dense color="accent" icon="assignment_ind" label="Asignar" @click="asignarEncuesta(enc)" class="action-btn-inline q-mr-sm" size="sm">
+                              <q-tooltip>Asignar usuarios</q-tooltip>
+                            </q-btn>
+                            <q-btn flat dense color="primary" icon="visibility" label="Vista Previa" @click.stop="verEncuesta(enc)" class="action-btn-inline" size="sm">
+                              <q-tooltip>Ver encuesta</q-tooltip>
+                            </q-btn>
+                          </div>
                         </div>
-                      </q-item-section>
-                    </q-item>
+                      </div>
+                    </div>
 
                     <q-separator />
 
@@ -1487,6 +1486,33 @@ $white: #FFFFFF;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 24px;
+  }
+}
+
+.encuesta-header-custom {
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: rgba(0,0,0,0.01);
+  }
+}
+
+.encuesta-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.action-btn-inline {
+  font-weight: 600;
+  font-size: 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: rgba(0,0,0,0.05);
+    transform: translateY(-1px);
   }
 }
 </style>

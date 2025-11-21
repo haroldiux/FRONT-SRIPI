@@ -48,17 +48,22 @@
                 bordered
                 data-aos="fade-up"
                 :data-aos-delay="100 + (index * 50)">
-          <q-card-section>
-            <div class="project-header">
-              <div class="project-title-section">
-                <h3 class="project-title">{{ proyecto.titulo }}</h3>
-                <q-badge :color="getEstadoColor(proyecto.estado, proyecto)"
-                  :label="getEstadoLabel(proyecto.estado, proyecto)" class="status-badge" />
-              </div>
-              <q-btn label="VER DETALLES" flat color="accent" icon-right="visibility"
-                @click="verDetalles(proyecto.id)" class="btn-ver-detalles" />
-            </div>
+          <q-card-section class="project-card-header q-pb-none">
+            <div class="project-header-column">
+              <h3 class="project-title q-mb-md">{{ proyecto.titulo }}</h3>
 
+              <div class="row items-center justify-between q-mb-sm full-width">
+                <q-badge :color="getEstadoColor(proyecto.estado, proyecto)"
+                  :label="getEstadoLabel(proyecto.estado, proyecto)"
+                  class="status-badge-inline" />
+
+                <q-btn label="VER DETALLES" flat color="accent" icon-right="visibility"
+                  @click="verDetalles(proyecto.id)" class="btn-ver-detalles" />
+              </div>
+            </div>
+          </q-card-section>
+
+          <q-card-section>
             <p class="project-description">{{ proyecto.descripcion || 'Sin descripción' }}</p>
 
             <!-- Fechas y responsable -->
@@ -724,11 +729,21 @@ $white: #FFFFFF;
   }
 }
 
-.status-badge {
+.project-card-header {
+  position: relative;
+}
+
+.project-header-column {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.status-badge-inline {
   padding: 6px 14px;
-  border-radius: 30px;
+  border-radius: 8px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);

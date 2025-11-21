@@ -215,7 +215,6 @@ const asignaciones = ref([])
 const searchUser = ref('')
 const loadingUsers = ref(false)
 const loadingAsignaciones = ref(false)
-const objetivo = ref(1) // Valor predeterminado para el objetivo
 
 
 
@@ -287,64 +286,80 @@ const getRolColor = (rolId) => {
   return colors[rolId] || 'grey'
 }
 
-// Abrir diálogo para establecer objetivo con estilo personalizado
+// Abrir diálogo para establecer objetivo con estilo mejorado para móviles
 const promptObjetivo = (user) => {
-  objetivo.value = 1 // Reset a valor por defecto
-
   $q.dialog({
-    title: 'Establecer objetivo',
-    message: `¿Cuántas encuestas debe completar ${user.nombres} ${user.apellidos}?`,
+    title: '<div class="text-h5 text-weight-bold">Establecer objetivo</div>',
+    message: `<div class="q-mb-md">¿Cuántas encuestas debe completar <strong class="text-teal">${user.nombres} ${user.apellidos}</strong>?</div>`,
     prompt: {
-      model: objetivo.value,
+      model: '1',
       type: 'number',
       min: 1,
+      inputmode: 'numeric',
+      outlined: true,
+      dense: false,
+      class: 'text-h4 text-center text-weight-bold mobile-objetivo-input',
+      style: 'font-size: 32px; text-align: center; padding: 20px;'
     },
+    html: true,
     persistent: true,
-    style: 'min-width: 450px; max-width: 95vw;',
-    class: 'objetivo-dialog-custom',
-    html: true, // Permitir HTML en el mensaje
-    dark: false,
+    class: 'objetivo-dialog-enhanced',
+    style: 'min-width: 90vw; max-width: 500px;',
     ok: {
-      color: 'teal',
       label: 'Asignar',
+      color: 'teal',
       unelevated: true,
-      class: 'confirm-btn'
+      size: 'lg',
+      class: 'q-px-xl q-py-md text-weight-bold',
+      style: 'min-height: 50px; font-size: 16px;'
     },
     cancel: {
+      label: 'Cancelar',
       flat: true,
       color: 'grey-7',
-      class: 'cancel-btn'
+      size: 'lg',
+      class: 'q-px-xl q-py-md',
+      style: 'min-height: 50px; font-size: 16px;'
     }
   }).onOk(objetivoValue => {
-    assignUser(user, parseInt(objetivoValue))
+    assignUser(user, parseInt(objetivoValue) || 1)
   })
 }
 
-// Editar objetivo de una asignación existente
+// Editar objetivo de una asignación existente con mejor UX móvil
 const editarObjetivo = (asignacion) => {
   $q.dialog({
-    title: 'Editar objetivo',
-    message: `¿Cuántas encuestas debe completar <span class="text-weight-bold text-purple">${asignacion.usuario.nombres} ${asignacion.usuario.apellidos}</span>?`,
+    title: '<div class="text-h5 text-weight-bold">Editar objetivo</div>',
+    message: `<div class="q-mb-md">¿Cuántas encuestas debe completar <strong class="text-purple">${asignacion.usuario.nombres} ${asignacion.usuario.apellidos}</strong>?</div>`,
     prompt: {
-      model: asignacion.objetivo || 1,
+      model: String(asignacion.objetivo || 1),
       type: 'number',
       min: 1,
+      inputmode: 'numeric',
+      outlined: true,
+      dense: false,
+      class: 'text-h4 text-center text-weight-bold mobile-objetivo-input',
+      style: 'font-size: 32px; text-align: center; padding: 20px;'
     },
-    persistent: true,
-    style: 'min-width: 450px; max-width: 95vw;',
-    class: 'objetivo-dialog-custom',
     html: true,
-    dark: false,
+    persistent: true,
+    class: 'objetivo-dialog-enhanced',
+    style: 'min-width: 90vw; max-width: 500px;',
     ok: {
-      color: 'purple',
       label: 'Actualizar',
+      color: 'purple',
       unelevated: true,
-      class: 'confirm-btn'
+      size: 'lg',
+      class: 'q-px-xl q-py-md text-weight-bold',
+      style: 'min-height: 50px; font-size: 16px;'
     },
     cancel: {
+      label: 'Cancelar',
       flat: true,
       color: 'grey-7',
-      class: 'cancel-btn'
+      size: 'lg',
+      class: 'q-px-xl q-py-md',
+      style: 'min-height: 50px; font-size: 16px;'
     }
   }).onOk(async (nuevoObjetivo) => {
     try {
@@ -353,16 +368,14 @@ const editarObjetivo = (asignacion) => {
         spinnerColor: 'purple'
       })
 
-      // Implementación para actualizar el objetivo de asignación
       const response = await api.put(`/asignaciones/${asignacion.id}`, {
-        objetivo: parseInt(nuevoObjetivo)
+        objetivo: parseInt(nuevoObjetivo) || 1
       })
 
       if (response.data) {
-        // Actualizar en el array local
         const index = asignaciones.value.findIndex(a => a.id === asignacion.id)
         if (index !== -1) {
-          asignaciones.value[index].objetivo = parseInt(nuevoObjetivo)
+          asignaciones.value[index].objetivo = parseInt(nuevoObjetivo) || 1
         }
 
         $q.notify({
@@ -387,35 +400,42 @@ const editarObjetivo = (asignacion) => {
   })
 }
 
-// Manejar autoasignación para académicos
+// Manejar autoasignación para académicos con mejor UX móvil
 const promptSelfAssign = () => {
   if (!auth.user) return
 
-  objetivo.value = 1 // Reset a valor por defecto
-
   $q.dialog({
-    title: 'Autoasignación',
-    message: '¿Cuántas encuestas te gustaría realizar para esta investigación?',
+    title: '<div class="text-h5 text-weight-bold">Autoasignación</div>',
+    message: '<div class="q-mb-md">¿Cuántas encuestas te gustaría realizar para esta investigación?</div>',
     prompt: {
-      model: objetivo.value,
+      model: '1',
       type: 'number',
       min: 1,
+      inputmode: 'numeric',
+      outlined: true,
+      dense: false,
+      class: 'text-h4 text-center text-weight-bold mobile-objetivo-input',
+      style: 'font-size: 32px; text-align: center; padding: 20px;'
     },
-    persistent: true,
-    style: 'min-width: 450px; max-width: 95vw;',
-    class: 'objetivo-dialog-custom',
     html: true,
-    dark: false,
+    persistent: true,
+    class: 'objetivo-dialog-enhanced',
+    style: 'min-width: 90vw; max-width: 500px;',
     ok: {
-      color: 'deep-purple',
       label: 'Confirmar',
+      color: 'deep-purple',
       unelevated: true,
-      class: 'confirm-btn'
+      size: 'lg',
+      class: 'q-px-xl q-py-md text-weight-bold',
+      style: 'min-height: 50px; font-size: 16px;'
     },
     cancel: {
+      label: 'Cancelar',
       flat: true,
       color: 'grey-7',
-      class: 'cancel-btn'
+      size: 'lg',
+      class: 'q-px-xl q-py-md',
+      style: 'min-height: 50px; font-size: 16px;'
     }
   }).onOk(async (objetivoValue) => {
     try {
@@ -431,7 +451,6 @@ const promptSelfAssign = () => {
       })
 
       if (response.data) {
-        // Refrescar lista de asignaciones
         await loadAsignaciones()
 
         $q.notify({
@@ -989,6 +1008,471 @@ onMounted(async () => {
   }
 }
 
+// Estilos para el nuevo diálogo móvil de objetivos
+.objetivo-dialog-mobile {
+  max-width: 500px;
+  width: 95vw;
+  border-radius: 16px;
+  overflow: hidden;
+
+  .dialog-header {
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 100px;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      animation: shine 3s infinite;
+    }
+  }
+
+  .bg-gradient {
+    background: linear-gradient(135deg, var(--purple) 0%, var(--teal) 100%);
+  }
+
+  .bg-gradient-purple {
+    background: linear-gradient(135deg, var(--purple) 0%, #8e44ad 100%);
+  }
+
+  .bg-gradient-deep-purple {
+    background: linear-gradient(135deg, #673AB7 0%, #9C27B0 100%);
+  }
+
+  .objetivo-input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(102, 51, 153, 0.05), rgba(0, 153, 153, 0.05));
+    border-radius: 16px;
+    margin: 16px 0;
+  }
+
+  .control-btn {
+    width: 60px;
+    height: 60px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+
+    &:hover:not(:disabled) {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    &:active:not(:disabled) {
+      transform: scale(0.95);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+    }
+  }
+
+  .objetivo-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 120px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .objetivo-value {
+    font-size: 48px;
+    font-weight: bold;
+    color: var(--purple);
+    line-height: 1;
+    background: linear-gradient(135deg, var(--purple), var(--teal));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .objetivo-label {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .mobile-number-input {
+    .q-field__control {
+      height: 56px;
+      font-size: 18px;
+    }
+
+    input {
+      text-align: center;
+      font-size: 20px;
+      font-weight: 500;
+    }
+  }
+
+  .mobile-btn {
+    min-width: 120px;
+    height: 48px;
+    font-size: 16px;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+
+  .confirm-btn {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Mejoras responsivas adicionales
+@media (max-width: 768px) {
+  .asignacion-card {
+    .header-section {
+      padding: 14px 16px;
+
+      .text-h5 {
+        font-size: 1.15rem;
+        line-height: 1.3;
+      }
+
+      .text-caption {
+        font-size: 0.8rem;
+      }
+
+      .close-btn {
+        padding: 8px;
+      }
+    }
+
+    .content-section {
+      padding: 12px !important;
+      overflow-y: auto;
+    }
+
+    .panel-card {
+      margin-bottom: 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .panel-header {
+      padding: 14px 16px;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+
+      .text-subtitle1 {
+        font-size: 1rem;
+      }
+
+      .search-input {
+        width: 100%;
+        margin-top: 10px;
+
+        input {
+          font-size: 15px;
+        }
+      }
+
+      .refresh-btn {
+        align-self: flex-end;
+        margin-top: 8px;
+        min-width: 44px;
+        min-height: 44px;
+      }
+
+      .badge-count {
+        font-size: 12px;
+        padding: 4px 8px;
+      }
+    }
+
+    .users-list-container {
+      padding: 8px;
+
+      .users-scroll {
+        height: 280px !important;
+      }
+    }
+
+    .empty-state {
+      padding: 32px 16px;
+
+      .q-icon {
+        font-size: 56px !important;
+      }
+
+      .text-subtitle1 {
+        font-size: 15px;
+      }
+
+      .text-caption {
+        font-size: 13px;
+      }
+    }
+
+    // Mejorar items de usuario
+    .user-item,
+    .asignacion-item {
+      padding: 14px 12px;
+      border-radius: 8px;
+      margin-bottom: 4px;
+
+      .q-avatar {
+        width: 42px;
+        height: 42px;
+        font-size: 16px;
+      }
+
+      .q-item-label {
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .user-info,
+      .asignacion-info {
+        font-size: 12px;
+        margin-top: 4px;
+      }
+
+      .q-badge {
+        font-size: 10px;
+        padding: 2px 6px;
+      }
+
+      .q-btn {
+        min-width: 48px;
+        min-height: 48px;
+        border-radius: 10px;
+
+        .q-icon {
+          font-size: 20px;
+        }
+      }
+
+      .add-button,
+      .edit-button,
+      .remove-button {
+        width: 48px;
+        height: 48px;
+      }
+    }
+
+    .action-buttons {
+      flex-direction: row;
+      gap: 8px;
+      padding: 12px;
+
+      .q-btn {
+        flex: 1;
+        margin-bottom: 0;
+        min-height: 48px;
+        font-size: 14px;
+      }
+    }
+
+    .self-assign-section {
+      padding: 12px;
+
+      .self-assign-banner {
+        padding: 14px;
+        border-radius: 10px;
+
+        .text-subtitle1 {
+          font-size: 15px;
+        }
+
+        .text-caption {
+          font-size: 12px;
+        }
+
+        .self-assign-btn {
+          min-height: 42px;
+          font-size: 14px;
+          padding: 0 20px;
+        }
+
+        .already-assigned {
+          font-size: 13px;
+          padding: 8px 14px;
+        }
+      }
+    }
+
+    .footer-actions {
+      padding: 14px 16px;
+
+      .close-action-btn {
+        min-height: 50px;
+        font-size: 16px;
+        padding: 0 28px;
+        border-radius: 10px;
+      }
+    }
+  }
+
+  // Ajustes para el scroll area
+  .q-scrollarea__content {
+    padding-right: 4px;
+  }
+
+  // Mejorar tooltips en móvil
+  .q-tooltip {
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+}
+
+// Estilos para móviles pequeños
+@media (max-width: 480px) {
+  .asignacion-card {
+    .header-section {
+      padding: 12px;
+
+      .text-h5 {
+        font-size: 1.05rem;
+      }
+
+      .text-caption {
+        font-size: 0.75rem;
+      }
+    }
+
+    .content-section {
+      padding: 8px !important;
+    }
+
+    .panel-header {
+      padding: 12px;
+
+      .text-subtitle1 {
+        font-size: 0.95rem;
+      }
+
+      .search-input {
+        input {
+          font-size: 14px;
+        }
+      }
+    }
+
+    .users-list-container {
+      padding: 6px;
+
+      .users-scroll {
+        height: 250px !important;
+      }
+    }
+
+    .user-item,
+    .asignacion-item {
+      padding: 12px 10px;
+
+      .q-avatar {
+        width: 38px;
+        height: 38px;
+        font-size: 14px;
+      }
+
+      .q-item-label {
+        font-size: 13px;
+      }
+
+      .user-info,
+      .asignacion-info {
+        font-size: 11px;
+      }
+
+      .q-btn {
+        min-width: 44px;
+        min-height: 44px;
+
+        .q-icon {
+          font-size: 18px;
+        }
+      }
+    }
+
+    .self-assign-section {
+      padding: 10px;
+
+      .self-assign-banner {
+        padding: 12px;
+
+        .text-subtitle1 {
+          font-size: 14px;
+        }
+
+        .text-caption {
+          font-size: 11px;
+        }
+
+        .self-assign-btn {
+          min-height: 40px;
+          font-size: 13px;
+          padding: 0 16px;
+        }
+      }
+    }
+
+    .footer-actions {
+      padding: 12px;
+
+      .close-action-btn {
+        min-height: 48px;
+        font-size: 15px;
+        padding: 0 24px;
+      }
+    }
+  }
+}
+
+// Mejoras para tablets en orientación landscape
+@media (min-width: 769px) and (max-width: 1024px) {
+  .asignacion-card {
+    .users-list-container {
+      .users-scroll {
+        height: calc(100vh - 350px) !important;
+      }
+    }
+
+    .user-item,
+    .asignacion-item {
+      padding: 12px 14px;
+
+      .q-btn {
+        min-width: 40px;
+        min-height: 40px;
+      }
+    }
+  }
+}
+
+.bg-deep-purple {
+  background-color: #673AB7 !important;
+}
+
+.text-deep-purple {
+  color: #673AB7 !important;
+}
+
 @keyframes modalEnter {
   from {
     opacity: 0;
@@ -1191,4 +1675,260 @@ onMounted(async () => {
 .text-deep-purple {
   color: #673AB7 !important;
 }
+
+// Estilos mejorados para los diálogos de objetivo
+.objetivo-dialog-enhanced {
+  .q-dialog__inner {
+    padding: 16px;
+  }
+
+  .q-card {
+    border-radius: 20px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+  }
+
+  .q-card__section {
+    padding: 28px 24px;
+  }
+
+  // Título del diálogo
+  .q-dialog__title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 8px;
+  }
+
+  // Mensaje del diálogo
+  .q-dialog__message {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #555;
+    margin-bottom: 24px;
+  }
+
+  // Input grande y centrado para móviles
+  .q-field {
+    margin: 24px 0;
+
+    .q-field__control {
+      height: auto;
+      min-height: 90px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+      border: 3px solid #e0e0e0;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: #00bcd4;
+        box-shadow: 0 4px 12px rgba(0, 188, 212, 0.15);
+      }
+
+      &.q-field__control--focused {
+        border-color: #00bcd4;
+        box-shadow: 0 6px 20px rgba(0, 188, 212, 0.25);
+        background: #ffffff;
+      }
+    }
+
+    input {
+      font-size: 48px !important;
+      font-weight: 800 !important;
+      text-align: center !important;
+      color: #00bcd4 !important;
+      padding: 24px 16px !important;
+      letter-spacing: 2px;
+    }
+
+    .q-field__label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #777;
+    }
+  }
+
+  // Botones de acción
+  .q-card__actions {
+    padding: 20px 24px 24px;
+    gap: 12px;
+    display: flex;
+    justify-content: flex-end;
+
+    .q-btn {
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      min-height: 54px !important;
+      min-width: 120px !important;
+      border-radius: 12px !important;
+      text-transform: none !important;
+      letter-spacing: 0.5px;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+
+      // Botón de confirmar
+      &.q-btn--unelevated {
+        background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+
+        &:hover {
+          background: linear-gradient(135deg, #00acc1 0%, #00838f 100%);
+        }
+      }
+
+      // Botón de cancelar
+      &.q-btn--flat {
+        background: #f5f5f5;
+        color: #666;
+
+        &:hover {
+          background: #eeeeee;
+          color: #444;
+        }
+      }
+    }
+  }
+}
+
+// Estilos responsivos para tablets
+@media (max-width: 1024px) {
+  .objetivo-dialog-enhanced {
+    .q-dialog__inner {
+      padding: 12px;
+    }
+
+    .q-card__section {
+      padding: 24px 20px;
+    }
+
+    .q-field {
+      input {
+        font-size: 42px !important;
+      }
+    }
+
+    .q-card__actions {
+      .q-btn {
+        min-width: 110px !important;
+        font-size: 15px !important;
+      }
+    }
+  }
+}
+
+// Estilos responsivos para móviles
+@media (max-width: 768px) {
+  .objetivo-dialog-enhanced {
+    .q-dialog__inner {
+      padding: 8px;
+    }
+
+    .q-card {
+      border-radius: 16px;
+      margin: 0;
+    }
+
+    .q-card__section {
+      padding: 20px 16px;
+    }
+
+    .q-dialog__title {
+      font-size: 20px;
+    }
+
+    .q-dialog__message {
+      font-size: 15px;
+      margin-bottom: 20px;
+    }
+
+    .q-field {
+      margin: 20px 0;
+
+      .q-field__control {
+        min-height: 100px;
+        border-radius: 14px;
+        border-width: 2px;
+      }
+
+      input {
+        font-size: 56px !important;
+        padding: 28px 12px !important;
+      }
+    }
+
+    .q-card__actions {
+      padding: 16px;
+      gap: 10px;
+      flex-direction: column-reverse;
+
+      .q-btn {
+        width: 100% !important;
+        min-width: 100% !important;
+        min-height: 56px !important;
+        font-size: 17px !important;
+        border-radius: 10px !important;
+      }
+    }
+  }
+}
+
+// Estilos responsivos para móviles pequeños
+@media (max-width: 480px) {
+  .objetivo-dialog-enhanced {
+    .q-card__section {
+      padding: 16px 12px;
+    }
+
+    .q-dialog__title {
+      font-size: 18px;
+    }
+
+    .q-dialog__message {
+      font-size: 14px;
+    }
+
+    .q-field {
+      .q-field__control {
+        min-height: 95px;
+      }
+
+      input {
+        font-size: 52px !important;
+      }
+    }
+
+    .q-card__actions {
+      .q-btn {
+        min-height: 52px !important;
+        font-size: 16px !important;
+      }
+    }
+  }
+}
+
+// Animación de entrada
+.objetivo-dialog-enhanced {
+  animation: dialogFadeIn 0.3s ease-out;
+}
+
+@keyframes dialogFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+
 </style>
