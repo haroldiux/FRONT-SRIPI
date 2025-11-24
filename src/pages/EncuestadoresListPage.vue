@@ -331,7 +331,6 @@ import { api } from 'boot/axios';
 import { useQuasar, scroll } from 'quasar';
 import { date } from 'quasar';
 import AOS from 'aos';
-import 'particles.js/particles';
 
 const { getScrollTarget, setVerticalScrollPosition } = scroll;
 
@@ -447,9 +446,8 @@ export default defineComponent({
       });
     };
 
-    // Inicializar partículas en el header (comprobando global y haciendo import dinámico como fallback)
+    // Inicializar partículas en el header
     const initHeaderParticles = async () => {
-      // helper que ejecuta la inicialización si tenemos una referencia válida a particlesJS
       const runParticles = (pjs) => {
         if (!pjs) return;
         try {
@@ -505,27 +503,22 @@ export default defineComponent({
             retina_detect: true
           });
         } catch (e) {
-          // no bloquear la app si la inicialización falla
           console.warn('particles.js initialization failed:', e);
         }
       };
 
       try {
-        // Primero intentar usar la versión global si existe
         if (typeof window !== 'undefined' && typeof window.particlesJS !== 'undefined') {
           runParticles(window.particlesJS);
           return;
         }
 
-        // Intentar import dinámico (algunos bundlers exponen la función como default o named export)
-        const mod = await import(/* webpackChunkName: "particles" */ 'particles.js/particles').catch(() => null);
+        const mod = await import('particles.js').catch(() => null);
         const pjs = mod && (mod.particlesJS || mod.default || mod);
         if (typeof pjs !== 'undefined') {
           runParticles(pjs);
           return;
         }
-
-        // Si llegamos aquí, no hay particlesJS disponible; no hacemos nada
       } catch (err) {
         console.warn('Error cargando particles.js:', err);
       }
