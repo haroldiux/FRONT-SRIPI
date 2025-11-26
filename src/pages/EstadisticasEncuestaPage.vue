@@ -34,8 +34,8 @@
             </q-select>
           </div>
 
-          <!-- Selector de aplicador (solo para admin/supervisor) -->
-          <div v-if="isAdmin || isSupervisor" class="col-12 col-md">
+          <!-- Selector de aplicador (para admin/supervisor/academico) -->
+          <div v-if="isAdmin || isSupervisor || isAcademico" class="col-12 col-md">
             <q-select v-model="aplicadorSeleccionado" :options="opcionesAplicadores" outlined dense
               label="Filtrar por aplicador" emit-value map-options clearable @update:model-value="filtrarPorAplicador"
               :disable="!encuestaSeleccionada" class="filter-select">
@@ -208,6 +208,7 @@ export default defineComponent({
     const getSubtitleByRole = computed(() => {
       if (isAdmin.value) return 'Visualiza y analiza los datos de todas las encuestas';
       if (isSupervisor.value) return 'Analiza los resultados de las encuestas de tus proyectos';
+      if (isAcademico.value) return 'Analiza los resultados completos de tus encuestas asignadas';
       return 'Visualiza estadísticas de tus encuestas realizadas';
     });
 
@@ -375,8 +376,9 @@ export default defineComponent({
         // 3. Cargar respuestas
         const respuestasParams = { encuesta_id: encuestaSeleccionada.value };
 
-        // Para encuestadores y académicos, solo ver sus propios envíos
-        if (isEncuestador.value || isAcademico.value) {
+        // Para encuestadores, solo ver sus propios envíos
+        // Los académicos ven todos los datos de la encuesta
+        if (isEncuestador.value) {
           respuestasParams.aplicador_id = auth.user.id;
         }
 
@@ -389,8 +391,8 @@ export default defineComponent({
         });
         asignaciones.value = asignacionesResponse.data.data || [];
 
-        // 5. Cargar opciones de aplicadores (para admins y supervisores)
-        if (isAdmin.value || isSupervisor.value) {
+        // 5. Cargar opciones de aplicadores (para admins, supervisores y académicos)
+        if (isAdmin.value || isSupervisor.value || isAcademico.value) {
           await cargarOpcionesAplicadores();
         }
 
