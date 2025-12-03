@@ -145,13 +145,28 @@
                   {{ getTotalRespuestas(pregunta) }} respuestas
                 </div>
 
-                <!-- Selector de tipo de gráfico (solo para tipos compatibles) -->
-                <div v-if="tieneOpcionesMultiples(pregunta)">
-                  <q-btn-toggle v-model="tiposGrafico[pregunta.id]" :options="[
-                    { label: 'Barras', value: 'bar', icon: 'bar_chart' },
-                    { label: 'Pastel', value: 'pie', icon: 'pie_chart' }
-                  ]" color="primary" text-color="white" toggle-color="accent"
-                    @update:model-value="actualizarGrafico(pregunta.id)" size="sm" dense rounded unelevated />
+                <div class="row q-gutter-sm items-center">
+                  <!-- Selector de tipo de gráfico (solo para tipos compatibles) -->
+                  <div v-if="tieneOpcionesMultiples(pregunta)">
+                    <q-btn-toggle v-model="tiposGrafico[pregunta.id]" :options="[
+                      { label: 'Barras', value: 'bar', icon: 'bar_chart' },
+                      { label: 'Pastel', value: 'pie', icon: 'pie_chart' }
+                    ]" color="primary" text-color="white" toggle-color="accent"
+                      @update:model-value="actualizarGrafico(pregunta.id)" size="sm" dense rounded unelevated />
+                  </div>
+
+                  <!-- Botón de descarga -->
+                  <q-btn
+                    icon="download"
+                    color="secondary"
+                    size="sm"
+                    round
+                    flat
+                    @click="descargarGraficoComoImagen(pregunta)"
+                    :loading="descargando[pregunta.id]"
+                  >
+                    <q-tooltip>Descargar gráfico como imagen PNG</q-tooltip>
+                  </q-btn>
                 </div>
               </div>
 
@@ -185,6 +200,7 @@ export default defineComponent({
     // Referencias a los gráficos
     const graficos = ref({});
     const tiposGrafico = ref({});
+    const descargando = ref({}); // Estado de descarga por pregunta
 
     // Variables reactivas
     const cargando = ref(false);
@@ -904,8 +920,127 @@ export default defineComponent({
       return colors.slice(0, count);
     }
 
+    // Descargar gráfico como imagen PNG
+    async function descargarGraficoComoImagen(pregunta) {
+      const preguntaId = pregunta.id;
+      descargando.value[preguntaId] = true;
+
+      try {
+        const containerId = `grafico-${preguntaId}`;
+        const container = document.getElementById(containerId);
+
+        if (!container) {
+          throw new Error('Contenedor del gráfico no encontrado');
+        }
+
+        const svgElement = container.querySelector('svg');
+        if (!svgElement) {
+          throw new Error('Gráfico SVG no encontrado');
+        }
+
+        // Clonar el SVG para no afectar el original
+        const svgClone = svgElement.cloneNode(true);
+
+        // Obtener dimensiones del SVG
+        const width = svgElement.clientWidth || 800;
+        const height = svgElement.clientHeight || 400;
+
+        // Configurar el SVG clonado con fondo blanco
+        svgClone.setAttribute('width', width);
+        svgClone.setAttribute('height', height);
+        svgClone.style.backgroundColor = 'white';
+
+        // Añadir fondo blanco al SVG
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('width', '100%');
+        rect.setAttribute('height', '100%');
+        rect.setAttribute('fill', 'white');
+        svgClone.insertBefore(rect, svgClone.firstChild);
+
+        // Serializar el SVG
+        const serializer = new XMLSerializer();
+        const svgString = serializer.serializeToString(svgClone);
+
+        // Crear un blob del SVG
+        const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(svgBlob);
+
+        // Crear una imagen para convertir a PNG
+        const img = new Image();
+        img.onload = () => {
+          // Crear canvas con alta resolución (2x para mejor calidad)
+          const scale = 2;
+          const canvas = document.createElement('canvas');
+          canvas.width = width * scale;
+          canvas.height = height * scale;
+          const ctx = canvas.getContext('2d');
+
+          // Escalar el contexto para alta resolución
+          ctx.scale(scale, scale);
+
+          // Dibujar fondo blanco
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, width, height);
+
+          // Dibujar la imagen SVG
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convertir canvas a blob PNG
+          canvas.toBlob((blob) => {
+            // Crear nombre de archivo descriptivo
+            const nombreEncuesta = infoEncuesta.value.titulo || 'encuesta';
+            const nombrePregunta = pregunta.enunciado
+              .substring(0, 50)
+              .replace(/[^a-z0-9]/gi, '_')
+              .toLowerCase();
+            const timestamp = new Date().toISOString().split('T')[0];
+            const filename = `${nombreEncuesta}_${nombrePregunta}_${timestamp}.png`;
+
+            // Crear enlace de descarga
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            // Limpiar URLs
+            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(downloadUrl);
+
+            // Notificar éxito
+            $q.notify({
+              type: 'positive',
+              message: 'Gráfico descargado exitosamente',
+              caption: filename,
+              position: 'top',
+              timeout: 2000
+            });
+
+            descargando.value[preguntaId] = false;
+          }, 'image/png', 1.0);
+        };
+
+        img.onerror = () => {
+          throw new Error('Error al cargar la imagen SVG');
+        };
+
+        img.src = url;
+
+      } catch (error) {
+        console.error('Error al descargar gráfico:', error);
+        $q.notify({
+          type: 'negative',
+          message: 'Error al descargar el gráfico',
+          caption: error.message,
+          position: 'top'
+        });
+        descargando.value[preguntaId] = false;
+      }
+    }
+
     // Exportar datos a Excel
-    // Modifica esta parte de tu código
     async function exportarDatos() {
       if (!encuestaSeleccionada.value || !datosDisponibles.value) return;
 
@@ -1056,6 +1191,8 @@ export default defineComponent({
       objetivoAplicador,
       enviosAplicador,
       porcentajeCompletadoAplicador,
+      descargando,
+      descargarGraficoComoImagen,
 
       cargarEncuestasDisponibles,
       cargarDatosEncuesta,
