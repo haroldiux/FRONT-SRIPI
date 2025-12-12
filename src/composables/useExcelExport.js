@@ -80,6 +80,32 @@ export function useExcelExport() {
                   row.push('');
                 }
                 break;
+              case 'matrix':
+                if (respuesta.valor_texto) {
+                  try {
+                    const parsed = JSON.parse(respuesta.valor_texto);
+                    // Mapear IDs a texto
+                    // pregunta.configuracion puede ser string si no se casteó en el frontend, intentamos parsear
+                    let config = pregunta.configuracion;
+                    if (typeof config === 'string') {
+                        try { config = JSON.parse(config); } catch (error) { console.warn(error); }
+                    }
+
+                    const formatted = Object.entries(parsed).map(([rowId, colId]) => {
+                       const row = config?.filas?.find(f => f.id === rowId)?.texto || 'Fila desconocida';
+                       const col = pregunta.opciones?.find(o => o.id === colId)?.texto || 'Opción desconocida';
+                       return `${row}: ${col}`;
+                    }).join('; ');
+
+                    row.push(formatted);
+                  } catch (error) {
+                    console.warn(error);
+                    row.push(respuesta.valor_texto || '');
+                  }
+                } else {
+                  row.push('');
+                }
+                break;
               case 'date':
                 if (respuesta.valor_texto) {
                   try {

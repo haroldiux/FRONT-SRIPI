@@ -231,6 +231,81 @@
                                 <q-input v-model="preg.previewValue" type="number" dense outlined placeholder="0"
                                   class="custom-input" />
                               </div>
+
+                              <!-- Matriz (Cuadrícula) - Editor Visual -->
+                              <div v-else-if="preg.tipo === 'matrix'" class="q-mt-md">
+                                <div class="text-subtitle2 q-mb-sm text-grey-8">Configuración de la Matriz:</div>
+
+                                <div class="matrix-editor-container bg-grey-1 rounded-borders q-pa-sm"
+                                  style="overflow-x: auto;">
+                                  <table class="matrix-editor-table">
+                                    <thead>
+                                      <tr>
+                                        <th class="matrix-corner-cell">
+                                          <q-input v-model="preg.configuracion.encabezadoFilas" dense borderless
+                                            class="col-input text-weight-bold" placeholder="Encabezado">
+                                            <q-tooltip>Título para las filas (opcional)</q-tooltip>
+                                          </q-input>
+                                        </th>
+                                        <!-- Columnas (Opciones) -->
+                                        <th v-for="(col, colIndex) in preg.opciones" :key="col.id"
+                                          class="matrix-col-header">
+                                          <div class="row items-center no-wrap">
+                                            <q-input v-model="col.texto" dense borderless
+                                              class="col-input text-center full-width" placeholder="Columna"
+                                              :rules="[val => !!val || 'Requerido']" />
+                                            <q-btn flat round dense color="negative" icon="close" size="xs"
+                                              class="q-ml-xs delete-col-btn" @click="removeOpcion(si, qi, colIndex)"
+                                              :disable="preg.opciones.length <= 2">
+                                              <q-tooltip>Eliminar columna</q-tooltip>
+                                            </q-btn>
+                                          </div>
+                                        </th>
+                                        <th class="matrix-add-col-cell">
+                                          <q-btn flat round dense color="teal" icon="add" size="sm"
+                                            @click="addOpcion(si, qi)">
+                                            <q-tooltip>Agregar columna</q-tooltip>
+                                          </q-btn>
+                                        </th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      <!-- Filas -->
+                                      <tr v-for="(fila, rowIndex) in preg.configuracion?.filas" :key="fila.id">
+                                        <td class="matrix-row-header">
+                                          <div class="row items-center no-wrap">
+                                            <q-input v-model="fila.texto" dense borderless class="row-input full-width"
+                                              placeholder="Fila" :rules="[val => !!val || 'Requerido']" />
+                                            <q-btn flat round dense color="negative" icon="close" size="xs"
+                                              class="q-ml-xs delete-row-btn" @click="removeFila(si, qi, rowIndex)"
+                                              :disable="preg.configuracion.filas.length <= 1">
+                                              <q-tooltip>Eliminar fila</q-tooltip>
+                                            </q-btn>
+                                          </div>
+                                        </td>
+                                        <!-- Celdas de intersección (Visualización) -->
+                                        <td v-for="col in preg.opciones" :key="col.id" class="text-center matrix-cell">
+                                          <q-radio :model-value="null" disable dense />
+                                        </td>
+                                        <td></td>
+                                      </tr>
+                                      <!-- Botón agregar fila -->
+                                      <tr>
+                                        <td class="text-center q-pa-sm">
+                                          <q-btn outline dense no-caps color="teal" icon="add" label="Agregar Fila"
+                                            size="sm" class="full-width" @click="addFila(si, qi)" />
+                                        </td>
+                                        <td :colspan="preg.opciones.length + 1"></td>
+                                      </tr>
+                                    </tbody>
+                                  </table>
+                                </div>
+
+                                <div class="text-caption text-grey-6 q-mt-xs">
+                                  <q-icon name="info" /> Edite los encabezados de filas y columnas directamente en la
+                                  tabla.
+                                </div>
+                              </div>
                             </q-card-section>
                           </div>
                         </div>
@@ -332,6 +407,29 @@
                         </q-icon>
                       </template>
                     </q-input>
+                  </div>
+
+                  <!-- Matriz (Cuadrícula) -->
+                  <div v-else-if="pregunta.tipo === 'matrix'" class="q-mt-md overflow-auto">
+                    <table class="matrix-table full-width">
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th v-for="col in pregunta.opciones" :key="col.id" class="text-center q-pa-sm bg-grey-2">
+                            {{ col.texto }}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(fila, fi) in pregunta.configuracion?.filas" :key="fila.id"
+                          :class="fi % 2 === 0 ? 'bg-white' : 'bg-grey-1'">
+                          <td class="q-pa-sm text-weight-medium">{{ fila.texto }}</td>
+                          <td v-for="col in pregunta.opciones" :key="col.id" class="text-center q-pa-sm">
+                            <q-radio v-model="pregunta.previewValue[fila.id]" :val="col.id" color="teal" dense />
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               </div>
@@ -515,7 +613,8 @@ function mapPreguntas(preguntasApi) {
       previewValue: '',
       opciones: opciones,
       min: min,
-      max: max
+      max: max,
+      configuracion: preg.configuracion ? (typeof preg.configuracion === 'string' ? JSON.parse(preg.configuracion) : preg.configuracion) : null
     }
   })
 }
@@ -596,7 +695,8 @@ const tiposPreguntas = [
   { label: 'Opción múltiple', value: 'single' },
   { label: 'Casillas', value: 'multi' },
   { label: 'Escala', value: 'scale' },
-  { label: 'Fecha', value: 'date' }
+  { label: 'Fecha', value: 'date' },
+  { label: 'Cuadrícula (Matriz)', value: 'matrix' }
 ]
 
 // Estado inicial del formulario
@@ -735,8 +835,10 @@ function moveQuestion(sectionIndex, questionIndex, direction) {
 
 // FUNCIONES PARA TIPOS DE PREGUNTAS
 function typeChanged(sectionIndex, questionIndex, value) {
+  console.log('typeChanged called:', { sectionIndex, questionIndex, value })
   const question = formData.value.secciones[sectionIndex].preguntas[questionIndex]
   question.tipo = value
+  console.log('Question after tipo change:', question)
 
   if (['single', 'multi'].includes(value)) {
     // Inicializar opciones para selección múltiple
@@ -761,11 +863,30 @@ function typeChanged(sectionIndex, questionIndex, value) {
     // Valor por defecto para escala
     question.previewValue = question.min
   }
+  else if (value === 'matrix') {
+    // Inicializar configuración para matriz
+    question.configuracion = {
+      filas: [
+        { id: uid(), texto: 'Fila 1' },
+        { id: uid(), texto: 'Fila 2' }
+      ]
+    }
+    // Inicializar columnas (usando opciones)
+    question.opciones = [
+      { id: uid(), texto: 'Columna 1', valor: null },
+      { id: uid(), texto: 'Columna 2', valor: null }
+    ]
+    // Borrar propiedades de escala
+    question.min = null
+    question.max = null
+    question.previewValue = {} // Objeto para respuestas { filaId: opcionId }
+  }
   else {
-    // Limpiar opciones/escala para otros tipos
+    // Limpiar opciones/escala/configuracion para otros tipos
     question.opciones = []
     question.min = null
     question.max = null
+    question.configuracion = null
 
     // Valor por defecto según tipo
     question.previewValue = value === 'number' ? 0 : ''
@@ -773,6 +894,33 @@ function typeChanged(sectionIndex, questionIndex, value) {
 
   // Actualizar animaciones después de cambiar tipo
 
+}
+
+// FUNCIONES PARA FILAS (MATRIZ)
+function addFila(sectionIndex, questionIndex) {
+  const question = formData.value.secciones[sectionIndex].preguntas[questionIndex]
+  if (!question.configuracion) question.configuracion = { filas: [] }
+  if (!question.configuracion.filas) question.configuracion.filas = []
+
+  question.configuracion.filas.push({
+    id: uid(),
+    texto: `Fila ${question.configuracion.filas.length + 1}`
+  })
+}
+
+function removeFila(sectionIndex, questionIndex, rowIndex) {
+  const question = formData.value.secciones[sectionIndex].preguntas[questionIndex]
+  if (question.configuracion?.filas?.length <= 1) {
+    $q.notify({
+      type: 'warning',
+      message: 'La matriz debe tener al menos una fila',
+      position: 'top',
+      color: 'teal',
+      icon: 'warning'
+    })
+    return
+  }
+  question.configuracion.filas.splice(rowIndex, 1)
 }
 
 // FUNCIONES PARA OPCIONES
@@ -938,7 +1086,8 @@ function buildEncuestaPayload() {
         orden: pregIndex + 1, // Asignar orden basado en el índice
         min: pregunta.tipo === 'scale' ? pregunta.min : null,
         max: pregunta.tipo === 'scale' ? pregunta.max : null,
-        opciones: ['single', 'multi'].includes(pregunta.tipo)
+        configuracion: pregunta.tipo === 'matrix' ? pregunta.configuracion : null,
+        opciones: ['single', 'multi', 'matrix'].includes(pregunta.tipo)
           ? pregunta.opciones.map((opcion, optIndex) => ({
             texto: opcion.texto.trim(),
             valor: opcion.valor,
@@ -959,7 +1108,8 @@ function mapTipoToBackend(tipo) {
     'single': 'single',
     'multi': 'multi',
     'scale': 'scale',
-    'date': 'date'
+    'date': 'date',
+    'matrix': 'matrix'
   }
   return mapping[tipo] || 'text'
 }
@@ -1414,5 +1564,78 @@ function resetForm() {
 .q-card__actions .q-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para la tabla matriz */
+.matrix-table {
+  border-collapse: collapse;
+  min-width: 600px;
+  /* Forzar scroll en pantallas pequeñas */
+}
+
+.matrix-table th,
+.matrix-table td {
+  border: 1px solid #e0e0e0;
+}
+
+.matrix-editor-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  min-width: 600px;
+}
+
+.matrix-editor-table th,
+.matrix-editor-table td {
+  padding: 4px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.matrix-col-header {
+  min-width: 150px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.matrix-row-header {
+  min-width: 200px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.matrix-corner-cell {
+  width: 200px;
+}
+
+.matrix-add-col-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.col-input :deep(.q-field__control),
+.row-input :deep(.q-field__control) {
+  height: 32px;
+  min-height: 32px;
+}
+
+.col-input :deep(.q-field__native),
+.row-input :deep(.q-field__native) {
+  padding: 4px 0;
+  font-weight: 500;
+}
+
+.delete-col-btn,
+.delete-row-btn {
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.delete-col-btn:hover,
+.delete-row-btn:hover {
+  opacity: 1;
+}
+
+.matrix-cell {
+  border-left: 1px solid #f0f0f0;
 }
 </style>

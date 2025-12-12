@@ -156,15 +156,8 @@
                   </div>
 
                   <!-- Botón de descarga -->
-                  <q-btn
-                    icon="download"
-                    color="secondary"
-                    size="sm"
-                    round
-                    flat
-                    @click="descargarGraficoComoImagen(pregunta)"
-                    :loading="descargando[pregunta.id]"
-                  >
+                  <q-btn icon="download" color="secondary" size="sm" round flat
+                    @click="descargarGraficoComoImagen(pregunta)" :loading="descargando[pregunta.id]">
                     <q-tooltip>Descargar gráfico como imagen PNG</q-tooltip>
                   </q-btn>
                 </div>
@@ -292,7 +285,7 @@ export default defineComponent({
     // Preguntas que pueden visualizarse con gráficos
     const preguntasConGraficos = computed(() => {
       return preguntas.value.filter(p =>
-        ['text', 'number', 'single', 'multi', 'scale', 'date'].includes(p.tipo)
+        ['text', 'number', 'single', 'multi', 'scale', 'date', 'matrix'].includes(p.tipo)
       );
     });
 
@@ -311,7 +304,8 @@ export default defineComponent({
         'multiple': 'check_box',
         'checkbox': 'check_box_outline_blank',
         'scale': 'linear_scale',
-        'date': 'calendar_today'
+        'date': 'calendar_today',
+        'matrix': 'grid_on'
       };
       return iconos[tipo] || 'help';
     }
@@ -586,6 +580,187 @@ export default defineComponent({
             label: value.toString(),
             value: scaleValues[value]
           }));
+          break;
+        }
+
+        case 'matrix': {
+          // Parsear configuración de la matriz
+          let matrixConfig = pregunta.configuracion;
+          if (typeof matrixConfig === 'string') {
+            try {
+              matrixConfig = JSON.parse(matrixConfig);
+            } catch (e) {
+              console.error('Error parsing matrix config', e);
+              matrixConfig = { filas: [] };
+            }
+          }
+
+          if (!matrixConfig || !matrixConfig.filas || matrixConfig.filas.length === 0) {
+            const noDataDiv = document.createElement('div');
+            noDataDiv.className = 'text-center q-py-md';
+            noDataDiv.innerHTML = '<p class="text-grey">Configuración de matriz inválida</p>';
+            container.appendChild(noDataDiv);
+            return;
+          }
+
+          // Inicializar contadores: { filaId: { opcionId: count } }
+          const counts = {};
+          matrixConfig.filas.forEach(fila => {
+            counts[fila.id] = {};
+            pregunta.opciones.forEach(opcion => {
+              counts[fila.id][opcion.id] = 0;
+            });
+          });
+
+          // Procesar respuestas
+          respuestasPregunta.forEach(respuesta => {
+            let valores = respuesta.valor_texto;
+            if (typeof valores === 'string') {
+              try {
+                valores = JSON.parse(valores);
+              } catch {
+                return; // Ignorar respuestas mal formadas
+              }
+            }
+
+            if (valores) {
+              Object.entries(valores).forEach(([filaId, opcionId]) => {
+                if (counts[filaId] && counts[filaId][opcionId] !== undefined) {
+                  counts[filaId][opcionId]++;
+                }
+              });
+            }
+          });
+
+          // Preparar datos para D3 (Stacked Bar Chart)
+          // Cada elemento del array representa una fila de la matriz
+          data = matrixConfig.filas.map(fila => {
+            const rowData = { label: fila.texto };
+            pregunta.opciones.forEach(opcion => {
+              rowData[opcion.texto] = counts[fila.id][opcion.id];
+            });
+            return rowData;
+          });
+
+          // Definir las claves (columnas) para el apilamiento
+          const keys = pregunta.opciones.map(o => o.texto);
+
+          // Configuración del gráfico
+          const containerWidth = container.clientWidth || 600; // Fallback si es 0
+          const margin = { top: 20, right: 120, bottom: 40, left: 100 };
+          const width = Math.max(containerWidth - margin.left - margin.right, 100); // Asegurar ancho positivo
+          const height = 350 - margin.top - margin.bottom;
+
+          const svg = d3.select(container)
+            .append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+
+          // Escalas
+          const x = d3.scaleBand()
+            .domain(data.map(d => d.label))
+            .range([0, width])
+            .padding(0.2);
+
+          const maxY = d3.max(data, d => {
+            return keys.reduce((acc, key) => acc + (d[key] || 0), 0);
+          }) || 0;
+
+          const y = d3.scaleLinear()
+            .domain([0, Math.max(maxY, 1)]) // Asegurar que el dominio no sea [0, 0]
+            .nice()
+            .range([height, 0]);
+
+          const color = d3.scaleOrdinal()
+            .domain(keys)
+            .range(d3.schemeTableau10); // Paleta de colores distintiva
+
+          // Ejes
+          svg.append('g')
+            .attr('transform', `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-.8em')
+            .attr('dy', '.15em')
+            .attr('transform', 'rotate(-15)');
+
+          svg.append('g')
+            .call(d3.axisLeft(y).ticks(null, 's'));
+
+          // Generar datos apilados
+          const stackedData = d3.stack()
+            .keys(keys)(data);
+
+          // Tooltip
+          const tooltip = d3.select('body').append('div')
+            .attr('class', 'd3-tooltip')
+            .style('opacity', 0)
+            .style('position', 'absolute')
+            .style('background', 'rgba(0,0,0,0.8)')
+            .style('color', 'white')
+            .style('padding', '8px')
+            .style('border-radius', '4px')
+            .style('pointer-events', 'none')
+            .style('font-size', '12px')
+            .style('z-index', '9999');
+
+          // Barras
+          svg.append('g')
+            .selectAll('g')
+            .data(stackedData)
+            .join('g')
+            .attr('fill', d => color(d.key))
+            .selectAll('rect')
+            .data(d => d)
+            .join('rect')
+            .attr('x', d => x(d.data.label))
+            .attr('y', d => y(d[1]))
+            .attr('height', d => y(d[0]) - y(d[1]))
+            .attr('width', x.bandwidth())
+            .on('mouseover', function (event, d) {
+              const subgrupoName = d3.select(this.parentNode).datum().key;
+              const subgrupoValue = d.data[subgrupoName];
+
+              d3.select(this).style('opacity', 0.8);
+
+              tooltip.transition().duration(200).style('opacity', 0.9);
+              tooltip.html(`
+                <strong>${d.data.label}</strong><br/>
+                ${subgrupoName}: ${subgrupoValue}
+              `)
+                .style('left', (event.pageX + 10) + 'px')
+                .style('top', (event.pageY - 28) + 'px');
+            })
+            .on('mouseout', function () {
+              d3.select(this).style('opacity', 1);
+              tooltip.transition().duration(500).style('opacity', 0);
+            });
+
+          // Leyenda
+          const legend = svg.append('g')
+            .attr('font-family', 'sans-serif')
+            .attr('font-size', 10)
+            .attr('text-anchor', 'start')
+            .selectAll('g')
+            .data(keys.slice().reverse())
+            .join('g')
+            .attr('transform', (d, i) => `translate(${width + 10},${i * 20})`);
+
+          legend.append('rect')
+            .attr('x', 0)
+            .attr('width', 15)
+            .attr('height', 15)
+            .attr('fill', color);
+
+          legend.append('text')
+            .attr('x', 20)
+            .attr('y', 9.5)
+            .attr('dy', '0.32em')
+            .text(d => d);
+
           break;
         }
 

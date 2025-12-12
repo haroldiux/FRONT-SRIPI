@@ -16,14 +16,9 @@
       <div class="column items-center error-container">
         <q-icon name="error_outline" size="80px" color="negative" />
         <div class="text-h5 text-weight-bold text-purple q-mt-md">{{ error }}</div>
-        <p class="text-center q-mt-md text-grey-8">Ocurrió un problema al intentar cargar la encuesta. Por favor intente nuevamente.</p>
-        <q-btn
-          color="teal"
-          label="Reintentar"
-          class="q-mt-lg retry-btn"
-          icon="refresh"
-          @click="cargarEncuesta"
-        />
+        <p class="text-center q-mt-md text-grey-8">Ocurrió un problema al intentar cargar la encuesta. Por favor intente
+          nuevamente.</p>
+        <q-btn color="teal" label="Reintentar" class="q-mt-lg retry-btn" icon="refresh" @click="cargarEncuesta" />
       </div>
     </div>
 
@@ -35,7 +30,8 @@
             <!-- Cabecera -->
             <q-card-section class="header-section">
               <div class="text-h4 text-white text-weight-bold">{{ encuesta.titulo }}</div>
-              <div class="text-subtitle1 text-white opacity-8 q-mt-sm" v-if="encuesta.descripcion">{{ encuesta.descripcion }}</div>
+              <div class="text-subtitle1 text-white opacity-8 q-mt-sm" v-if="encuesta.descripcion">{{
+                encuesta.descripcion }}</div>
               <div class="text-caption text-white q-mt-sm deadline" v-if="encuesta.fechaFinal">
                 <q-icon name="event" size="18px" class="q-mr-xs" />
                 Disponible hasta: {{ formatDate(encuesta.fechaFinal) }}
@@ -56,16 +52,8 @@
                   </div>
                 </div>
                 <div class="col-12 col-sm-4 text-center">
-                  <q-circular-progress
-                    :value="progreso * 100"
-                    size="80px"
-                    :color="getProgresoColor()"
-                    class="progress-circle shadow-3"
-                    show-value
-                    font-size="16px"
-                    track-color="grey-3"
-                    :thickness="0.2"
-                  >
+                  <q-circular-progress :value="progreso * 100" size="80px" :color="getProgresoColor()"
+                    class="progress-circle shadow-3" show-value font-size="16px" track-color="grey-3" :thickness="0.2">
                     <div class="text-weight-bold">{{ Math.round(progreso * 100) }}%</div>
                   </q-circular-progress>
                 </div>
@@ -74,7 +62,8 @@
               <!-- Barra de progreso horizontal -->
               <div class="progress-bar-container q-mt-md">
                 <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" :style="`width: ${Math.round(progreso * 100)}%`" :class="getProgresoColor()"></div>
+                  <div class="progress-bar-fill" :style="`width: ${Math.round(progreso * 100)}%`"
+                    :class="getProgresoColor()"></div>
                 </div>
               </div>
             </q-card-section>
@@ -85,26 +74,24 @@
             <q-form ref="encuestaForm" @submit="confirmarEnvio">
               <!-- Secciones y preguntas -->
               <template v-for="(seccion, seccionIndex) in encuesta.secciones" :key="seccion.id">
-                <q-card-section
-                  :class="seccionIndex % 2 === 0 ? 'seccion-par' : 'seccion-impar'"
-                  class="seccion-container"
-                >
+                <q-card-section :class="seccionIndex % 2 === 0 ? 'seccion-par' : 'seccion-impar'"
+                  class="seccion-container">
                   <div class="seccion-header">
-                    <div class="text-h5 text-weight-bold section-title">{{ seccionIndex + 1 }}. {{ seccion.titulo }}</div>
-                    <div class="section-badge q-ml-sm" :class="seccionIndex % 2 === 0 ? 'bg-purple' : 'bg-teal'">Sección {{ seccionIndex + 1 }}</div>
+                    <div class="text-h5 text-weight-bold section-title">{{ seccionIndex + 1 }}. {{ seccion.titulo }}
+                    </div>
+                    <div class="section-badge q-ml-sm" :class="seccionIndex % 2 === 0 ? 'bg-purple' : 'bg-teal'">Sección
+                      {{ seccionIndex + 1 }}</div>
                   </div>
 
                   <p v-if="seccion.descripcion" class="q-mb-lg section-description">{{ seccion.descripcion }}</p>
 
                   <!-- Preguntas de la sección -->
-                  <div
-                    v-for="(pregunta, preguntaIndex) in seccion.preguntas"
-                    :key="pregunta.id"
-                    class="pregunta-container q-mb-xl"
-                  >
+                  <div v-for="(pregunta, preguntaIndex) in seccion.preguntas" :key="pregunta.id"
+                    class="pregunta-container q-mb-xl">
                     <div class="row items-center q-mb-sm question-header">
                       <div class="text-subtitle1 question-text">
-                        <span class="question-number">{{ seccionIndex + 1 }}.{{ preguntaIndex + 1 }}.</span> {{ pregunta.enunciado }}
+                        <span class="question-number">{{ seccionIndex + 1 }}.{{ preguntaIndex + 1 }}.</span> {{
+                          pregunta.enunciado }}
                       </div>
                       <q-badge v-if="pregunta.obligatoria" color="negative" class="q-ml-sm required-badge">
                         <q-icon name="priority_high" size="12px" class="q-mr-xs" /> Obligatoria
@@ -114,15 +101,9 @@
                     <!-- Campo para respuesta según tipo -->
                     <div class="q-pl-md q-mt-sm answer-container">
                       <!-- Texto corto -->
-                      <q-input
-                        v-if="pregunta.tipo === 'text'"
-                        outlined
-                        dense
-                        placeholder="Escriba su respuesta aquí"
-                        v-model="respuestas[pregunta.id]"
-                        class="custom-input"
-                        :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []"
-                      >
+                      <q-input v-if="pregunta.tipo === 'text'" outlined dense placeholder="Escriba su respuesta aquí"
+                        v-model="respuestas[pregunta.id]" class="custom-input"
+                        :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []">
                         <template v-slot:prepend>
                           <q-icon name="short_text" color="purple" />
                         </template>
@@ -132,17 +113,9 @@
                       </q-input>
 
                       <!-- Texto largo -->
-                      <q-input
-                        v-else-if="pregunta.tipo === 'textarea'"
-                        type="textarea"
-                        outlined
-                        autogrow
-                        placeholder="Escriba su respuesta aquí"
-                        v-model="respuestas[pregunta.id]"
-                        class="custom-input"
-                        :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []"
-                        counter
-                      >
+                      <q-input v-else-if="pregunta.tipo === 'textarea'" type="textarea" outlined autogrow
+                        placeholder="Escriba su respuesta aquí" v-model="respuestas[pregunta.id]" class="custom-input"
+                        :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []" counter>
                         <template v-slot:prepend>
                           <q-icon name="notes" color="purple" />
                         </template>
@@ -152,46 +125,32 @@
                       </q-input>
 
                       <!-- Número -->
-                      <q-input
-                        v-else-if="pregunta.tipo === 'number'"
-                        type="number"
-                        outlined
-                        dense
-                        placeholder="0"
-                        v-model.number="respuestas[pregunta.id]"
-                        class="custom-input"
-                        :rules="pregunta.obligatoria ? [val => val !== null && val !== undefined && val !== '' || 'Este campo es obligatorio'] : []"
-                      >
+                      <q-input v-else-if="pregunta.tipo === 'number'" type="number" outlined dense placeholder="0"
+                        v-model.number="respuestas[pregunta.id]" class="custom-input"
+                        :rules="pregunta.obligatoria ? [val => val !== null && val !== undefined && val !== '' || 'Este campo es obligatorio'] : []">
                         <template v-slot:prepend>
                           <q-icon name="numbers" color="purple" />
                         </template>
                         <template v-slot:append>
-                          <q-icon name="check_circle" color="teal" v-if="respuestas[pregunta.id] !== null && respuestas[pregunta.id] !== undefined && respuestas[pregunta.id] !== ''" />
+                          <q-icon name="check_circle" color="teal"
+                            v-if="respuestas[pregunta.id] !== null && respuestas[pregunta.id] !== undefined && respuestas[pregunta.id] !== ''" />
                         </template>
                       </q-input>
 
                       <!-- Opciones simples (radio) -->
                       <div v-else-if="pregunta.tipo === 'single'" class="q-mt-sm option-container">
-                        <q-option-group
-                          v-model="respuestas[pregunta.id]"
-                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))"
-                          type="radio"
-                          color="teal"
-                          class="custom-radio"
-                          :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []"
-                        />
+                        <q-option-group v-model="respuestas[pregunta.id]"
+                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))" type="radio"
+                          color="teal" class="custom-radio"
+                          :rules="pregunta.obligatoria ? [val => !!val || 'Debe seleccionar una opción'] : []" />
                       </div>
 
                       <!-- Opciones múltiples (checkbox) -->
                       <div v-else-if="pregunta.tipo === 'multi'" class="q-mt-sm option-container">
-                        <q-option-group
-                          v-model="respuestas[pregunta.id]"
-                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))"
-                          type="checkbox"
-                          color="purple"
-                          class="custom-checkbox"
-                          :rules="pregunta.obligatoria ? [val => val && val.length > 0 || 'Debe seleccionar al menos una opción'] : []"
-                        />
+                        <q-option-group v-model="respuestas[pregunta.id]"
+                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))" type="checkbox"
+                          color="purple" class="custom-checkbox"
+                          :rules="pregunta.obligatoria ? [val => val && val.length > 0 || 'Debe seleccionar al menos una opción'] : []" />
                       </div>
 
                       <!-- Escala -->
@@ -203,41 +162,22 @@
                         <div class="scale-value-display">
                           <span class="text-h6 text-purple">{{ respuestas[pregunta.id] }}</span>
                         </div>
-                        <q-slider
-                          v-model="respuestas[pregunta.id]"
-                          :min="pregunta.min"
-                          :max="pregunta.max"
-                          :step="1"
-                          label
-                          markers
-                          color="teal"
-                          class="custom-slider"
-                        />
+                        <q-slider v-model="respuestas[pregunta.id]" :min="pregunta.min" :max="pregunta.max" :step="1"
+                          label markers color="teal" class="custom-slider" />
                       </div>
 
                       <!-- Fecha -->
                       <div v-else-if="pregunta.tipo === 'date'" class="q-mt-sm">
-                        <q-input
-                          outlined
-                          dense
-                          placeholder="dd/mm/aaaa"
-                          mask="##/##/####"
-                          class="custom-input date-input"
-                          v-model="respuestas[pregunta.id]"
-                          :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []"
-                        >
+                        <q-input outlined dense placeholder="dd/mm/aaaa" mask="##/##/####"
+                          class="custom-input date-input" v-model="respuestas[pregunta.id]"
+                          :rules="pregunta.obligatoria ? [val => !!val || 'Este campo es obligatorio'] : []">
                           <template v-slot:prepend>
                             <q-icon name="event" color="purple" />
                           </template>
                           <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                               <q-popup-proxy transition-show="scale" transition-hide="scale" class="date-popup">
-                                <q-date
-                                  v-model="respuestas[pregunta.id]"
-                                  mask="DD/MM/YYYY"
-                                  color="teal"
-                                  today-btn
-                                >
+                                <q-date v-model="respuestas[pregunta.id]" mask="DD/MM/YYYY" color="teal" today-btn>
                                   <div class="row justify-end q-pa-sm">
                                     <q-btn v-close-popup flat label="Seleccionar" color="teal" />
                                   </div>
@@ -246,6 +186,37 @@
                             </q-icon>
                           </template>
                         </q-input>
+                      </div>
+
+                      <!-- Matriz (Cuadrícula) -->
+                      <div v-else-if="pregunta.tipo === 'matrix'" class="q-mt-sm matrix-container overflow-auto">
+                        <table class="matrix-table full-width">
+                          <thead>
+                            <tr>
+                              <th class="text-left q-pa-sm bg-grey-2 text-weight-bold" style="min-width: 150px;">
+                                {{ pregunta.configuracion?.encabezadoFilas || '' }}
+                              </th>
+                              <th v-for="col in pregunta.opciones" :key="col.id" class="text-center q-pa-sm bg-grey-2">
+                                {{ col.texto }}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(fila, fi) in pregunta.configuracion?.filas" :key="fila.id"
+                              :class="fi % 2 === 0 ? 'bg-white' : 'bg-grey-1'">
+                              <td class="q-pa-sm text-weight-medium">{{ fila.texto }}</td>
+                              <td v-for="col in pregunta.opciones" :key="col.id" class="text-center q-pa-sm">
+                                <q-radio v-model="respuestas[pregunta.id][fila.id]" :val="col.id" color="teal" dense
+                                  :name="`matrix-${pregunta.id}-${fila.id}`" />
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                        <!-- Validación visual para matriz -->
+                        <div v-if="pregunta.obligatoria && !validarMatriz(pregunta.id, pregunta.configuracion?.filas)"
+                          class="text-negative text-caption q-mt-xs">
+                          <q-icon name="error" /> Debe responder todas las filas
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -273,21 +244,14 @@
                 </p>
 
                 <!-- Mapa con ubicación actual -->
-                <div class="map-container q-mb-md" :class="{'map-with-location': coordenadas.lat && coordenadas.lng}">
+                <div class="map-container q-mb-md" :class="{ 'map-with-location': coordenadas.lat && coordenadas.lng }">
                   <div id="map" style="width: 100%; height: 350px; border-radius: 12px;" ref="mapContainer"></div>
                 </div>
 
                 <!-- Botón de calibrar ubicación -->
                 <div class="row justify-center q-mt-lg">
-                  <q-btn
-                    color="teal"
-                    icon="gps_fixed"
-                    label="CALIBRAR UBICACIÓN"
-                    @click="obtenerUbicacionActual"
-                    :loading="cargandoUbicacion"
-                    class="calibrate-btn"
-                    size="lg"
-                  />
+                  <q-btn color="teal" icon="gps_fixed" label="CALIBRAR UBICACIÓN" @click="obtenerUbicacionActual"
+                    :loading="cargandoUbicacion" class="calibrate-btn" size="lg" />
                 </div>
 
                 <!-- Coordenadas (solo para debug) -->
@@ -295,14 +259,16 @@
                   <div class="text-subtitle1 text-teal">Coordenadas capturadas:</div>
                   <div class="row q-col-gutter-md q-mt-xs">
                     <div class="col-6">
-                      <q-input dense outlined readonly label="Latitud" v-model="coordenadas.lat" class="coordinate-input">
+                      <q-input dense outlined readonly label="Latitud" v-model="coordenadas.lat"
+                        class="coordinate-input">
                         <template v-slot:prepend>
                           <q-icon name="north" color="teal" />
                         </template>
                       </q-input>
                     </div>
                     <div class="col-6">
-                      <q-input dense outlined readonly label="Longitud" v-model="coordenadas.lng" class="coordinate-input">
+                      <q-input dense outlined readonly label="Longitud" v-model="coordenadas.lng"
+                        class="coordinate-input">
                         <template v-slot:prepend>
                           <q-icon name="east" color="teal" />
                         </template>
@@ -316,23 +282,10 @@
 
               <!-- Botones de acción -->
               <q-card-actions class="action-buttons q-pa-lg">
-                <q-btn
-                  label="LIMPIAR RESPUESTAS"
-                  outline
-                  color="purple"
-                  @click="confirmarLimpiar"
-                  class="q-mr-sm clear-btn"
-                  icon="delete_sweep"
-                />
-                <q-btn
-                  label="GUARDAR Y ENVIAR"
-                  type="submit"
-                  color="teal"
-                  :loading="guardando"
-                  :disable="!coordenadas.lat || !coordenadas.lng"
-                  class="submit-btn"
-                  icon-right="send"
-                />
+                <q-btn label="LIMPIAR RESPUESTAS" outline color="purple" @click="confirmarLimpiar"
+                  class="q-mr-sm clear-btn" icon="delete_sweep" />
+                <q-btn label="GUARDAR Y ENVIAR" type="submit" color="teal" :loading="guardando"
+                  :disable="!coordenadas.lat || !coordenadas.lng" class="submit-btn" icon-right="send" />
               </q-card-actions>
             </q-form>
           </q-card>
@@ -353,7 +306,8 @@
         </p>
         <div class="row q-gutter-md q-mt-md">
           <q-btn color="teal" label="Realizar otra encuesta" to="/encuestadores" class="action-btn" icon="list_alt" />
-          <q-btn outline color="purple" label="Ver mis envíos" to="/encuestadores/envios" class="action-btn" icon="history" />
+          <q-btn outline color="purple" label="Ver mis envíos" to="/encuestadores/envios" class="action-btn"
+            icon="history" />
         </div>
       </div>
     </div>
@@ -497,6 +451,26 @@ function inicializarRespuestas() {
           break
         case 'number':
           respuestas.value[pregunta.id] = null
+          break
+        case 'matrix':
+          respuestas.value[pregunta.id] = {}
+
+          // Parsear configuración si es string
+          if (pregunta.configuracion && typeof pregunta.configuracion === 'string') {
+            try {
+              pregunta.configuracion = JSON.parse(pregunta.configuracion)
+            } catch (e) {
+              console.error('Error parsing matrix config', e)
+              pregunta.configuracion = { filas: [] }
+            }
+          }
+
+          // Inicializar cada fila con null
+          if (pregunta.configuracion && pregunta.configuracion.filas) {
+            pregunta.configuracion.filas.forEach(fila => {
+              respuestas.value[pregunta.id][fila.id] = null
+            })
+          }
           break
         default:
           respuestas.value[pregunta.id] = ''
@@ -754,6 +728,18 @@ function confirmarEnvio() {
       // Preparar datos para envío
       const datos = prepararDatosParaEnvio()
 
+      // Validar matrices obligatorias antes de enviar
+      if (!validarTodasLasMatrices()) {
+        guardando.value = false
+        $q.loading.hide()
+        $q.notify({
+          type: 'negative',
+          message: 'Por favor complete todas las preguntas de tipo cuadrícula obligatorias',
+          position: 'top'
+        })
+        return
+      }
+
       // Enviar datos al servidor
       await api.post('/envios', datos)
 
@@ -863,6 +849,10 @@ function prepararDatosParaEnvio() {
       case 'multi':
         respuestaObj.opciones_ids = valor.map(v => parseInt(v))
         break
+      case 'matrix':
+        // Para matriz, guardamos las respuestas como un JSON en valor_texto
+        respuestaObj.valor_texto = JSON.stringify(valor)
+        break
     }
 
     respuestasFormateadas.push(respuestaObj)
@@ -875,6 +865,29 @@ function prepararDatosParaEnvio() {
     lng: parseFloat(coordenadas.value.lng),
     respuestas: respuestasFormateadas
   }
+}
+
+// Validar si una matriz está completa
+function validarMatriz(preguntaId, filas) {
+  if (!filas) return true
+  const respuestasMatriz = respuestas.value[preguntaId] || {}
+  return filas.every(fila => respuestasMatriz[fila.id] !== null && respuestasMatriz[fila.id] !== undefined)
+}
+
+// Validar todas las matrices obligatorias
+function validarTodasLasMatrices() {
+  if (!encuesta.value) return true
+
+  for (const seccion of encuesta.value.secciones) {
+    for (const pregunta of seccion.preguntas) {
+      if (pregunta.tipo === 'matrix' && pregunta.obligatoria) {
+        if (!validarMatriz(pregunta.id, pregunta.configuracion?.filas)) {
+          return false
+        }
+      }
+    }
+  }
+  return true
 }
 
 // Funciones auxiliares
@@ -970,10 +983,12 @@ onMounted(() => {
     width: 0%;
     margin-left: 0%;
   }
+
   50% {
     width: 30%;
     margin-left: 70%;
   }
+
   100% {
     width: 0%;
     margin-left: 0%;
@@ -1049,12 +1064,15 @@ onMounted(() => {
     left: -100px;
     opacity: 0;
   }
+
   20% {
     opacity: 0.5;
   }
+
   60% {
     opacity: 0.3;
   }
+
   100% {
     left: 100%;
     opacity: 0;
@@ -1210,9 +1228,20 @@ onMounted(() => {
 }
 
 @keyframes pulse {
-  0% { opacity: 0.8; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-  100% { opacity: 0.8; transform: scale(1); }
+  0% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+
+  100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
 }
 
 // Contenedores de respuesta
@@ -1257,8 +1286,11 @@ onMounted(() => {
   background-color: rgba(255, 255, 255, 0.6);
   border-radius: 10px;
 
-  .custom-radio, .custom-checkbox {
-    .q-radio__inner, .q-checkbox__inner {
+  .custom-radio,
+  .custom-checkbox {
+
+    .q-radio__inner,
+    .q-checkbox__inner {
       transition: all 0.2s ease;
 
       &:hover {
@@ -1266,7 +1298,8 @@ onMounted(() => {
       }
     }
 
-    .q-radio__label, .q-checkbox__label {
+    .q-radio__label,
+    .q-checkbox__label {
       font-size: 16px;
       padding: 8px 0;
     }
@@ -1410,8 +1443,15 @@ onMounted(() => {
 }
 
 @keyframes markerBounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 // Botón de calibrar
@@ -1525,13 +1565,25 @@ onMounted(() => {
 }
 
 @keyframes rotate {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(30px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .action-btn {
@@ -1547,8 +1599,9 @@ onMounted(() => {
 }
 
 // Diálogos personalizados
-.custom-dialog, .confirm-dialog {
-  .q-dialog__inner > div {
+.custom-dialog,
+.confirm-dialog {
+  .q-dialog__inner>div {
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
@@ -1592,12 +1645,12 @@ onMounted(() => {
     bottom: 0;
     width: 40px;
     background-image:
-      radial-gradient(circle, rgba(255,255,255,0.2) 2px, transparent 2px);
+      radial-gradient(circle, rgba(255, 255, 255, 0.2) 2px, transparent 2px);
     background-size: 15px 15px;
   }
 
   &.error-notification {
-    animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
   }
 
   &.validation-error {
@@ -1606,10 +1659,50 @@ onMounted(() => {
 }
 
 @keyframes shake {
-  10%, 90% { transform: translateX(-1px); }
-  20%, 80% { transform: translateX(2px); }
-  30%, 50%, 70% { transform: translateX(-3px); }
-  40%, 60% { transform: translateX(3px); }
+
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+
+  30%,
+  50%,
+  70% {
+    transform: translateX(-3px);
+  }
+
+  40%,
+  60% {
+    transform: translateX(3px);
+  }
+}
+
+
+
+// Estilos para la tabla matriz
+.matrix-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* Suavizar scroll en iOS */
+  padding-bottom: 10px;
+  /* Espacio para la barra de scroll */
+}
+
+.matrix-table {
+  border-collapse: collapse;
+  min-width: 600px;
+  /* Forzar scroll en pantallas pequeñas */
+
+  th,
+  td {
+    border: 1px solid #e0e0e0;
+  }
 }
 
 // Ajustes para dispositivos móviles
@@ -1636,7 +1729,8 @@ onMounted(() => {
     flex-direction: column-reverse;
     gap: 12px;
 
-    .clear-btn, .submit-btn {
+    .clear-btn,
+    .submit-btn {
       width: 100%;
       margin: 0;
     }

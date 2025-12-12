@@ -1,11 +1,5 @@
 <template>
-  <q-dialog
-    v-model="internalOpen"
-    maximized
-    transition-show="fade"
-    transition-hide="fade"
-    @hide="handleClose"
-  >
+  <q-dialog v-model="internalOpen" maximized transition-show="fade" transition-hide="fade" @hide="handleClose">
     <q-card class="encuesta-preview-card">
       <!-- Header -->
       <q-card-section class="bg-purple text-white dialog-header-section">
@@ -79,22 +73,15 @@
             <div class="preview-container">
               <q-card class="preview-card" bordered>
                 <!-- Secciones y Preguntas -->
-                <q-card-section
-                  v-for="(seccion, i) in encuesta.secciones"
-                  :key="seccion.id"
-                  class="preview-section"
-                >
+                <q-card-section v-for="(seccion, i) in encuesta.secciones" :key="seccion.id" class="preview-section">
                   <div class="text-h6 q-mb-md section-title">
                     <q-icon name="bookmark" color="teal" size="xs" class="q-mr-xs" />
                     {{ i + 1 }}. {{ seccion.titulo }}
                   </div>
                   <p v-if="seccion.descripcion" class="q-mb-lg text-grey-8">{{ seccion.descripcion }}</p>
 
-                  <div
-                    v-for="(pregunta, pregIndex) in seccion.preguntas"
-                    :key="pregunta.id"
-                    class="preview-question q-mb-lg"
-                  >
+                  <div v-for="(pregunta, pregIndex) in seccion.preguntas" :key="pregunta.id"
+                    class="preview-question q-mb-lg">
                     <div class="row items-center q-mb-sm">
                       <div class="text-subtitle1 question-text">
                         <span class="question-number">{{ i + 1 }}.{{ pregIndex + 1 }}.</span>
@@ -108,57 +95,30 @@
                     <!-- Componente según el tipo de pregunta -->
                     <div class="q-pl-md q-mt-sm">
                       <!-- Texto corto -->
-                      <q-input
-                        v-if="pregunta.tipo === 'text'"
-                        outlined
-                        dense
-                        placeholder="Escriba su respuesta aquí"
-                        v-model="respuestas[getQuestionKey(i, pregIndex)]"
-                        class="custom-input"
-                      />
+                      <q-input v-if="pregunta.tipo === 'text'" outlined dense placeholder="Escriba su respuesta aquí"
+                        v-model="respuestas[getQuestionKey(i, pregIndex)]" class="custom-input" />
 
                       <!-- Texto largo -->
-                      <q-input
-                        v-else-if="pregunta.tipo === 'textarea'"
-                        type="textarea"
-                        outlined
-                        autogrow
-                        placeholder="Escriba su respuesta aquí"
-                        v-model="respuestas[getQuestionKey(i, pregIndex)]"
-                        class="custom-input"
-                      />
+                      <q-input v-else-if="pregunta.tipo === 'textarea'" type="textarea" outlined autogrow
+                        placeholder="Escriba su respuesta aquí" v-model="respuestas[getQuestionKey(i, pregIndex)]"
+                        class="custom-input" />
 
                       <!-- Número -->
-                      <q-input
-                        v-else-if="pregunta.tipo === 'number'"
-                        type="number"
-                        outlined
-                        dense
-                        placeholder="0"
-                        v-model="respuestas[getQuestionKey(i, pregIndex)]"
-                        class="custom-input"
-                      />
+                      <q-input v-else-if="pregunta.tipo === 'number'" type="number" outlined dense placeholder="0"
+                        v-model="respuestas[getQuestionKey(i, pregIndex)]" class="custom-input" />
 
                       <!-- Opciones simples (radio) -->
                       <div v-else-if="pregunta.tipo === 'single'" class="q-mt-sm">
-                        <q-option-group
-                          v-model="respuestas[getQuestionKey(i, pregIndex)]"
-                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))"
-                          type="radio"
-                          color="teal"
-                          class="custom-option-group"
-                        />
+                        <q-option-group v-model="respuestas[getQuestionKey(i, pregIndex)]"
+                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))" type="radio"
+                          color="teal" class="custom-option-group" />
                       </div>
 
                       <!-- Opciones múltiples (checkbox) -->
                       <div v-else-if="pregunta.tipo === 'multi'" class="q-mt-sm">
-                        <q-option-group
-                          v-model="respuestasMulti[getQuestionKey(i, pregIndex)]"
-                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))"
-                          type="checkbox"
-                          color="teal"
-                          class="custom-option-group"
-                        />
+                        <q-option-group v-model="respuestasMulti[getQuestionKey(i, pregIndex)]"
+                          :options="pregunta.opciones.map(opt => ({ label: opt.texto, value: opt.id }))" type="checkbox"
+                          color="teal" class="custom-option-group" />
                       </div>
 
                       <!-- Escala -->
@@ -167,35 +127,19 @@
                           <div class="text-caption">{{ pregunta.min || 0 }}</div>
                           <div class="text-caption">{{ pregunta.max || 10 }}</div>
                         </div>
-                        <q-slider
-                          v-model="respuestas[getQuestionKey(i, pregIndex)]"
-                          :min="pregunta.min || 0"
-                          :max="pregunta.max || 10"
-                          :step="1"
-                          label
-                          markers
-                          color="teal"
-                        />
+                        <q-slider v-model="respuestas[getQuestionKey(i, pregIndex)]" :min="pregunta.min || 0"
+                          :max="pregunta.max || 10" :step="1" label markers color="teal" />
                       </div>
 
                       <!-- Fecha -->
                       <div v-else-if="pregunta.tipo === 'date'" class="q-mt-sm">
-                        <q-input
-                          outlined
-                          dense
-                          placeholder="dd/mm/aaaa"
-                          mask="##/##/####"
-                          v-model="respuestas[getQuestionKey(i, pregIndex)]"
-                          class="custom-input"
-                        >
+                        <q-input outlined dense placeholder="dd/mm/aaaa" mask="##/##/####"
+                          v-model="respuestas[getQuestionKey(i, pregIndex)]" class="custom-input">
                           <template v-slot:append>
                             <q-icon name="event" class="cursor-pointer">
                               <q-popup-proxy transition-show="scale" transition-hide="scale">
-                                <q-date
-                                  v-model="respuestas[getQuestionKey(i, pregIndex)]"
-                                  mask="DD/MM/YYYY"
-                                  color="teal"
-                                >
+                                <q-date v-model="respuestas[getQuestionKey(i, pregIndex)]" mask="DD/MM/YYYY"
+                                  color="teal">
                                   <div class="row justify-end">
                                     <q-btn v-close-popup flat label="Cerrar" color="teal" />
                                   </div>
@@ -205,6 +149,30 @@
                           </template>
                         </q-input>
                       </div>
+
+                      <!-- Matriz (Cuadrícula) -->
+                      <div v-else-if="pregunta.tipo === 'matrix'" class="q-mt-sm matrix-container overflow-auto">
+                        <table class="matrix-table full-width">
+                          <thead>
+                            <tr>
+                              <th></th>
+                              <th v-for="col in pregunta.opciones" :key="col.id" class="text-center q-pa-sm bg-grey-2">
+                                {{ col.texto }}
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(fila, fi) in pregunta.configuracion?.filas" :key="fila.id"
+                              :class="fi % 2 === 0 ? 'bg-white' : 'bg-grey-1'">
+                              <td class="q-pa-sm text-weight-medium">{{ fila.texto }}</td>
+                              <td v-for="col in pregunta.opciones" :key="col.id" class="text-center q-pa-sm">
+                                <q-radio v-model="respuestas[getQuestionKey(i, pregIndex)][fila.id]" :val="col.id"
+                                  color="teal" dense />
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   </div>
                 </q-card-section>
@@ -212,8 +180,10 @@
                 <q-separator />
 
                 <q-card-section class="preview-footer">
-                  <q-btn unelevated color="teal" label="Enviar Respuestas" class="q-mr-sm action-btn" icon="send" @click="simularEnvio" />
-                  <q-btn outline color="grey-7" label="Borrar Todo" class="action-btn" icon="delete_sweep" @click="limpiarRespuestas" />
+                  <q-btn unelevated color="teal" label="Enviar Respuestas" class="q-mr-sm action-btn" icon="send"
+                    @click="simularEnvio" />
+                  <q-btn outline color="grey-7" label="Borrar Todo" class="action-btn" icon="delete_sweep"
+                    @click="limpiarRespuestas" />
                 </q-card-section>
               </q-card>
             </div>
@@ -225,13 +195,16 @@
         <q-card-section class="bg-grey-2 footer-actions">
           <div class="row justify-between items-center">
             <div>
-              <q-btn outline color="purple" icon="edit" label="Editar" @click="editarEncuesta" class="q-mr-md action-btn">
+              <q-btn outline color="purple" icon="edit" label="Editar" @click="editarEncuesta"
+                class="q-mr-md action-btn">
                 <q-tooltip>Editar esta encuesta</q-tooltip>
               </q-btn>
-              <q-btn outline color="purple" icon="print" label="Imprimir" @click="imprimirEncuesta" class="q-mr-md action-btn">
+              <q-btn outline color="purple" icon="print" label="Imprimir" @click="imprimirEncuesta"
+                class="q-mr-md action-btn">
                 <q-tooltip>Imprimir encuesta</q-tooltip>
               </q-btn>
-              <q-btn outline color="purple" icon="share" label="Compartir" @click="compartirEncuesta" class="action-btn">
+              <q-btn outline color="purple" icon="share" label="Compartir" @click="compartirEncuesta"
+                class="action-btn">
                 <q-tooltip>Compartir encuesta</q-tooltip>
               </q-btn>
             </div>
@@ -324,6 +297,26 @@ async function loadEncuestaData() {
       secciones: response.data.secciones || []
     }
 
+    // Parsear configuracion de preguntas tipo matrix ANTES de inicializar respuestas
+    if (encuesta.value.secciones && encuesta.value.secciones.length > 0) {
+      encuesta.value.secciones.forEach((seccion) => {
+        if (seccion.preguntas && seccion.preguntas.length > 0) {
+          seccion.preguntas.forEach((pregunta) => {
+            if (pregunta.tipo === 'matrix' && pregunta.configuracion) {
+              if (typeof pregunta.configuracion === 'string') {
+                try {
+                  pregunta.configuracion = JSON.parse(pregunta.configuracion)
+                } catch (e) {
+                  console.error('Error parsing matrix config', e)
+                  pregunta.configuracion = null
+                }
+              }
+            }
+          })
+        }
+      })
+    }
+
     // Inicializar respuestas vacías
     respuestas.value = {}
     respuestasMulti.value = {}
@@ -333,8 +326,11 @@ async function loadEncuestaData() {
       encuesta.value.secciones.forEach((seccion, secIdx) => {
         if (seccion.preguntas && seccion.preguntas.length > 0) {
           seccion.preguntas.forEach((pregunta, pregIdx) => {
+            const key = getQuestionKey(secIdx, pregIdx)
             if (pregunta.tipo === 'multi') {
-              respuestasMulti.value[getQuestionKey(secIdx, pregIdx)] = []
+              respuestasMulti.value[key] = []
+            } else if (pregunta.tipo === 'matrix') {
+              respuestas.value[key] = {}
             }
           });
         }
@@ -677,7 +673,11 @@ function compartirEncuesta() {
     overflow: visible !important;
   }
 
-  .bg-purple, .bg-teal, .bg-grey-2, .bg-teal-1, .preview-title-section {
+  .bg-purple,
+  .bg-teal,
+  .bg-grey-2,
+  .bg-teal-1,
+  .preview-title-section {
     background: white !important;
     background-color: white !important;
     color: black !important;
@@ -690,7 +690,8 @@ function compartirEncuesta() {
     transform: none !important;
   }
 
-  .footer-actions, .dialog-header-section {
+  .footer-actions,
+  .dialog-header-section {
     display: none !important;
   }
 
@@ -705,6 +706,24 @@ function compartirEncuesta() {
   * {
     color: black !important;
   }
+}
+
+/* Estilos para la tabla matriz */
+.matrix-container {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 10px;
+}
+
+.matrix-table {
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.matrix-table th,
+.matrix-table td {
+  border: 1px solid #e0e0e0;
 }
 
 /* AOS animations removed */
