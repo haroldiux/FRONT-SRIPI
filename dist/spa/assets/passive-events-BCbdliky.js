@@ -1,0 +1,1 @@
+const r=()=>{const a=window.EventTarget.prototype.addEventListener;window.EventTarget.prototype.addEventListener=function(t,n,e){return(t==="touchstart"||t==="touchmove")&&(e===void 0||e===!1?e={passive:!0}:typeof e=="object"&&e!==null&&e.passive===void 0&&(e={...e,passive:!0})),a.call(this,t,n,e)}};export{r as default};
